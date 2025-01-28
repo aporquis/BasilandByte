@@ -1,7 +1,8 @@
 # Python
  __pycache__/ 
 *.py[cod] 
-venv/ 
+venv/
+myenv
 
 # Node.js (for react)
  node_modules/ <-it’s big that’s why we don’t include
