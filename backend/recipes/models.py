@@ -16,6 +16,8 @@ class Recipe(models.Model):
     instructions = models.TextField()  # Here is where we will store our instructions
     # This is a time stamp which helps with figuring out of course as you guessed the time the model was created!
     created_at = models.DateTimeField(auto_now_add=True)
+    #image field for image upload 
+    image = models.ImageField(upload_to='recipe_images/', null=True, blank =True)
 
     def __str__(self):
         """Returns a string that represents the recipe (the title)."""
