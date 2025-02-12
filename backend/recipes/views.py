@@ -1,103 +1,73 @@
-from django.shortcuts import render
+from django.shortcuts import get_object_or_404
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
+from django.core.files.storage import default_storage
 import json
-from .models import Recipe #this imports the model that we made in models.py
+from .models import Recipe
+from .serializers import RecipeSerializer  # Import the serializer
+from rest_framework.parsers import MultiPartParser
+from rest_framework.decorators import api_view, parser_classes
+from rest_framework.response import Response
+from rest_framework import status
+
+# Fetch all recipes (GET)
 
 
-# Create your views here.
-
-@csrf_exempt
-@require_http_methods(["POST","GET","PUT","DELETE"]) #I am going to look into this next sprint because I dont think it is correct but it is working for the time being.
-
-def add_recipe(request):
-    """Handles adding new recipes to the database."""
-    try:
-        data = json.loads(request.body)  # Parse JSON request
-        recipe = Recipe.objects.create( #create a recipe object to store the new information for the recipe
-            title=data.get("title", "Untitled"), #the untitled, and the "" help ensure that if left blank something with substance is inserted in that way it doesnt break. 
-            description=data.get("description", ""),
-            ingredients=data.get("ingredients", ""),
-            instructions=data.get("instructions", "")
-        )
-
-        # Return full recipe object to frontend
-        return JsonResponse({              #will return to the GUI for the use the following:
-            "id": recipe.id,
-            "title": recipe.title,
-            "description": recipe.description,
-            "ingredients": recipe.ingredients,
-            "instructions": recipe.instructions,
-            "created_at": recipe.created_at.strftime('%Y-%m-%d %H:%M:%S'),
-        }, status=201)
-
-    except Exception as e:
-        return JsonResponse({"error": str(e)}, status=400)
-                                                                                          #request on the add_recipes part so I ended up just adding this line as a handler.
-    
-
-@csrf_exempt
-@require_http_methods(["POST", "GET", "PUT", "DELETE"])
+@api_view(["GET"])
 def get_recipes(request):
-    """Fetch all recipes from the database."""
-    if request.method == "GET":
-        recipes = Recipe.objects.all() #fetch recipe objects in the database
-        data = [ #convert the objects into a dictionary with key and value
-            {
-                "id": recipe.id,
-                "title": recipe.title,
-                "description": recipe.description,
-                "ingredients": recipe.ingredients,
-                "instructions": recipe.instructions,
-                "created_at": recipe.created_at,
-            }
-            for recipe in recipes
-        ]
-        return JsonResponse(data, safe=False) #these statements that you see in every function return the data as a JSON
+    """Fetch all recipes, including their images."""
+    recipes = Recipe.objects.all()
+    serializer = RecipeSerializer(recipes, many=True)
+    return Response(serializer.data)
 
-    return JsonResponse({"error": "Invalid request method"}, status=405)
-    
+#  Add a recipe (POST) with optional image
 
-@csrf_exempt
-@require_http_methods(["POST", "GET", "PUT", "DELETE"])
+
+@api_view(["POST"])
+@parser_classes([MultiPartParser])  # Enables file parsing
+def add_recipe(request):
+    """Handles adding a new recipe with an image."""
+    try:
+        data = request.data  # Parse form data (including file)
+        serializer = RecipeSerializer(data=data)
+
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    except Exception as e:
+        return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+# Update an existing recipe (PUT) with image support
+
+
+@api_view(["PUT"])
+@parser_classes([MultiPartParser])
 def update_recipe(request, recipe_id):
-    """Updates an existing recipe by ID."""
-    if request.method == "PUT":
-        try:
-            data = json.loads(request.body)
-            recipe = Recipe.objects.get(id=recipe_id)  # Fetch the recipe
+    """Updates a recipe's text and/or image."""
+    recipe = get_object_or_404(Recipe, id=recipe_id)
 
-            # Update the fields only if provided in the request if it is not then it should be left alone. 
-            recipe.title = data.get("title", recipe.title)
-            recipe.description = data.get("description", recipe.description)
-            recipe.ingredients = data.get("ingredients", recipe.ingredients)
-            recipe.instructions = data.get("instructions", recipe.instructions)
-            recipe.save()
+    serializer = RecipeSerializer(recipe, data=request.data, partial=True)
 
-            return JsonResponse({
-                "id": recipe.id,
-                "title": recipe.title,
-                "description": recipe.description,
-                "ingredients": recipe.ingredients,
-                "instructions": recipe.instructions
-            }, status=200)
-        except Recipe.DoesNotExist:
-            return JsonResponse({"error": "Recipe not found"}, status=404)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data)
 
-    return JsonResponse({"error": "Invalid request method"}, status=405)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+#  Delete a recipe (DELETE)
 
 
-@csrf_exempt
-@require_http_methods(["POST", "GET", "PUT", "DELETE"])
+@api_view(["DELETE"])
 def delete_recipe(request, recipe_id):
     """Deletes a recipe by ID."""
-    if request.method == "DELETE":
-        try:
-            recipe = Recipe.objects.get(id=recipe_id)
-            recipe.delete()
-            return JsonResponse({"message": "Recipe deleted successfully"}, status=200)
-        except Recipe.DoesNotExist:
-            return JsonResponse({"error": "Recipe not found"}, status=404)
+    recipe = get_object_or_404(Recipe, id=recipe_id)
 
-    return JsonResponse({"error": "Invalid request method"}, status=405)
+    # If the recipe has an image, delete it from storage
+    if recipe.image:
+        default_storage.delete(recipe.image.path)
+
+    recipe.delete()
+    return Response({"message": "Recipe deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
