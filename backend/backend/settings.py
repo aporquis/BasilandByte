@@ -6,6 +6,12 @@ import os
 from dotenv import load_dotenv
 from pathlib import Path
 
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+#this is what I am going to add to ensure that we are able to upload images to our app and website!
+MEDIA_URL = "/recipe_images/"
+MEDIA_ROOT = os.path.join(BASE_DIR, "recipe_images")
+
 # Load .env file
 BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(os.path.join(BASE_DIR, '.env'))
@@ -22,12 +28,13 @@ ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "127.0.0.1,localhost").split(",")
 # CORS Configuration
 CORS_ALLOW_ALL_ORIGINS = False  # Set False for security
 CORS_ALLOWED_ORIGINS = os.getenv(
-    "CORS_ALLOWED_ORIGINS", "http://localhost:3000,http://10.0.0.150:8000").split(",")
+    "CORS_ALLOWED_ORIGINS", "http://localhost:3000,http://10.0.0.150:3000").split(",") #first one is react frontend, the next one is your instance of the backend server on your personal IP.
 CORS_ALLOW_METHODS = ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
 CORS_ALLOW_HEADERS = ["*"]
 
 # Application definition
 INSTALLED_APPS = [
+    "corsheaders",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -35,7 +42,6 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "recipes",  # our first app! yay!
-    "corsheaders",
     "django_extensions",
     "rest_framework",
 ]
