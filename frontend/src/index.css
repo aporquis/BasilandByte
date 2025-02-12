@@ -87,7 +87,7 @@ form button[type="submit"]:hover {
 /* Resposive design */
 @media (max-width: 768px) {
   ul li {
-    padding: 15px;
+    padding: 16px;
   }
   form input[type="text"] {
     width: calc(100% -22px);
