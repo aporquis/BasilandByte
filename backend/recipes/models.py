@@ -7,8 +7,7 @@ from django.db import models
 
 class Recipe(models.Model):
     """This is a basic model for storing recipe traits such as the title, description, ingredients, instructions, and as well as the time stamp."""
-    title = models.CharField(
-        max_length=200)  # Here is where we will store our recipe name
+    title = models.CharField(max_length=200)  # Here is where we will store our recipe name
     # Here is where we will store our recipe description
     description = models.TextField()
     # Here is where we will store our ingredients list

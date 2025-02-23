@@ -1,20 +1,21 @@
-"""
-Django settings for backend project.
-"""
-
 import os
 from dotenv import load_dotenv
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-#this is what I am going to add to ensure that we are able to upload images to our app and website!
-MEDIA_URL = "/recipe_images/"
-MEDIA_ROOT = os.path.join(BASE_DIR, "recipe_images")
-
 # Load .env file
-BASE_DIR = Path(__file__).resolve().parent.parent
-load_dotenv(os.path.join(BASE_DIR, '.env'))
+dotenv_path = BASE_DIR / ".env"
+if dotenv_path.exists():
+    load_dotenv(dotenv_path)
+else:
+    raise FileNotFoundError(f"Missing .env file at {dotenv_path}")
+
+# Ensure MEDIA settings work correctly
+RECIPE_IMAGE_PATH = os.getenv("RECIPE_IMAGE_PATH", str(
+    BASE_DIR / "recipe_images"))  # Default to local folder
+MEDIA_URL = "/recipe_images/"
+MEDIA_ROOT = RECIPE_IMAGE_PATH  # Use the correct path
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "fallback-secret-key")
@@ -23,12 +24,14 @@ SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "fallback-secret-key")
 DEBUG = os.getenv("DEBUG", "False") == "True"
 
 # ALLOWED_HOSTS
-ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "127.0.0.1,localhost").split(",")
+ALLOWED_HOSTS = [host.strip() for host in os.getenv(
+    "ALLOWED_HOSTS", "").split(",") if host]
 
 # CORS Configuration
 CORS_ALLOW_ALL_ORIGINS = False  # Set False for security
 CORS_ALLOWED_ORIGINS = os.getenv(
-    "CORS_ALLOWED_ORIGINS", "http://localhost:3000,http://10.0.0.150:3000").split(",") #first one is react frontend, the next one is your instance of the backend server on your personal IP.
+    "CORS_ALLOWED_ORIGINS", "http://localhost:3000,http://10.0.0.150:3000"
+).split(",")
 CORS_ALLOW_METHODS = ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
 CORS_ALLOW_HEADERS = ["*"]
 
@@ -44,6 +47,7 @@ INSTALLED_APPS = [
     "recipes",  # our first app! yay!
     "django_extensions",
     "rest_framework",
+    
 ]
 
 MIDDLEWARE = [
@@ -108,3 +112,10 @@ STATIC_URL = "static/"
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+#import for the Json Web Token feature that django has
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES':(
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+}
