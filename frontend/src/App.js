@@ -123,7 +123,8 @@ function RecipeApp() {
   };
 
   return (
-    <div>
+      <div>
+          <p>Please log in to add or modify recipes.</p>
       {/* Search and Filter Controls */}
       <div style={{ marginBottom: "20px" }}>
         <input
