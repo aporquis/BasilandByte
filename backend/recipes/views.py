@@ -47,7 +47,7 @@ def add_recipe(request):
 @parser_classes([MultiPartParser])
 def update_recipe(request, recipe_id):
     """Updates a recipe's text and/or image."""
-    recipe = get_object_or_404(Recipe, id=recipe_id)
+    recipe = get_object_or_404(Recipe, recipe_id=recipe_id)
 
     serializer = RecipeSerializer(recipe, data=request.data, partial=True)
 
@@ -63,7 +63,7 @@ def update_recipe(request, recipe_id):
 @api_view(["DELETE"])
 def delete_recipe(request, recipe_id):
     """Deletes a recipe by ID."""
-    recipe = get_object_or_404(Recipe, id=recipe_id)
+    recipe = get_object_or_404(Recipe, recipe_id=recipe_id)
 
     # If the recipe has an image, delete it from storage
     if recipe.image:
