@@ -1,15 +1,15 @@
 # Python
- __pycache__/ 
-*.py[cod] 
+ __pycache__/
+*.py[cod]
 venv
 db.sqlite3
 # Node.js (for react)
  node_modules/ <-it’s big that’s why we don’t include
 build/
 
- # OS-specific files 
-.DS_Store 
-Thumbs.db 
+ # OS-specific files
+.DS_Store
+Thumbs.db
 
 # Git
  .gitignore
