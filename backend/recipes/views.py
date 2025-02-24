@@ -10,7 +10,8 @@ from .serializers import RecipeSerializer
 
 # Fetch all recipes (GET)
 
-# Ensure that users are only able to delete and add recipes if they are logged in and the token is working. 
+# Ensure that users are only able to delete and add recipes if they are logged in and the token is working.
+
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
@@ -46,9 +47,10 @@ def add_recipe(request):
 @permission_classes([IsAuthenticated])
 def update_recipe(request, recipe_id):
     """Updates a recipe's text and/or image."""
-    recipe = get_object_or_404(Recipe, id=recipe_id)
-    serializer = RecipeSerializer(
-        recipe, data=request.data, partial=True, context={'request': request})
+    recipe = get_object_or_404(Recipe, recipe_id=recipe_id)
+
+    serializer = RecipeSerializer(recipe, data=request.data, partial=True)
+
     if serializer.is_valid():
         serializer.save()
         return Response(serializer.data)
@@ -61,7 +63,9 @@ def update_recipe(request, recipe_id):
 @permission_classes([IsAuthenticated])
 def delete_recipe(request, recipe_id):
     """Deletes a recipe by ID."""
-    recipe = get_object_or_404(Recipe, id=recipe_id)
+    recipe = get_object_or_404(Recipe, recipe_id=recipe_id)
+
+    # If the recipe has an image, delete it from storage
     if recipe.image:
         default_storage.delete(recipe.image.path)
     recipe.delete()
