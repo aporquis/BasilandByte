@@ -3,6 +3,7 @@
 *.py[cod]
 venv
 db.sqlite3
+
 # Node.js (for react)
  node_modules/ <-it’s big that’s why we don’t include
 build/
@@ -10,7 +11,3 @@ build/
  # OS-specific files
 .DS_Store
 Thumbs.db
-
-# Git
- .gitignore
-
