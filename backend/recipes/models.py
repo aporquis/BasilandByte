@@ -3,6 +3,10 @@ from django.contrib.auth.models import User
 
 # The models below create tables. Primary keys are specified and foreign keys are referenced
 # We do not need to create a user model, as we are using Django's user model
+from django.contrib.auth.models import User
+
+# The models below create tables. Primary keys are specified and foreign keys are referenced
+# We do not need to create a user model, as we are using Django's user model
 
 class Recipe(models.Model):
     """Stores recipes with recipe_id as the PK and user_id as a FK.
@@ -10,6 +14,7 @@ class Recipe(models.Model):
     user =models.ForeignKey(User, on_delete=models.CASCADE, related_name="recipes")
     recipe_name = models.CharField(max_length=255)
     description = models.TextField()
+    instructions = models.TextField()
     instructions = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
     image = models.ImageField(upload_to='recipe_images/', null=True, blank =True)
