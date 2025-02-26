@@ -10,6 +10,8 @@ from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
 from .models import Recipe
 from .serializers import RecipeSerializer
+from django.contrib.auth.hashers import make_password
+from django.contrib.auth.models import User
 
 # Utility function to generate JWT tokens
 
