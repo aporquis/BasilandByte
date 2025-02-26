@@ -3,16 +3,27 @@ from django.core.files.storage import default_storage
 from rest_framework.parsers import MultiPartParser, JSONParser
 from rest_framework.decorators import api_view, parser_classes, permission_classes
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.parsers import MultiPartParser, JSONParser
+from rest_framework.decorators import api_view, parser_classes, permission_classes
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
+from .models import Recipe
+from .serializers import RecipeSerializer
 from .models import Recipe
 from .serializers import RecipeSerializer
 
 # Fetch all recipes (GET)
 
+<<<<<<< HEAD
 # Ensure that users are only able to delete and add recipes if they are logged in and the token is working. 
+=======
+# Ensure that users are only able to delete and add recipes if they are logged in and the token is working.
+
+>>>>>>> 8312481b99b257b03adc074ef5bafa2ae0a18345
 
 @api_view(["GET"])
+@permission_classes([IsAuthenticated])
 @permission_classes([IsAuthenticated])
 def get_recipes(request):
     """Fetch all recipes, including their images."""
@@ -21,9 +32,12 @@ def get_recipes(request):
     return Response(serializer.data)
 
 # Add a recipe (POST) with optional image
+# Add a recipe (POST) with optional image
 
 
 @api_view(["POST"])
+@parser_classes([MultiPartParser])
+@permission_classes([IsAuthenticated])
 @parser_classes([MultiPartParser])
 @permission_classes([IsAuthenticated])
 def add_recipe(request):
@@ -31,7 +45,9 @@ def add_recipe(request):
     try:
         data = request.data  # Parse form data (including file)
         serializer = RecipeSerializer(data=data, context={'request': request})
+        serializer = RecipeSerializer(data=data, context={'request': request})
         if serializer.is_valid():
+            serializer.save()  # Optionally, associate with request.user in your serializer
             serializer.save()  # Optionally, associate with request.user in your serializer
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -42,6 +58,8 @@ def add_recipe(request):
 
 
 @api_view(["PUT"])
+@parser_classes([MultiPartParser, JSONParser])
+@permission_classes([IsAuthenticated])
 @parser_classes([MultiPartParser, JSONParser])
 @permission_classes([IsAuthenticated])
 def update_recipe(request, recipe_id):
@@ -56,9 +74,11 @@ def update_recipe(request, recipe_id):
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 # Delete a recipe (DELETE)
+# Delete a recipe (DELETE)
 
 
 @api_view(["DELETE"])
+@permission_classes([IsAuthenticated])
 @permission_classes([IsAuthenticated])
 def delete_recipe(request, recipe_id):
     """Deletes a recipe by ID."""
