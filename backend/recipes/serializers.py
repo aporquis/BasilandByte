@@ -36,3 +36,9 @@ class RecipeSerializer(serializers.ModelSerializer): #serializer for recipes
         request = self.context.get('request')
         # Automatically assign the logged-in user
         return Recipe.objects.create(user=request.user, **validated_data)
+        fields = "__all__"
+
+    def create(self, validated_data):
+        request = self.context.get('request')
+        # Automatically assign the logged-in user
+        return Recipe.objects.create(user=request.user, **validated_data)
