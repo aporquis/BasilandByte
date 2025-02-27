@@ -3,6 +3,7 @@
 *.py[cod]
 venv
 db.sqlite3
+.env
 
 # Node.js (for react)
  node_modules/ <-it’s big that’s why we don’t include
