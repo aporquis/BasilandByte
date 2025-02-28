@@ -6,6 +6,7 @@ import Navbar from "./Navbar";
 import Home from "./Home";
 import Login from "./Login";
 import Register from "./Register";
+import Dashboard from "./Dashboard";
 
 // Use environment variable for API base URL (Make sure this is set in .env if this is not working please get ahold of Lyric ASAP, instructions are in the sprint 3)
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "http://localhost:8000";
@@ -246,6 +247,7 @@ function MainApp() {
         <Route path="/recipes" element={<RecipeApp />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/dashboard" element={<Dashboard />} />
       </Routes>
     </Router>
   );
