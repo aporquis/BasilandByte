@@ -29,7 +29,7 @@ function Login() {
             setMessage("✅ Login successful! Redirecting...");
 
             // Redirect user to homepage or dashboard
-            navigate("/");
+            navigate("/Dashboard");
         } catch (error) {
             console.error(" Login Error:", error.response?.data); //  Debugging
             setMessage(error.response?.data?.detail || "Login failed! Check your credentials.");

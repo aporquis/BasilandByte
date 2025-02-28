@@ -7,13 +7,17 @@ from .views import (
     get_recipes,
     add_recipe,
     update_recipe,
-    delete_recipe
+    delete_recipe,
+    get_user_info,
 )
 
 urlpatterns = [
     # User Authentication URLs
     path("register/", register_user, name="register"),
     path("login/", login_user, name="login"),
+
+    # User Information URL
+    path("user-info/", get_user_info, name="user-info"),
 
     # Recipe API URLs
     path("", get_recipes, name="get_recipes"),

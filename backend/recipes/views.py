@@ -15,10 +15,17 @@ from django.contrib.auth.models import User
 
 # Utility function to generate JWT tokens
 
+# Gather the user information and the saved recipes to shoot back to the frontend after login
 
-def get_tokens_for_user(user):
-    refresh = RefreshToken.for_user(user)
-    return {"refresh": str(refresh), "access": str(refresh.access_token)}
+
+# This view is used to send user name once logged into the website on the frontend side of things
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_user_info(request):
+    user = request.user
+    return Response({"username": user.username})
+
 
 # User Registration API
 
