@@ -1,83 +1,50 @@
 import React, { useState } from "react";
-import axios from "axios"; 
-import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
 function Register() {
-    const [username, setUsername] = useState("");
-    const [password, setPassword] = useState("");
-    const [confirmPassword, setConfirmPassword] = useState("");
-    const [message, setMessage] = useState("");
-    const navigate = useNavigate();
+    const [formData, setFormData] = useState({
+        username: "",
+        password: "",
+        first_name: "",          //fields for registering users
+        last_name: "",
+        email: "",
+    });
 
-    // Handle form submission
+    const [error, setError] = useState("");
+    const [successMessage, setSuccessMessage] = useState("");
+
+    const handleChange = (e) => {
+        setFormData({ ...formData, [e.target.name]: e.target.value });
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
-
-        // Ensure passwords match before submitting
-        if (password !== confirmPassword) {
-            setMessage("⚠️ Passwords do not match!");
-            return;
-        }
+        setError("");
+        setSuccessMessage("");
 
         try {
-            const response = await axios.post(`${API_BASE_URL}api/recipes/register/`, { 
-                username, 
-                password 
-            });
-
-            console.log("Registration Response:", response.data); // Debugging
-
-            setMessage("✅ Registration successful! Redirecting to login...");
-            
-            // Redirect user to login page after 2 seconds
-            setTimeout(() => navigate("/login"), 2000);
-
-        } catch (error) {
-            console.error("Registration Error:", error.response?.data); // Debugging
-            setMessage(error.response?.data?.error || "⚠️ Registration failed! Try a different username.");
+            const response = await axios.post(`${API_BASE_URL}/api/recipes/register/`, formData);
+            setSuccessMessage("Registration successful! You can now log in.");
+        } catch (err) {
+            setError(err.response?.data?.error || "Registration failed.");
         }
     };
 
     return (
         <div>
             <h2>Register</h2>
-            {message && <p style={{ color: "red" }}>{message}</p>}
+            {error && <p style={{ color: "red" }}>{error}</p>}
+            {successMessage && <p style={{ color: "green" }}>{successMessage}</p>}
             <form onSubmit={handleSubmit}>
-                <div>
-                    <label>Username: </label>
-                    <input
-                        type="text"
-                        value={username}
-                        onChange={(e) => setUsername(e.target.value)}
-                        required
-                    />
-                </div>
-                <div>
-                    <label>Password: </label>
-                    <input
-                        type="password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        required
-                    />
-                </div>
-                <div>
-                    <label>Confirm Password: </label>
-                    <input
-                        type="password"
-                        value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
-                        required
-                    />
-                </div>
+                <input type="text" name="username" placeholder="Username" onChange={handleChange} required />
+                <input type="password" name="password" placeholder="Password" onChange={handleChange} required />
+                <input type="text" name="first_name" placeholder="First Name" onChange={handleChange} required />
+                <input type="text" name="last_name" placeholder="Last Name" onChange={handleChange} required />
+                <input type="email" name="email" placeholder="Email" onChange={handleChange} required />
                 <button type="submit">Register</button>
             </form>
-            <div style={{ marginTop: "20px" }}>
-                <p>Already have an account?</p>
-                <button onClick={() => navigate("/login")}>Go to Login</button>
-            </div>
         </div>
     );
 }
