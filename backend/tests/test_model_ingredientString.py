@@ -4,7 +4,7 @@ from recipes.models import Recipe, Ingredient, RecipeIngredient, FoodGroup
 
 class RecipeIngredientModels(TestCase):
     def setUp(self):
-        """FULL MODEL TEST: Set up a test user, recipe, recipe ingredient, ingredient, and food group"""
+        """Set up a test user, recipe, recipe ingredient, ingredient, and food group"""
         self.user = User.objects.create(username="capstone_user", password="dbbytes_basil")
         self.food_group = FoodGroup.objects.create(food_group_name="Vegetables")
         self.ingredient = Ingredient.objects.create(

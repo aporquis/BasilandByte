@@ -1,9 +1,10 @@
 from rest_framework import serializers
 from .models import Recipe
 
+"""Serializers is a Django REST framework component that converts data types (Django models) to JSON for APIs"""
 
 class RecipeSerializer(serializers.ModelSerializer):
-    image = serializers.ImageField(required=False) #gives the user the ability to add a recipe and NOT have to include an image. 
+    image = serializers.ImageField(required=False) #gives the user the ability to add a recipe and NOT have to include an image.
     user = serializers.StringRelatedField(read_only=True)  # shows the username
 
     class Meta:
