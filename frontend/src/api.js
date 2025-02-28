@@ -50,3 +50,27 @@ export const deleteRecipe = async (id) => {
         return false;
     }
 };
+
+// User Registration - Allows users to create an account in the system.
+export const registerUser = async (username, password) => {
+    try {
+        const response = await axios.post(`${API_BASE_URL}register/`, { username, password });
+        return response.data; // Returns success message and user token.
+    } catch (error) {
+        console.error("Registration error:", error.response?.data || error);
+        throw error;
+    }
+};
+
+// User Login - Authenticates users and returns a JWT token for further API requests.
+export const loginUser = async (username, password) => {
+    try {
+        const response = await axios.post(`${API_BASE_URL}login/`, { username, password });
+        const token = response.data.token.access; // Get the access token.
+        localStorage.setItem("token", token); // Store token for authentication.
+        return response.data;
+    } catch (error) {
+        console.error("Login error:", error.response?.data || error);
+        throw error;
+    }
+};
