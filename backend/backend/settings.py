@@ -1,7 +1,9 @@
 import os
 from dotenv import load_dotenv
 from pathlib import Path
+from datetime import timedelta
 
+# Base directory
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Load .env file
@@ -11,24 +13,17 @@ if dotenv_path.exists():
 else:
     raise FileNotFoundError(f"Missing .env file at {dotenv_path}")
 
-# Ensure MEDIA settings work correctly
-RECIPE_IMAGE_PATH = os.getenv("RECIPE_IMAGE_PATH", str(
-    BASE_DIR / "recipe_images"))  # Default to local folder
-MEDIA_URL = "/recipe_images/"
-MEDIA_ROOT = RECIPE_IMAGE_PATH  # Use the correct path
-
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "fallback-secret-key")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv("DEBUG", "False") == "True"
 
-# ALLOWED_HOSTS
-ALLOWED_HOSTS = [host.strip() for host in os.getenv(
-    "ALLOWED_HOSTS", "").split(",") if host]
+# Allowed Hosts Configuration
+ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
 
-# CORS Configuration
-CORS_ALLOW_ALL_ORIGINS = False  # Set False for security
+# CORS Configuration (Ensuring frontend can communicate with backend)
+CORS_ALLOW_ALL_ORIGINS = False  # Set to False for security
 CORS_ALLOWED_ORIGINS = os.getenv(
     "CORS_ALLOWED_ORIGINS", "http://localhost:3000,http://10.0.0.150:3000"
 ).split(",")
@@ -44,10 +39,10 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "recipes",  # our first app! yay!
+    "recipes",  # Our app
     "django_extensions",
     "rest_framework",
-    
+    "rest_framework_simplejwt.token_blacklist",  # Required for JWT Blacklist
 ]
 
 MIDDLEWARE = [
@@ -108,14 +103,31 @@ USE_I18N = True
 USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
-STATIC_URL = "static/"
+STATIC_URL = "/static/"
+STATIC_ROOT = BASE_DIR / "staticfiles"
+
+# Media files (Uploaded user images)
+MEDIA_URL = "/recipe_images/"
+MEDIA_ROOT = os.getenv("RECIPE_IMAGE_PATH", str(BASE_DIR / "recipe_images"))
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-#import for the Json Web Token feature that django has
+# Django Rest Framework Authentication Settings
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES':(
+    'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+    ),
+}
+
+# JWT Authentication Configuration
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(hours=1),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
+    "ROTATE_REFRESH_TOKENS": True,
+    "BLACKLIST_AFTER_ROTATION": True,
+    "AUTH_HEADER_TYPES": ("Bearer",),
 }

@@ -3,14 +3,18 @@ from django.contrib.auth.models import User
 
 # The models below create tables. Primary keys are specified and foreign keys are referenced
 # We do not need to create a user model, as we are using Django's user model
+from django.contrib.auth.models import User
+
+# The models below create tables. Primary keys are specified and foreign keys are referenced
+# We do not need to create a user model, as we are using Django's user model
 
 class Recipe(models.Model):
     """Stores recipes with recipe_id as the PK and user_id as a FK.
     Also holds recipe name, image, description, instructions, and a created at timestamp"""
-    recipe_id = models.AutoField(primary_key=True) #auto incremented
     user =models.ForeignKey(User, on_delete=models.CASCADE, related_name="recipes")
     recipe_name = models.CharField(max_length=255)
     description = models.TextField()
+    instructions = models.TextField()
     instructions = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
     image = models.ImageField(upload_to='recipe_images/', null=True, blank =True)
@@ -21,7 +25,6 @@ class Recipe(models.Model):
 
 class Ingredient(models.Model):
     """This is a basic model for storing all ingredients"""
-    ingredient_id = models.AutoField(primary_key=True)
     ingredient_name = models.CharField(max_length=100)
     food_group = models.ForeignKey("FoodGroup", on_delete=models.SET_NULL, null=True, related_name= "ingredients")
     specific_species = models.CharField(max_length=100, null=True, blank=True)
@@ -45,7 +48,6 @@ class RecipeIngredient(models.Model):
 
 class FoodGroup(models.Model):
     """This is a basic model for storing food groups"""
-    food_group_id = models.AutoField(primary_key=True)
     food_group_name = models.CharField(max_length=100, unique=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
