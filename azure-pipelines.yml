@@ -86,21 +86,3 @@ jobs:
           appName: 'BasilandByte'
           package: 'backend'
           startupCommand: 'gunicorn backend.wsgi --bind 0.0.0.0:$PORT'
-
-# === Frontend Deployment (React) ===
-  - job: Deploy_Frontend
-    displayName: "Deploy React Frontend"
-    dependsOn: Deploy_Backend
-    condition: succeeded()
-    pool:
-      vmImage: 'ubuntu-latest'
-
-    steps:
-      - checkout: self
-
-      - task: AzureStaticWebApp@1
-        inputs:
-          app_location: 'frontend'
-          output_location: 'frontend/build'
-          azure_static_web_apps_api_token: $
-
