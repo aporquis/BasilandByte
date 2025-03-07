@@ -4,37 +4,103 @@
 # https://docs.microsoft.com/azure/devops/pipelines/languages/python
 
 trigger:
-- main
+  branches:
+    include:
+      #- main #run CI/CD on main branch commits
+      - IntegrationPipeline
 
-pool:
-  vmImage: ubuntu-latest
-strategy:
-  matrix:
-    Python38:
-      PYTHON_VERSION: '3.8'
-    Python39:
-      PYTHON_VERSION: '3.9'
-    Python310:
-      PYTHON_VERSION: '3.10'
-  maxParallel: 3
+pr:
+  branches:
+    include:
+      #-main #run tests on PRs to main
+       IntegrationPipeline
 
-steps:
-- task: UsePythonVersion@0
-  inputs:
-    versionSpec: '$(PYTHON_VERSION)'
-    architecture: 'x64'
+jobs:
+# === Backend Integration with Tests ===
+  - job: Test_Backend
+    displayName: Run Django Tests
+    pool:
+      vmImage: 'ubuntu-latest'
+    services:
+      postgres:
+        image: postgres:latest
+        env:
+          POSTGRES_DB: capstone_recipe
+          POSTGRES_USER: capstone_user
+          POSTGRES_PASSWORD: dbbytes_basil
+        ports:
+          -5432:5432
 
-- script: |
-    python -m pip install --upgrade pip
-    pip install -r requirements.txt
-  displayName: 'Install prerequisites'
+    steps:
+      - checkout: self
+      - task: UsePythonVersion@0
+        inputs:
+          versionSpec: '3.12'
 
-- script: |
-    python manage.py test
-  displayName: 'Run tests'
+      - script: |
+          cd backend
+          pip install -r requirements.txt
+        displayName: 'Install prerequisites'
 
-- task: PublishTestResults@2
-  inputs:
-    testResultsFiles: '**/TEST-*.xml'
-    testRunTitle: 'Python $(PYTHON_VERSION)'
-  condition: succeededOrFailed()
+      - script: |
+          cd backend
+          python manage.py test
+        displayName: 'Running Django Tests'
+
+# === Frontend Integration with Tests ===
+  - job: Test_Frontend
+    displayName: Run React Tests
+    dependsOn: Test_Backend
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+      - checkout: self
+
+      - task: UseNode@1
+        inputs:
+          versionSpec: '$(NODE_VERSION)'
+
+      - script: |
+          cd frontend
+          npm install
+        displayName: 'Install prerequisites'
+
+# === Backend Deployment (Django) ===
+  - job: Deploy_Backend
+    displayName: "Deploy Django Backend"
+    dependsOn: Test_Frontend
+    condition: succeeded()
+    pool:
+      vmImage: 'ubuntu-latest'
+
+    steps:
+      - checkout: self
+
+      - task: UsePythonVersion@0
+        inputs:
+          versionSpec: '3.12'
+
+      - task: AzureWebApp@1
+        inputs:
+          azureSubscription: '39195835-1121-432a-9d8b-c197418424de'
+          appName: 'BasilandByte'
+          package: 'backend'
+          startupCommand: 'gunicorn backend.wsgi --bind 0.0.0.0:$PORT'
+
+# === Frontend Deployment (React) ===
+  - job: Deploy_Frontend
+    displayName: "Deploy React Frontend"
+    dependsOn: Deploy_Backend
+    condition: succeeded()
+    pool:
+      vmImage: 'ubuntu-latest'
+
+    steps:
+      - checkout: self
+
+      - task: AzureStaticWebApp@1
+        inputs:
+          app_location: 'frontend'
+          output_location: 'frontend/build'
+          azure_static_web_apps_api_token: $
+
