@@ -13,7 +13,7 @@ pr:
   branches:
     include:
       #-main #run tests on PRs to main
-       IntegrationPipeline
+      - IntegrationPipeline
 
 jobs:
 # === Backend Integration with Tests ===
@@ -29,7 +29,7 @@ jobs:
           POSTGRES_USER: capstone_user
           POSTGRES_PASSWORD: dbbytes_basil
         ports:
-          -5432:5432
+          - 5432:5432
 
     steps:
       - checkout: self
