@@ -89,6 +89,11 @@ DATABASES = {
     }
 }
 
+TEST = {
+    'NAME': 'test_capstone_recipe',
+    'CREATE_DB': True,
+}
+
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
