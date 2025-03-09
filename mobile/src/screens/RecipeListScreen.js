@@ -1,169 +1,160 @@
-// RecipeListScreen.js
-// Displays a list of all recipes, allowing authenticated users to add, edit, or delete their own recipes.
-// Unauthenticated users can only view the list.
+// src/screens/RecipeListScreen.js
+// Displays a list of all recipes for authenticated users, including the posting user.
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, FlatList, Button, Image, StyleSheet } from 'react-native';
-import axios from 'axios';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useFocusEffect } from '@react-navigation/native';
-import { API_URL } from '@env';
+import React, { useState, useEffect } from 'react'; // Import React and hooks
+import { View, Text, FlatList, StyleSheet, Image } from 'react-native'; // UI components
+import AsyncStorage from '@react-native-async-storage/async-storage'; // For token storage
+import axios from 'axios'; // HTTP client for API requests
+import { API_URL } from '@env'; // Environment variable for API endpoint
+import { useNavigation, useFocusEffect } from '@react-navigation/native'; // Navigation and focus hooks
 
-// RecipeListScreen component receives navigation prop for navigation actions
-const RecipeListScreen = ({ navigation }) => {
-    // State for recipes, user ID, authentication status, and errors
-    const [recipes, setRecipes] = useState([]);
-    const [userId, setUserId] = useState(null);
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
-    const [error, setError] = useState('');
+const RecipeListScreen = () => {
+    const [recipes, setRecipes] = useState([]); // State to store fetched recipes
+    const [error, setError] = useState(''); // State to store error messages
+    const [isLoading, setIsLoading] = useState(false); // State to track loading status
+    const navigation = useNavigation(); // Hook for navigation
 
-    // Fetch all recipes from the backend
+    // Fetch recipes from the API
     const fetchRecipes = async () => {
-        const url = `${API_URL}/`;
-        console.log('Fetching recipes from:', url); // Debug log
+        setIsLoading(true); // Set loading state
+        const token = await AsyncStorage.getItem('userToken'); // Retrieve authentication token
+        if (!token) {
+            setError('Please log in to view recipes.'); // Set error if no token
+            navigation.navigate('Login'); // Navigate to login if unauthenticated
+            setIsLoading(false);
+            return;
+        }
+
         try {
-            const response = await axios.get(url, {
-                timeout: 5000, // Add timeout to catch slow responses
+            const response = await axios.get(`${API_URL}/`, {
+                headers: { Authorization: `Bearer ${token}` }, // Include token in request
             });
-            console.log('Recipes response:', response.data); // Debug log
-            setRecipes(response.data);
+            console.log('Fetched recipes:', response.data); // Debug log
+            setRecipes(response.data); // Update state with fetched recipes
             setError(''); // Clear any previous errors
-        } catch (error) {
-            const errorMsg = error.response ? error.response.data : error.message;
-            console.error('Error fetching recipes:', errorMsg, error.config); // Detailed error logging
-            setError('Failed to load recipes. Please check your network or try again.');
+        } catch (err) {
+            console.error('Error fetching recipes:', err.message); // Log error details
+            setError('Failed to fetch recipes. Please try again.'); // User-friendly error
+        } finally {
+            setIsLoading(false); // Reset loading state
         }
     };
 
-    // Fetch the current user's ID if authenticated
-    const fetchUserId = async () => {
-        try {
-            const token = await AsyncStorage.getItem('userToken');
-            if (!token) {
-                setIsAuthenticated(false);
-                return;
-            }
-            setIsAuthenticated(true);
-            const response = await axios.get(`${API_URL}/user-info/`, {
-                headers: { Authorization: `Bearer ${token}` },
-            });
-            setUserId(response.data.id);
-        } catch (error) {
-            console.error('Error fetching user ID:', error.message);
-            setIsAuthenticated(false);
-        }
-    };
-
-    // Use useFocusEffect to refresh data when the screen is focused
+    // Use useFocusEffect to re-fetch recipes when the screen is focused
     useFocusEffect(
-        useCallback(() => {
-            fetchRecipes();
-            fetchUserId();
-        }, [])
+        React.useCallback(() => {
+            fetchRecipes(); // Re-fetch recipes on focus
+        }, []) // Empty dependency array ensures it runs on every focus
     );
 
-    // Handle recipe deletion for authenticated users
-    const deleteRecipe = async (recipeId) => {
-        try {
-            const token = await AsyncStorage.getItem('userToken');
-            await axios.delete(`${API_URL}/delete/${recipeId}/`, {
-                headers: { Authorization: `Bearer ${token}` },
-            });
-            fetchRecipes(); // Refresh the recipe list after deletion
-        } catch (error) {
-            console.error('Error deleting recipe:', error.message);
-        }
-    };
+    // Initial fetch when component mounts
+    useEffect(() => {
+        fetchRecipes(); // Fetch recipes on mount
+    }, [navigation]); // Include navigation as dependency to avoid warnings
+
+    const renderRecipeItem = ({ item }) => (
+        <View style={styles.recipeItem}>
+            {/* Display recipe name with fallback */}
+            <Text style={styles.recipeName}>{item.recipe_name || 'No Name'}</Text>
+            {/* Display username of the recipe's author */}
+            <Text style={styles.username}>Posted by: {item.username || 'Unknown User'}</Text>
+            {/* Display description with fallback */}
+            <Text style={styles.recipeDescription}>{item.description || 'No Description'}</Text>
+            {/* Display instructions with fallback */}
+            <Text style={styles.recipeInstructions}>{item.instructions || 'No Instructions'}</Text>
+            {/* Display image if available */}
+            {item.image && (
+                <Image
+                    source={{ uri: `${API_URL}${item.image}` }}
+                    style={styles.recipeImage}
+                    resizeMode="cover"
+                />
+            )}
+        </View>
+    );
 
     return (
         <View style={styles.container}>
-            {/* Recipes title wrapped in <Text> */}
-            <Text style={styles.title}>Recipes</Text>
-            {/* Display error message if there is one, wrapped in <Text> */}
+            {/* Header for the recipes list */}
+            <Text style={styles.header}>Recipes</Text>
+            {/* Display error message if any */}
             {error ? <Text style={styles.error}>{error}</Text> : null}
-            {/* Show "Add Recipe" button only for authenticated users */}
-            {isAuthenticated && (
-                <Button
-                    title="Add Recipe"
-                    onPress={() => navigation.navigate('Add Recipe')}
-                    style={styles.addButton}
-                />
-            )}
-            {/* FlatList to display recipes */}
+            {/* Show loading indicator */}
+            {isLoading ? <Text style={styles.loadingText}>Loading...</Text> : null}
+            {/* FlatList to render recipe items */}
             <FlatList
                 data={recipes}
-                keyExtractor={(item) => item.id.toString()}
-                renderItem={({ item }) => (
-                    <View style={styles.recipeItem}>
-                        {/* Recipe name wrapped in <Text> */}
-                        <Text style={styles.recipeName}>{item.recipe_name}</Text>
-                        {/* Recipe image */}
-                        <Image
-                            source={{ uri: `${API_URL.replace('/api/recipes', '')}${item.image}` }}
-                            style={styles.image}
-                            resizeMode="cover"
-                        />
-                        {/* Recipe description wrapped in <Text> */}
-                        <Text>{item.description}</Text>
-                        {/* Edit and Delete buttons for authenticated users who own the recipe */}
-                        {isAuthenticated && userId && item.user === userId && (
-                            <View style={styles.buttonContainer}>
-                                <Button
-                                    title="Edit"
-                                    onPress={() => navigation.navigate('Edit Recipe', { recipe: item })}
-                                />
-                                <Button
-                                    title="Delete"
-                                    onPress={() => deleteRecipe(item.id)}
-                                    color="red"
-                                />
-                            </View>
-                        )}
-                    </View>
-                )}
+                renderItem={renderRecipeItem}
+                keyExtractor={(item) => item.id.toString()} // Unique key for each item
+                ListEmptyComponent={<Text style={styles.emptyText}>No recipes available.</Text>}
+                refreshing={isLoading} // Optional: Enable pull-to-refresh
+                onRefresh={fetchRecipes} // Optional: Trigger refresh on pull
             />
         </View>
     );
 };
 
-// Styles for the RecipeListScreen layout
 const styles = StyleSheet.create({
     container: {
-        flex: 1, // Takes full screen height
-        padding: 10, // Adds padding around the content
+        flex: 1, // Use full screen height
+        padding: 10, // Add padding around content
     },
-    title: {
-        fontSize: 20, // Medium font for the title
-        fontWeight: 'bold', // Bold text for emphasis
-        textAlign: 'center', // Centers the text
-        marginVertical: 10, // Vertical margin for spacing
-    },
-    error: {
-        color: 'red', // Red color for error messages
-        textAlign: 'center', // Centers the text
-        marginBottom: 10, // Adds spacing below the error
-    },
-    addButton: {
-        marginBottom: 10, // Adds spacing below the button
+    header: {
+        fontSize: 24, // Large header text
+        fontWeight: 'bold', // Bold header
+        textAlign: 'center', // Center align
+        marginVertical: 10, // Vertical margin
     },
     recipeItem: {
-        padding: 10, // Adds padding around each recipe item
-        borderBottomWidth: 1, // Adds a bottom border
-        borderBottomColor: '#ccc', // Light gray border color
+        padding: 15, // Padding inside each recipe item
+        borderWidth: 1, // Border width
+        borderColor: '#ccc', // Light gray border
+        borderRadius: 5, // Rounded corners
+        marginBottom: 10, // Margin between items
+        backgroundColor: '#f9f9f9', // Light background
     },
     recipeName: {
-        fontSize: 18, // Medium font for recipe name
-        fontWeight: 'bold', // Bold text for emphasis
+        fontSize: 18, // Larger text for name
+        fontWeight: 'bold', // Bold name
+        marginBottom: 5, // Margin below name
+        color: '#333', // Darker text for contrast
     },
-    image: {
-        width: 150, // Image width
-        height: 150, // Image height
-        marginTop: 10, // Adds spacing above the image
+    username: {
+        fontSize: 14, // Smaller text for username
+        color: '#666', // Neutral color for username
+        marginBottom: 5, // Margin below username
+        fontStyle: 'italic', // Italicize for distinction
     },
-    buttonContainer: {
-        flexDirection: 'row', // Horizontal layout for buttons
-        justifyContent: 'space-between', // Evenly space buttons
-        marginTop: 10, // Adds spacing above buttons
+    recipeDescription: {
+        fontSize: 16, // Medium text for description
+        marginBottom: 5, // Margin below description
+        color: '#555', // Slightly lighter text
+    },
+    recipeInstructions: {
+        fontSize: 14, // Smaller text for instructions
+        color: '#777', // Lighter text for distinction
+        marginBottom: 5, // Margin below instructions
+    },
+    recipeImage: {
+        width: '100', // Full width of container
+        height: 150, // Fixed height for image
+        marginTop: 5, // Margin above image
+        borderRadius: 5, // Rounded corners for image
+    },
+    error: {
+        color: 'red', // Red error text
+        textAlign: 'center', // Center align
+        marginBottom: 10, // Margin below error
+    },
+    emptyText: {
+        textAlign: 'center', // Center align
+        color: '#888', // Light gray color
+        marginTop: 20, // Margin above empty text
+    },
+    loadingText: {
+        textAlign: 'center', // Center align
+        color: '#666', // Neutral loading color
+        marginVertical: 10, // Vertical margin
     },
 });
 
