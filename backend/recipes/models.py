@@ -3,7 +3,6 @@ from django.contrib.auth.models import User
 
 # The models below create tables. Primary keys are specified and foreign keys are referenced
 # We do not need to create a user model, as we are using Django's user model
-from django.contrib.auth.models import User
 
 # The models below create tables. Primary keys are specified and foreign keys are referenced
 # We do not need to create a user model, as we are using Django's user model
@@ -15,7 +14,6 @@ class Recipe(models.Model):
     recipe_name = models.CharField(max_length=255)
     description = models.TextField()
     instructions = models.TextField()
-    instructions = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
     image = models.ImageField(upload_to='recipe_images/', null=True, blank =True)
 
@@ -23,10 +21,19 @@ class Recipe(models.Model):
         """Returns a string that represents the recipe (the title)."""
         return self.recipe_name
 
+class FoodGroup(models.Model):
+    """This is a basic model for storing food groups"""
+    food_group_name = models.CharField(max_length=100, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        """Returns a string that represents the food group."""
+        return self.food_group_name
+
 class Ingredient(models.Model):
     """This is a basic model for storing all ingredients"""
     ingredient_name = models.CharField(max_length=100)
-    food_group = models.ForeignKey("FoodGroup", on_delete=models.SET_NULL, null=True, related_name= "ingredients")
+    food_group = models.ForeignKey(FoodGroup, on_delete=models.SET_NULL, null=True, related_name= "ingredients")
     specific_species = models.CharField(max_length=100, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -45,15 +52,6 @@ class RecipeIngredient(models.Model):
     def __str__(self):
         """Returns a f-string of the recipe name and the ingredient name"""
         return f"{self.recipe.recipe_name} - {self.ingredient.ingredient_name}"
-
-class FoodGroup(models.Model):
-    """This is a basic model for storing food groups"""
-    food_group_name = models.CharField(max_length=100, unique=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        """Returns a string that represents the food group."""
-        return self.food_group_name
 
 class SavedItem(models.Model):
     """Stores saved recipes for users"""
