@@ -1,22 +1,22 @@
-// src/screens/EditRecipeScreen.js
+// EditRecipeScreen.js
 // Allows users to edit an existing recipe.
+// Fixed: Updated endpoint to /api/recipes/update/<int:recipe_id>/ to match Django urls.py.
 
-import React, { useState, useEffect } from 'react'; // Import React and hooks
-import { View, Text, TextInput, Button, StyleSheet, Alert, Platform } from 'react-native'; // UI components
-import AsyncStorage from '@react-native-async-storage/async-storage'; // For token storage
-import axios from 'axios'; // HTTP client for API requests
-import { API_URL } from '@env'; // Environment variable for API endpoint
-import * as ImagePicker from 'react-native-image-picker'; // For image selection
+import React, { useState, useEffect } from 'react';
+import { View, Text, TextInput, Button, StyleSheet, Alert, Platform } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
+import { API_URL } from '@env';
+import * as ImagePicker from 'react-native-image-picker';
 
 const EditRecipeScreen = ({ route, navigation }) => {
-    const { recipe } = route.params; // Get recipe data from navigation params
-    const [recipeName, setRecipeName] = useState(recipe.recipe_name || ''); // State for recipe name
-    const [description, setDescription] = useState(recipe.description || ''); // State for description
-    const [instructions, setInstructions] = useState(recipe.instructions || ''); // State for instructions
-    const [image, setImage] = useState(recipe.image || null); // State for image URI
-    const [error, setError] = useState(''); // State for error messages
+    const { recipe } = route.params;
+    const [recipeName, setRecipeName] = useState(recipe.recipe_name || '');
+    const [description, setDescription] = useState(recipe.description || '');
+    const [instructions, setInstructions] = useState(recipe.instructions || '');
+    const [image, setImage] = useState(recipe.image || null);
+    const [error, setError] = useState('');
 
-    // Handle image picking
     const pickImage = async () => {
         const options = {
             mediaType: 'photo',
@@ -30,21 +30,20 @@ const EditRecipeScreen = ({ route, navigation }) => {
                 console.log('ImagePicker Error: ', response.errorMessage);
                 setError('Failed to pick image: ' + response.errorMessage);
             } else if (response.assets && response.assets.length > 0) {
-                setImage(response.assets[0].uri); // Set the image URI
+                setImage(response.assets[0].uri);
             }
         });
     };
 
-    // Handle updating the recipe
     const updateRecipe = async () => {
         if (!recipeName || !description || !instructions) {
             setError('Recipe name, description, and instructions are required!');
             return;
         }
 
-        const token = await AsyncStorage.getItem('userToken'); // Retrieve authentication token
+        const token = await AsyncStorage.getItem('userToken');
         if (!token) {
-            navigation.navigate('Login'); // Navigate to login if unauthenticated
+            navigation.navigate('Login');
             return;
         }
 
@@ -52,7 +51,7 @@ const EditRecipeScreen = ({ route, navigation }) => {
         formData.append('recipe_name', recipeName);
         formData.append('description', description);
         formData.append('instructions', instructions);
-        if (image && image !== recipe.image) { // Only append if image has changed
+        if (image && image !== recipe.image) {
             formData.append('image', {
                 uri: image,
                 type: 'image/jpeg',
@@ -61,43 +60,39 @@ const EditRecipeScreen = ({ route, navigation }) => {
         }
 
         try {
-            const url = `${API_URL}/update/${recipe.id}/`; // Ensure full path
-            console.log('Attempting to update recipe at:', url); // Debug log
+            const url = `${API_URL}/api/recipes/update/${recipe.id}/`; // Fixed endpoint
+            console.log('📡 Attempting to update recipe at:', url);
             const response = await axios.put(url, formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                     Authorization: `Bearer ${token}`,
                 },
             });
-            console.log('Update response:', response.data); // Debug log
+            console.log('📡 Update Response:', response.data);
             Alert.alert('Success', 'Recipe updated successfully!');
-            navigation.goBack(); // Navigate back to MyPostedRecipesScreen
+            navigation.goBack();
         } catch (err) {
             console.error('Error updating recipe:', {
                 message: err.message,
                 code: err.code,
                 response: err.response?.data,
-                config: err.config?.url, // Log the requested URL
-                stack: err.stack, // Include stack trace
-            }); // Log detailed error
+                status: err.response?.status,
+                config: err.config?.url,
+            });
             setError('Failed to update recipe: ' + (err.response?.data?.detail || err.message));
         }
     };
 
     return (
         <View style={styles.container}>
-            {/* Title for the edit recipe screen */}
             <Text style={styles.title}>Edit Recipe</Text>
-            {/* Display error message if any */}
             {error ? <Text style={styles.error}>{error}</Text> : null}
-            {/* Recipe name input */}
             <TextInput
                 placeholder="Recipe Name"
                 value={recipeName}
                 onChangeText={setRecipeName}
                 style={styles.input}
             />
-            {/* Description input */}
             <TextInput
                 placeholder="Description"
                 value={description}
@@ -105,7 +100,6 @@ const EditRecipeScreen = ({ route, navigation }) => {
                 style={styles.input}
                 multiline
             />
-            {/* Instructions input */}
             <TextInput
                 placeholder="Instructions"
                 value={instructions}
@@ -113,9 +107,7 @@ const EditRecipeScreen = ({ route, navigation }) => {
                 style={styles.input}
                 multiline
             />
-            {/* Button to pick an image */}
             <Button title="Pick an Image" onPress={pickImage} />
-            {/* Update recipe button */}
             <Button title="Update Recipe" onPress={updateRecipe} style={styles.submitButton} />
         </View>
     );
@@ -123,30 +115,30 @@ const EditRecipeScreen = ({ route, navigation }) => {
 
 const styles = StyleSheet.create({
     container: {
-        flex: 1, // Use full screen height
-        padding: 20, // Padding around content
+        flex: 1,
+        padding: 20,
     },
     title: {
-        fontSize: 24, // Large title text
-        fontWeight: 'bold', // Bold title
-        textAlign: 'center', // Center align
-        marginBottom: 20, // Margin below title
+        fontSize: 24,
+        fontWeight: 'bold',
+        textAlign: 'center',
+        marginBottom: 20,
     },
     error: {
-        color: 'red', // Red error text
-        textAlign: 'center', // Center align
-        marginBottom: 10, // Margin below error
+        color: 'red',
+        textAlign: 'center',
+        marginBottom: 10,
     },
     input: {
-        borderWidth: 1, // Border width
-        borderColor: '#ccc', // Light gray border
-        borderRadius: 4, // Rounded corners
-        padding: 10, // Padding inside input
-        marginVertical: 10, // Vertical margin
-        fontSize: 16, // Readable text size
+        borderWidth: 1,
+        borderColor: '#ccc',
+        borderRadius: 4,
+        padding: 10,
+        marginVertical: 10,
+        fontSize: 16,
     },
     submitButton: {
-        marginTop: 10, // Margin above submit button
+        marginTop: 10,
     },
 });
 
