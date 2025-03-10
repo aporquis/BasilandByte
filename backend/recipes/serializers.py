@@ -3,7 +3,7 @@
 
 from django.contrib.auth.models import User
 from rest_framework import serializers
-from .models import Recipe
+from .models import Recipe, Ingredient, RecipeIngredient, FoodGroup, SavedItem
 
 
 class UserRegisterSerializer(serializers.ModelSerializer):
@@ -58,3 +58,14 @@ class RecipeSerializer(serializers.ModelSerializer):
     def get_username(self, obj):
         """Return the username of the recipe's user."""
         return obj.user.username if obj.user else "Unknown User"
+    
+
+class SavedItemSerializer(serializers.ModelSerializer):
+    recipe_name = serializers.CharField(
+        source='recipe.recipe_name', read_only=True)
+    username = serializers.CharField(source='user.username', read_only=True)
+
+    class Meta:
+        model = SavedItem
+        fields = ['id', 'recipe', 'recipe_name',
+                  'user', 'username', 'saved_at']
