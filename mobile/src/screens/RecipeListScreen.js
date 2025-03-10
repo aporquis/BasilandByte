@@ -1,68 +1,94 @@
 // src/screens/RecipeListScreen.js
 // Displays a list of all recipes for authenticated users, including the posting user.
+// Enhanced: Added Save button to save recipes to user's saved list.
 
-import React, { useState, useEffect } from 'react'; // Import React and hooks
-import { View, Text, FlatList, StyleSheet, Image } from 'react-native'; // UI components
-import AsyncStorage from '@react-native-async-storage/async-storage'; // For token storage
-import axios from 'axios'; // HTTP client for API requests
-import { API_URL } from '@env'; // Environment variable for API endpoint
-import { useNavigation, useFocusEffect } from '@react-navigation/native'; // Navigation and focus hooks
+import React, { useState, useEffect } from 'react';
+import { View, Text, FlatList, StyleSheet, Image, TouchableOpacity, Alert } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
+import { API_URL } from '@env';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 
 const RecipeListScreen = () => {
-    const [recipes, setRecipes] = useState([]); // State to store fetched recipes
-    const [error, setError] = useState(''); // State to store error messages
-    const [isLoading, setIsLoading] = useState(false); // State to track loading status
-    const navigation = useNavigation(); // Hook for navigation
+    const [recipes, setRecipes] = useState([]);
+    const [error, setError] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
+    const navigation = useNavigation();
 
-    // Fetch recipes from the API
     const fetchRecipes = async () => {
-        setIsLoading(true); // Set loading state
-        const token = await AsyncStorage.getItem('userToken'); // Retrieve authentication token
+        setIsLoading(true);
+        const token = await AsyncStorage.getItem('userToken');
         if (!token) {
-            setError('Please log in to view recipes.'); // Set error if no token
-            navigation.navigate('Login'); // Navigate to login if unauthenticated
+            setError('Please log in to view recipes.');
+            navigation.navigate('Login');
             setIsLoading(false);
             return;
         }
 
         try {
-            const response = await axios.get(`${API_URL}/`, {
-                headers: { Authorization: `Bearer ${token}` }, // Include token in request
+            console.log('📡 Requesting Recipes:', `${API_URL}/api/recipes/`);
+            const response = await axios.get(`${API_URL}/api/recipes/`, {
+                headers: { Authorization: `Bearer ${token}` },
             });
-            console.log('Fetched recipes:', response.data); // Debug log
-            setRecipes(response.data); // Update state with fetched recipes
-            setError(''); // Clear any previous errors
+            console.log('📡 Fetched Recipes:', response.data);
+            setRecipes(response.data);
+            setError('');
         } catch (err) {
-            console.error('Error fetching recipes:', err.message); // Log error details
-            setError('Failed to fetch recipes. Please try again.'); // User-friendly error
+            console.error('Error fetching recipes:', {
+                message: err.message,
+                response: err.response?.data,
+                status: err.response?.status,
+                config: err.config?.url,
+            });
+            setError('Failed to fetch recipes. Please try again.');
         } finally {
-            setIsLoading(false); // Reset loading state
+            setIsLoading(false);
         }
     };
 
-    // Use useFocusEffect to re-fetch recipes when the screen is focused
+    const saveRecipe = async (recipeId) => {
+        const token = await AsyncStorage.getItem('userToken');
+        if (!token) {
+            setError('Please log in to save recipes.');
+            navigation.navigate('Login');
+            return;
+        }
+
+        try {
+            console.log('📡 Saving Recipe:', `${API_URL}/api/recipes/save/`);
+            const response = await axios.post(`${API_URL}/api/recipes/save/`, { recipe_id: recipeId }, {
+                headers: { Authorization: `Bearer ${token}` },
+                timeout: 30000,
+            });
+            console.log('📡 Save Recipe Response:', response.data);
+            Alert.alert('Success', response.data.message);
+        } catch (err) {
+            console.error('❌ Error saving recipe:', {
+                message: err.message,
+                response: err.response?.data,
+                status: err.response?.status,
+                config: err.config?.url,
+            });
+            Alert.alert('Error', 'Failed to save recipe: ' + (err.response?.data?.error || err.message));
+        }
+    };
+
     useFocusEffect(
         React.useCallback(() => {
-            fetchRecipes(); // Re-fetch recipes on focus
-        }, []) // Empty dependency array ensures it runs on every focus
+            fetchRecipes();
+        }, [])
     );
 
-    // Initial fetch when component mounts
     useEffect(() => {
-        fetchRecipes(); // Fetch recipes on mount
-    }, [navigation]); // Include navigation as dependency to avoid warnings
+        fetchRecipes();
+    }, [navigation]);
 
     const renderRecipeItem = ({ item }) => (
         <View style={styles.recipeItem}>
-            {/* Display recipe name with fallback */}
             <Text style={styles.recipeName}>{item.recipe_name || 'No Name'}</Text>
-            {/* Display username of the recipe's author */}
             <Text style={styles.username}>Posted by: {item.username || 'Unknown User'}</Text>
-            {/* Display description with fallback */}
             <Text style={styles.recipeDescription}>{item.description || 'No Description'}</Text>
-            {/* Display instructions with fallback */}
             <Text style={styles.recipeInstructions}>{item.instructions || 'No Instructions'}</Text>
-            {/* Display image if available */}
             {item.image && (
                 <Image
                     source={{ uri: `${API_URL}${item.image}` }}
@@ -70,25 +96,27 @@ const RecipeListScreen = () => {
                     resizeMode="cover"
                 />
             )}
+            <TouchableOpacity
+                style={styles.saveButton}
+                onPress={() => saveRecipe(item.id)}
+            >
+                <Text style={styles.saveButtonText}>Save</Text>
+            </TouchableOpacity>
         </View>
     );
 
     return (
         <View style={styles.container}>
-            {/* Header for the recipes list */}
             <Text style={styles.header}>Recipes</Text>
-            {/* Display error message if any */}
             {error ? <Text style={styles.error}>{error}</Text> : null}
-            {/* Show loading indicator */}
             {isLoading ? <Text style={styles.loadingText}>Loading...</Text> : null}
-            {/* FlatList to render recipe items */}
             <FlatList
                 data={recipes}
                 renderItem={renderRecipeItem}
-                keyExtractor={(item) => item.id.toString()} // Unique key for each item
+                keyExtractor={(item) => item.id.toString()}
                 ListEmptyComponent={<Text style={styles.emptyText}>No recipes available.</Text>}
-                refreshing={isLoading} // Optional: Enable pull-to-refresh
-                onRefresh={fetchRecipes} // Optional: Trigger refresh on pull
+                refreshing={isLoading}
+                onRefresh={fetchRecipes}
             />
         </View>
     );
@@ -96,65 +124,76 @@ const RecipeListScreen = () => {
 
 const styles = StyleSheet.create({
     container: {
-        flex: 1, // Use full screen height
-        padding: 10, // Add padding around content
+        flex: 1,
+        padding: 10,
     },
     header: {
-        fontSize: 24, // Large header text
-        fontWeight: 'bold', // Bold header
-        textAlign: 'center', // Center align
-        marginVertical: 10, // Vertical margin
+        fontSize: 24,
+        fontWeight: 'bold',
+        textAlign: 'center',
+        marginVertical: 10,
     },
     recipeItem: {
-        padding: 15, // Padding inside each recipe item
-        borderWidth: 1, // Border width
-        borderColor: '#ccc', // Light gray border
-        borderRadius: 5, // Rounded corners
-        marginBottom: 10, // Margin between items
-        backgroundColor: '#f9f9f9', // Light background
+        padding: 15,
+        borderWidth: 1,
+        borderColor: '#ccc',
+        borderRadius: 5,
+        marginBottom: 10,
+        backgroundColor: '#f9f9f9',
     },
     recipeName: {
-        fontSize: 18, // Larger text for name
-        fontWeight: 'bold', // Bold name
-        marginBottom: 5, // Margin below name
-        color: '#333', // Darker text for contrast
+        fontSize: 18,
+        fontWeight: 'bold',
+        marginBottom: 5,
+        color: '#333',
     },
     username: {
-        fontSize: 14, // Smaller text for username
-        color: '#666', // Neutral color for username
-        marginBottom: 5, // Margin below username
-        fontStyle: 'italic', // Italicize for distinction
+        fontSize: 14,
+        color: '#666',
+        marginBottom: 5,
+        fontStyle: 'italic',
     },
     recipeDescription: {
-        fontSize: 16, // Medium text for description
-        marginBottom: 5, // Margin below description
-        color: '#555', // Slightly lighter text
+        fontSize: 16,
+        marginBottom: 5,
+        color: '#555',
     },
     recipeInstructions: {
-        fontSize: 14, // Smaller text for instructions
-        color: '#777', // Lighter text for distinction
-        marginBottom: 5, // Margin below instructions
+        fontSize: 14,
+        color: '#777',
+        marginBottom: 5,
     },
     recipeImage: {
-        width: '100', // Full width of container
-        height: 150, // Fixed height for image
-        marginTop: 5, // Margin above image
-        borderRadius: 5, // Rounded corners for image
+        width: '100%', // Fixed from '100'
+        height: 150,
+        marginTop: 5,
+        borderRadius: 5,
+    },
+    saveButton: {
+        backgroundColor: '#4CD964',
+        padding: 10,
+        borderRadius: 5,
+        alignItems: 'center',
+        marginTop: 10,
+    },
+    saveButtonText: {
+        color: 'white',
+        fontWeight: 'bold',
     },
     error: {
-        color: 'red', // Red error text
-        textAlign: 'center', // Center align
-        marginBottom: 10, // Margin below error
+        color: 'red',
+        textAlign: 'center',
+        marginBottom: 10,
     },
     emptyText: {
-        textAlign: 'center', // Center align
-        color: '#888', // Light gray color
-        marginTop: 20, // Margin above empty text
+        textAlign: 'center',
+        color: '#888',
+        marginTop: 20,
     },
     loadingText: {
-        textAlign: 'center', // Center align
-        color: '#666', // Neutral loading color
-        marginVertical: 10, // Vertical margin
+        textAlign: 'center',
+        color: '#666',
+        marginVertical: 10,
     },
 });
 
