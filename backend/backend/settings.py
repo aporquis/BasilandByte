@@ -1,3 +1,4 @@
+# backend/settings.py
 import os
 from dotenv import load_dotenv
 from pathlib import Path
@@ -50,7 +51,8 @@ MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",  # Ensure CORS is loaded first
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
-    "django.middleware.common.CommonMiddleware",
+    # Temporarily disabled to test impact on DELETE requests
+    # "django.middleware.common.CommonMiddleware", <--this is the problem for duplication of deleting
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
@@ -133,3 +135,6 @@ SIMPLE_JWT = {
     "BLACKLIST_AFTER_ROTATION": True,
     "AUTH_HEADER_TYPES": ("Bearer",),
 }
+
+# Server-Side Timeout Configuration
+SOCKET_TIMEOUT = 30  # Matches client timeout of 30000ms
