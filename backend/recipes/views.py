@@ -1,5 +1,5 @@
 # backend/recipes/views.py
-# Views for user authentication, user data, and recipe management.
+# Views for user authentication, user data, recipe management, and saved items.
 
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
@@ -11,10 +11,14 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
-from .models import Recipe
-from .serializers import RecipeSerializer, UserRegisterSerializer, UserLoginSerializer
+from .models import Recipe, Ingredient, RecipeIngredient, FoodGroup, SavedItem
+from .serializers import RecipeSerializer, UserRegisterSerializer, UserLoginSerializer, SavedItemSerializer
 from django.http import JsonResponse, HttpResponse
 import json
+import logging
+
+# Setup logging
+logger = logging.getLogger(__name__)
 
 # Generates the needed tokens for users to log into the website.
 
@@ -44,11 +48,9 @@ def export_user_data(request):
         "date_joined": user.date_joined.strftime("%Y-%m-%d %H:%M:%S"),
     }
 
-    # Convert data to JSON and force download of a file for easy user readability and access
     response = HttpResponse(json.dumps(user_data, indent=4),
                             content_type="application/json")
     response['Content-Disposition'] = f'attachment; filename="{user.username}_data.json"'
-
     return response
 
 # Gathers the user's username and sends it to the dashboard page to show the user that they have successfully logged into their specific account
@@ -74,19 +76,16 @@ def register_user(request):
     last_name = request.data.get("last_name")
     email = request.data.get("email")
 
-    # Check if all fields are provided
     if not all([username, password, first_name, last_name, email]):
         return Response({"error": "All fields (username, password, first name, last name, email) are required"},
                         status=status.HTTP_400_BAD_REQUEST)
 
-    # Check if the username or email already exists
     if User.objects.filter(username=username).exists():
         return Response({"error": "Username already taken"}, status=status.HTTP_400_BAD_REQUEST)
 
     if User.objects.filter(email=email).exists():
         return Response({"error": "Email is already in use"}, status=status.HTTP_400_BAD_REQUEST)
 
-    # Create user with additional fields
     user = User.objects.create_user(
         username=username,
         password=password,
@@ -95,7 +94,6 @@ def register_user(request):
         email=email
     )
 
-    # Generate authentication tokens for the new user
     tokens = get_tokens_for_user(user)
 
     return Response({
@@ -122,15 +120,13 @@ def login_user(request):
 # Fetch all recipes (GET) (Available to everyone)
 
 
-# backend/recipes/views.py (partial update)
-# Fetch all recipes (GET) (Available to everyone)
 @api_view(["GET"])
 @permission_classes([AllowAny])
 def get_recipes(request):
     """Fetch all recipes (public endpoint) with username included, optionally filtered by user."""
     recipes = Recipe.objects.all()
     if request.query_params.get('user') and request.user.is_authenticated:
-        recipes = recipes.filter(user=request.user)  # Filter by logged-in user
+        recipes = recipes.filter(user=request.user)
     serializer = RecipeSerializer(
         recipes, many=True, context={'request': request})
     return Response(serializer.data)
@@ -143,15 +139,13 @@ def get_recipes(request):
 @permission_classes([IsAuthenticated])
 def add_recipe(request):
     """Handles adding a new recipe with an optional image."""
-    data = request.data  # Parse form data (including file)
+    data = request.data
     serializer = RecipeSerializer(data=data, context={'request': request})
 
     if serializer.is_valid():
-        # Add the authenticated user to the validated data
         validated_data = serializer.validated_data
-        validated_data['user'] = request.user  # Ensure user is set here
+        validated_data['user'] = request.user
         try:
-            # Save the recipe using the serializer (calls create method)
             serializer.save()
             return Response({"message": "Recipe added successfully"}, status=status.HTTP_201_CREATED)
         except Exception as e:
@@ -168,7 +162,6 @@ def update_recipe(request, recipe_id):
     """Updates a recipe's text and/or image (only if the user owns it)."""
     recipe = get_object_or_404(Recipe, id=recipe_id)
 
-    # Ensure the user is the owner of the recipe
     if recipe.user != request.user:
         return Response({"error": "You can only update your own recipes."}, status=status.HTTP_403_FORBIDDEN)
 
@@ -185,15 +178,69 @@ def update_recipe(request, recipe_id):
 @permission_classes([IsAuthenticated])
 def delete_recipe(request, recipe_id):
     """Deletes a recipe by ID (only if the user owns it)."""
+    logger.info(
+        f"Attempting to delete recipe {recipe_id} for user {request.user.username}")
     recipe = get_object_or_404(Recipe, id=recipe_id)
 
-    # Ensure the user is the owner of the recipe
     if recipe.user != request.user:
+        logger.warning(
+            f"Permission denied for user {request.user.username} on recipe {recipe_id}")
         return Response({"error": "You can only delete your own recipes."}, status=status.HTTP_403_FORBIDDEN)
 
-    # If the recipe has an image, delete it from storage
     if recipe.image:
         default_storage.delete(recipe.image.path)
 
     recipe.delete()
+    logger.info(f"Deleted recipe {recipe_id} for user {request.user.username}")
     return Response({"message": "Recipe deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
+
+# Save a recipe (POST) (Only authenticated users)
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def save_recipe(request):
+    """Save a recipe for the authenticated user."""
+    recipe_id = request.data.get("recipe_id")
+    if not recipe_id:
+        return Response({"error": "Recipe ID is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        recipe = get_object_or_404(Recipe, id=recipe_id)
+        user = request.user
+        saved_item, created = SavedItem.objects.get_or_create(
+            user=user, recipe=recipe)
+        if created:
+            return Response({"message": "Recipe saved successfully"}, status=status.HTTP_201_CREATED)
+        return Response({"message": "Recipe already saved"}, status=status.HTTP_200_OK)
+    except Exception as e:
+        return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+# Get saved recipes (GET) (Only authenticated users)
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def get_saved_recipes(request):
+    """Fetch all saved recipes for the authenticated user."""
+    user = request.user
+    saved_items = SavedItem.objects.filter(user=user).select_related('recipe')
+    serializer = SavedItemSerializer(
+        saved_items, many=True, context={'request': request})
+    return Response(serializer.data)
+
+# Unsave a recipe (DELETE) (Only authenticated users)
+
+
+@api_view(["DELETE"])
+@permission_classes([IsAuthenticated])
+def unsave_recipe(request, saved_item_id):
+    """Unsave a recipe for the authenticated user."""
+    logger.info(
+        f"Attempting to unsave recipe with saved_item_id {saved_item_id} for user {request.user.username}")
+    saved_item = get_object_or_404(
+        SavedItem, id=saved_item_id, user=request.user)
+    saved_item.delete()
+    logger.info(
+        f"Unsaved recipe with saved_item_id {saved_item_id} for user {request.user.username}")
+    return Response({"message": "Recipe unsaved successfully"}, status=status.HTTP_204_NO_CONTENT)
