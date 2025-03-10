@@ -15,7 +15,6 @@ class Recipe(models.Model):
     recipe_name = models.CharField(max_length=255)
     description = models.TextField()
     instructions = models.TextField()
-    instructions = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
     image = models.ImageField(upload_to='recipe_images/', null=True, blank =True)
 
