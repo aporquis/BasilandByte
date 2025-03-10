@@ -1,43 +1,49 @@
-// src/screens/ProfileScreen.js
+// ProfileScreen.js
 // Displays user profile information and navigation buttons for saved recipes, posted recipes, and weekly planner.
 // Uses a nested Stack Navigator to handle navigation to new screens.
+// Fixed: Updated endpoint to /api/recipes/user-info/ to match Django urls.py.
 
-import React, { useState, useEffect } from 'react'; // Import React and hooks
-import { View, Text, Button, StyleSheet, TouchableOpacity } from 'react-native'; // UI components
-import AsyncStorage from '@react-native-async-storage/async-storage'; // For token storage
-import axios from 'axios'; // HTTP client for API requests
-import { API_URL } from '@env'; // Environment variable for API endpoint
-import { createStackNavigator } from '@react-navigation/stack'; // Stack navigator for nested navigation
-import SavedRecipesScreen from './SavedRecipesScreen'; // Import saved recipes screen
-import MyPostedRecipesScreen from './MyPostedRecipesScreen'; // Import my posted recipes screen
-import WeeklyPlannerScreen from './WeeklyPlannerScreen'; // Import weekly planner screen
+import React, { useState, useEffect } from 'react';
+import { View, Text, Button, StyleSheet, TouchableOpacity } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
+import { API_URL } from '@env';
+import { createStackNavigator } from '@react-navigation/stack';
+import SavedRecipesScreen from './SavedRecipesScreen';
+import MyPostedRecipesScreen from './MyPostedRecipesScreen';
+import WeeklyPlannerScreen from './WeeklyPlannerScreen';
 
-// Create a Stack Navigator for profile-related screens
 const ProfileStack = createStackNavigator();
 
-const ProfileScreen = ({ navigation }) => { // Accept navigation prop from ProfileStack
-    const [username, setUsername] = useState(''); // State to store username
-    const [error, setError] = useState(''); // State to store error messages
+const ProfileScreen = ({ navigation }) => {
+    const [username, setUsername] = useState('');
+    const [error, setError] = useState('');
 
     useEffect(() => {
-        // Fetch user info when component mounts
         const fetchUserInfo = async () => {
-            const token = await AsyncStorage.getItem('userToken'); // Retrieve authentication token
+            const token = await AsyncStorage.getItem('userToken');
             if (!token) {
-                setError('Please log in to view your profile.'); // Set error if no token
-                navigation.navigate('Login'); // Navigate to login if unauthenticated
+                setError('Please log in to view your profile.');
+                navigation.navigate('Login');
                 return;
             }
 
             try {
-                const response = await axios.get(`${API_URL}/user-info/`, {
-                    headers: { Authorization: `Bearer ${token}` }, // Include token in request
+                console.log('📡 Requesting Profile Info:', `${API_URL}/api/recipes/user-info/`); // Debug log
+                const response = await axios.get(`${API_URL}/api/recipes/user-info/`, {
+                    headers: { Authorization: `Bearer ${token}` },
                 });
-                setUsername(response.data.username); // Update state with username
-                setError(''); // Clear any previous errors
+                console.log('📡 Profile Data Response:', response.data);
+                setUsername(response.data.username);
+                setError('');
             } catch (err) {
-                console.error('Error fetching user info:', err.message); // Log error details
-                setError('Failed to fetch user info. Please try again.'); // User-friendly error
+                console.error('Error fetching user info:', {
+                    message: err.message,
+                    response: err.response?.data,
+                    status: err.response?.status,
+                    config: err.config?.url,
+                });
+                setError('Failed to fetch user info. Please try again.');
             }
         };
         fetchUserInfo();
@@ -45,21 +51,15 @@ const ProfileScreen = ({ navigation }) => { // Accept navigation prop from Profi
 
     return (
         <View style={styles.container}>
-            {/* Title for the profile screen */}
             <Text style={styles.title}>Profile</Text>
-            {/* Display error message if any */}
             {error ? <Text style={styles.error}>{error}</Text> : null}
-            {/* Display username */}
             <Text style={styles.username}>Welcome, {username || 'Guest'}!</Text>
-            {/* Button to navigate to Saved Recipes */}
             <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('SavedRecipes')}>
                 <Text style={styles.buttonText}>Saved Recipes</Text>
             </TouchableOpacity>
-            {/* Button to navigate to My Posted Recipes */}
             <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('MyPostedRecipes')}>
                 <Text style={styles.buttonText}>My Posted Recipes</Text>
             </TouchableOpacity>
-            {/* Button to navigate to Weekly Planner */}
             <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('WeeklyPlanner')}>
                 <Text style={styles.buttonText}>Weekly Planner</Text>
             </TouchableOpacity>
@@ -67,28 +67,23 @@ const ProfileScreen = ({ navigation }) => { // Accept navigation prop from Profi
     );
 };
 
-// ProfileStackNavigator component to wrap the nested navigator
 const ProfileStackNavigator = () => (
     <ProfileStack.Navigator initialRouteName="Profile">
-        {/* Profile screen as the initial route */}
         <ProfileStack.Screen
             name="Profile"
             component={ProfileScreen}
-            options={{ headerShown: false }} // Hide header for the initial profile screen
+            options={{ headerShown: false }}
         />
-        {/* Saved Recipes screen */}
         <ProfileStack.Screen
             name="SavedRecipes"
             component={SavedRecipesScreen}
             options={{ headerTitle: () => <Text>Saved Recipes</Text> }}
         />
-        {/* My Posted Recipes screen */}
         <ProfileStack.Screen
             name="MyPostedRecipes"
             component={MyPostedRecipesScreen}
             options={{ headerTitle: () => <Text>My Posted Recipes</Text> }}
         />
-        {/* Weekly Planner screen */}
         <ProfileStack.Screen
             name="WeeklyPlanner"
             component={WeeklyPlannerScreen}
@@ -99,39 +94,39 @@ const ProfileStackNavigator = () => (
 
 const styles = StyleSheet.create({
     container: {
-        flex: 1, // Use full screen height
-        padding: 20, // Padding around content
-        justifyContent: 'center', // Center content vertically
-        alignItems: 'center', // Center content horizontally
+        flex: 1,
+        padding: 20,
+        justifyContent: 'center',
+        alignItems: 'center',
     },
     title: {
-        fontSize: 24, // Large title text
-        fontWeight: 'bold', // Bold title
-        marginBottom: 20, // Margin below title
+        fontSize: 24,
+        fontWeight: 'bold',
+        marginBottom: 20,
     },
     username: {
-        fontSize: 18, // Readable text size
-        color: '#333', // Dark text for contrast
-        marginBottom: 20, // Margin below username
+        fontSize: 18,
+        color: '#333',
+        marginBottom: 20,
     },
     error: {
-        color: 'red', // Red error text
-        textAlign: 'center', // Center align
-        marginBottom: 10, // Margin below error
+        color: 'red',
+        textAlign: 'center',
+        marginBottom: 10,
     },
     button: {
-        backgroundColor: '#007AFF', // Blue button color
-        padding: 15, // Padding inside button
-        borderRadius: 5, // Rounded corners
-        width: '80%', // Width for better visibility
-        alignItems: 'center', // Center text
-        marginVertical: 10, // Vertical margin between buttons
+        backgroundColor: '#007AFF',
+        padding: 15,
+        borderRadius: 5,
+        width: '80%',
+        alignItems: 'center',
+        marginVertical: 10,
     },
     buttonText: {
-        color: 'white', // White text
-        fontSize: 16, // Readable text size
-        fontWeight: 'bold', // Bold text
+        color: 'white',
+        fontSize: 16,
+        fontWeight: 'bold',
     },
 });
 
-export default ProfileStackNavigator; // Export the navigator instead of the screen
+export default ProfileStackNavigator;
