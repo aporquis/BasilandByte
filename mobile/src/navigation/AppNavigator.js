@@ -1,43 +1,41 @@
-// AppNavigator.js
+// src/navigation/AppNavigator.js
 // Manages the navigation structure for the app, handling both authenticated and unauthenticated states.
 // Uses Stack and Tab navigators to switch between screens based on authentication status.
 
-import React, { useState, useEffect } from 'react'; // Import React and hooks for state and side effects
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'; // Tab navigation for authenticated users
-import { createStackNavigator } from '@react-navigation/stack'; // Stack navigation for screen transitions
-import { Text } from 'react-native'; // Import Text component for header titles
-import AsyncStorage from '@react-native-async-storage/async-storage'; // For storing and retrieving authentication tokens
-import WelcomeScreen from '../screens/WelcomeScreen'; // Initial welcome screen
-import HomeScreen from '../screens/HomeScreen'; // Home screen for authenticated users
-import RecipeListScreen from '../screens/RecipeListScreen'; // Screen to list all recipes
-import AddRecipeScreen from '../screens/AddRecipeScreen'; // Screen to add new recipes
-import EditRecipeScreen from '../screens/EditRecipeScreen'; // Screen to edit existing recipes
-import ProfileStackNavigator from '../screens/ProfileScreen'; // Updated import for nested navigator
-import DashboardScreen from '../screens/DashboardScreen'; // Dashboard screen
-import LoginScreen from '../screens/LoginScreen'; // Login screen
-import RegisterScreen from '../screens/RegisterScreen'; // Register screen
-import Icon from 'react-native-vector-icons/Ionicons'; // Icons for tab navigation
+import React, { useState, useEffect } from 'react';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { createStackNavigator } from '@react-navigation/stack';
+import { Text } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import WelcomeScreen from '../screens/WelcomeScreen';
+import HomeScreen from '../screens/HomeScreen';
+import RecipeListScreen from '../screens/RecipeListScreen';
+import AddRecipeScreen from '../screens/AddRecipeScreen';
+import EditRecipeScreen from '../screens/EditRecipeScreen';
+import ProfileStackNavigator from '../screens/ProfileScreen';
+import DashboardScreen from '../screens/DashboardScreen';
+import LoginScreen from '../screens/LoginScreen';
+import RegisterScreen from '../screens/RegisterScreen';
+import SavedRecipesScreen from '../screens/SavedRecipesScreen'; // Added import
+import WeeklyPlannerScreen from '../screens/WeeklyPlannerScreen'; // Added import
+import Icon from 'react-native-vector-icons/Ionicons';
 
-// Create navigation instances
-const Tab = createBottomTabNavigator(); // Tab navigator instance
-const Stack = createStackNavigator(); // Stack navigator instance
+const Tab = createBottomTabNavigator();
+const Stack = createStackNavigator();
 
-// Stack navigator for recipes, used within authenticated tabs
+// Stack navigator for recipes
 const RecipeStack = () => (
     <Stack.Navigator>
-        {/* Screen for listing recipes */}
         <Stack.Screen
             name="Recipe_List"
             component={RecipeListScreen}
             options={{ headerTitle: () => <Text>Recipe List</Text> }}
         />
-        {/* Screen for adding new recipes */}
         <Stack.Screen
             name="Recipe_Add"
             component={AddRecipeScreen}
             options={{ headerTitle: () => <Text>Add Recipe</Text> }}
         />
-        {/* Screen for editing existing recipes */}
         <Stack.Screen
             name="Recipe_Edit"
             component={EditRecipeScreen}
@@ -46,10 +44,9 @@ const RecipeStack = () => (
     </Stack.Navigator>
 );
 
-// Tab navigator for authenticated users, providing access to core screens
+// Tab navigator for authenticated users, limited to Dashboard, Recipes, Add Recipe, and Profile
 const AuthenticatedTabs = () => (
     <Tab.Navigator screenOptions={{ headerShown: true }}>
-        {/* Dashboard tab */}
         <Tab.Screen
             name="Tab_Dashboard"
             component={DashboardScreen}
@@ -61,7 +58,6 @@ const AuthenticatedTabs = () => (
                 tabBarLabel: () => <Text>Dashboard</Text>,
             }}
         />
-        {/* Recipes tab with nested RecipeStack */}
         <Tab.Screen
             name="Tab_Recipes"
             component={RecipeStack}
@@ -73,7 +69,6 @@ const AuthenticatedTabs = () => (
                 tabBarLabel: () => <Text>Recipes</Text>,
             }}
         />
-        {/* Add Recipe tab (separate for direct access) */}
         <Tab.Screen
             name="Tab_AddRecipe"
             component={AddRecipeScreen}
@@ -85,7 +80,6 @@ const AuthenticatedTabs = () => (
                 tabBarLabel: () => <Text>Add Recipe</Text>,
             }}
         />
-        {/* Profile tab with nested navigator */}
         <Tab.Screen
             name="Tab_Profile"
             component={ProfileStackNavigator}
@@ -100,53 +94,56 @@ const AuthenticatedTabs = () => (
     </Tab.Navigator>
 );
 
-// Main app navigator, handling authentication state
+// Main app navigator
 const AppNavigator = () => {
-    // State to track authentication status
     const [isAuthenticated, setIsAuthenticated] = useState(null);
 
     useEffect(() => {
-        // Check authentication status on mount
         const checkAuth = async () => {
             const token = await AsyncStorage.getItem('userToken');
             setIsAuthenticated(!!token);
         };
         checkAuth();
-    }, []); // Empty dependency array ensures this runs only once on mount
+    }, []);
 
-    // Show loading state while checking authentication
     if (isAuthenticated === null) {
-        return null; // Optionally show a loading spinner here
+        return <Text>Loading...</Text>;
     }
 
     return (
         <Stack.Navigator initialRouteName={isAuthenticated ? 'AuthenticatedTabs' : 'Welcome'}>
-            {/* Welcome screen for initial app entry (shown if not authenticated) */}
             <Stack.Screen
                 name="Welcome"
                 component={WelcomeScreen}
-                options={{ headerShown: false, headerTitle: () => <Text>Welcome</Text> }}
+                options={{ headerShown: false }}
             />
-            {/* Login screen for unauthenticated users */}
             <Stack.Screen
                 name="Login"
                 component={LoginScreen}
-                options={{ headerShown: false, headerTitle: () => <Text>Login</Text> }}
+                options={{ headerShown: false }}
             />
-            {/* Register screen for new users */}
             <Stack.Screen
                 name="Register"
                 component={RegisterScreen}
-                options={{ headerShown: false, headerTitle: () => <Text>Register</Text> }}
+                options={{ headerShown: false }}
             />
-            {/* Authenticated tabs for main app navigation (shown if authenticated) */}
             {isAuthenticated && (
                 <Stack.Screen
                     name="AuthenticatedTabs"
                     component={AuthenticatedTabs}
-                    options={{ headerShown: false, headerTitle: () => <Text>Dashboard</Text> }}
+                    options={{ headerShown: false }}
                 />
             )}
+            <Stack.Screen
+                name="SavedRecipes"
+                component={SavedRecipesScreen}
+                options={{ headerTitle: () => <Text>Saved Recipes</Text> }}
+            />
+            <Stack.Screen
+                name="WeeklyPlanner"
+                component={WeeklyPlannerScreen}
+                options={{ headerTitle: () => <Text>Weekly Planner</Text> }}
+            />
         </Stack.Navigator>
     );
 };
