@@ -1,116 +1,152 @@
-// EditRecipeScreen.js
-// Allows authenticated users to edit their own recipes.
-// Only text fields are editable here (no image editing for simplicity).
+// src/screens/EditRecipeScreen.js
+// Allows users to edit an existing recipe.
 
-import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, Button, Alert, StyleSheet } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import axios from 'axios';
-import { API_URL } from '@env';
+import React, { useState, useEffect } from 'react'; // Import React and hooks
+import { View, Text, TextInput, Button, StyleSheet, Alert, Platform } from 'react-native'; // UI components
+import AsyncStorage from '@react-native-async-storage/async-storage'; // For token storage
+import axios from 'axios'; // HTTP client for API requests
+import { API_URL } from '@env'; // Environment variable for API endpoint
+import * as ImagePicker from 'react-native-image-picker'; // For image selection
 
-// EditRecipeScreen component receives route (for recipe data) and navigation props
 const EditRecipeScreen = ({ route, navigation }) => {
-    const { recipe } = route.params; // Get the recipe data from navigation params
-    // State for recipe details and errors
-    const [recipeName, setRecipeName] = useState(recipe.recipe_name);
-    const [description, setDescription] = useState(recipe.description);
-    const [instructions, setInstructions] = useState(recipe.instructions);
-    const [error, setError] = useState('');
+    const { recipe } = route.params; // Get recipe data from navigation params
+    const [recipeName, setRecipeName] = useState(recipe.recipe_name || ''); // State for recipe name
+    const [description, setDescription] = useState(recipe.description || ''); // State for description
+    const [instructions, setInstructions] = useState(recipe.instructions || ''); // State for instructions
+    const [image, setImage] = useState(recipe.image || null); // State for image URI
+    const [error, setError] = useState(''); // State for error messages
 
-    useEffect(() => {
-        // Check authentication status when the screen mounts
-        const checkAuth = async () => {
-            const token = await AsyncStorage.getItem('userToken');
-            if (!token) {
-                Alert.alert('Authentication Required', 'Please log in to edit this recipe.', [
-                    { text: 'OK', onPress: () => navigation.navigate('Login') },
-                ]);
-            }
+    // Handle image picking
+    const pickImage = async () => {
+        const options = {
+            mediaType: 'photo',
+            quality: 1,
         };
-        checkAuth();
-    }, [navigation]); // Dependency on navigation for redirect
 
-    // Handle recipe update submission to the backend
+        ImagePicker.launchImageLibrary(options, (response) => {
+            if (response.didCancel) {
+                console.log('User cancelled image picker');
+            } else if (response.errorCode) {
+                console.log('ImagePicker Error: ', response.errorMessage);
+                setError('Failed to pick image: ' + response.errorMessage);
+            } else if (response.assets && response.assets.length > 0) {
+                setImage(response.assets[0].uri); // Set the image URI
+            }
+        });
+    };
+
+    // Handle updating the recipe
     const updateRecipe = async () => {
-        // Validate all fields are filled
         if (!recipeName || !description || !instructions) {
-            setError('All fields are required!');
+            setError('Recipe name, description, and instructions are required!');
             return;
         }
 
-        const token = await AsyncStorage.getItem('userToken');
+        const token = await AsyncStorage.getItem('userToken'); // Retrieve authentication token
         if (!token) {
-            navigation.navigate('Login');
+            navigation.navigate('Login'); // Navigate to login if unauthenticated
             return;
+        }
+
+        let formData = new FormData();
+        formData.append('recipe_name', recipeName);
+        formData.append('description', description);
+        formData.append('instructions', instructions);
+        if (image && image !== recipe.image) { // Only append if image has changed
+            formData.append('image', {
+                uri: image,
+                type: 'image/jpeg',
+                name: 'recipe.jpg',
+            });
         }
 
         try {
-            // Send PUT request to update the recipe
-            await axios.put(
-                `${API_URL}/update/${recipe.id}/`,
-                { recipe_name: recipeName, description, instructions },
-                { headers: { Authorization: `Bearer ${token}` } }
-            );
-            Alert.alert('Success', 'Recipe updated successfully.');
-            navigation.goBack(); // Return to previous screen after success
-        } catch (error) {
-            console.error('Error updating recipe:', error.response?.data || error.message);
-            setError('Failed to update recipe');
+            const url = `${API_URL}/update/${recipe.id}/`; // Ensure full path
+            console.log('Attempting to update recipe at:', url); // Debug log
+            const response = await axios.put(url, formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+            console.log('Update response:', response.data); // Debug log
+            Alert.alert('Success', 'Recipe updated successfully!');
+            navigation.goBack(); // Navigate back to MyPostedRecipesScreen
+        } catch (err) {
+            console.error('Error updating recipe:', {
+                message: err.message,
+                code: err.code,
+                response: err.response?.data,
+                config: err.config?.url, // Log the requested URL
+                stack: err.stack, // Include stack trace
+            }); // Log detailed error
+            setError('Failed to update recipe: ' + (err.response?.data?.detail || err.message));
         }
     };
 
     return (
         <View style={styles.container}>
-            {/* Edit Recipe title wrapped in <Text> */}
+            {/* Title for the edit recipe screen */}
             <Text style={styles.title}>Edit Recipe</Text>
-            {/* Display error message if there is one, wrapped in <Text> */}
+            {/* Display error message if any */}
             {error ? <Text style={styles.error}>{error}</Text> : null}
             {/* Recipe name input */}
             <TextInput
+                placeholder="Recipe Name"
                 value={recipeName}
                 onChangeText={setRecipeName}
                 style={styles.input}
             />
             {/* Description input */}
             <TextInput
+                placeholder="Description"
                 value={description}
                 onChangeText={setDescription}
                 style={styles.input}
+                multiline
             />
             {/* Instructions input */}
             <TextInput
+                placeholder="Instructions"
                 value={instructions}
                 onChangeText={setInstructions}
                 style={styles.input}
-                multiline // Allow multiple lines
+                multiline
             />
-            {/* Update button */}
-            <Button title="Update Recipe" onPress={updateRecipe} />
+            {/* Button to pick an image */}
+            <Button title="Pick an Image" onPress={pickImage} />
+            {/* Update recipe button */}
+            <Button title="Update Recipe" onPress={updateRecipe} style={styles.submitButton} />
         </View>
     );
 };
 
-// Styles for the EditRecipeScreen layout
 const styles = StyleSheet.create({
     container: {
-        padding: 20, // Adds padding around the content
-        flex: 1, // Takes full screen height
+        flex: 1, // Use full screen height
+        padding: 20, // Padding around content
     },
     title: {
-        fontSize: 20, // Medium font for the title
-        fontWeight: 'bold', // Bold text for emphasis
-        textAlign: 'center', // Centers the text
-        marginBottom: 20, // Adds spacing below the title
+        fontSize: 24, // Large title text
+        fontWeight: 'bold', // Bold title
+        textAlign: 'center', // Center align
+        marginBottom: 20, // Margin below title
     },
     error: {
-        color: 'red', // Red color for error messages
-        textAlign: 'center', // Centers the text
-        marginBottom: 10, // Adds spacing below the error
+        color: 'red', // Red error text
+        textAlign: 'center', // Center align
+        marginBottom: 10, // Margin below error
     },
     input: {
-        borderBottomWidth: 1, // Underline for input fields
-        marginVertical: 10, // Vertical margin for spacing
-        padding: 5, // Padding inside the input
+        borderWidth: 1, // Border width
+        borderColor: '#ccc', // Light gray border
+        borderRadius: 4, // Rounded corners
+        padding: 10, // Padding inside input
+        marginVertical: 10, // Vertical margin
+        fontSize: 16, // Readable text size
+    },
+    submitButton: {
+        marginTop: 10, // Margin above submit button
     },
 });
 

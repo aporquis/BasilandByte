@@ -122,12 +122,17 @@ def login_user(request):
 # Fetch all recipes (GET) (Available to everyone)
 
 
+# backend/recipes/views.py (partial update)
+# Fetch all recipes (GET) (Available to everyone)
 @api_view(["GET"])
 @permission_classes([AllowAny])
 def get_recipes(request):
-    """Fetch all recipes (public endpoint) with username included."""
+    """Fetch all recipes (public endpoint) with username included, optionally filtered by user."""
     recipes = Recipe.objects.all()
-    serializer = RecipeSerializer(recipes, many=True)
+    if request.query_params.get('user') and request.user.is_authenticated:
+        recipes = recipes.filter(user=request.user)  # Filter by logged-in user
+    serializer = RecipeSerializer(
+        recipes, many=True, context={'request': request})
     return Response(serializer.data)
 
 # Add a recipe (POST) (Only authenticated users)

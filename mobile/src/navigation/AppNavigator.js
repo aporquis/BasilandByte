@@ -12,7 +12,7 @@ import HomeScreen from '../screens/HomeScreen'; // Home screen for authenticated
 import RecipeListScreen from '../screens/RecipeListScreen'; // Screen to list all recipes
 import AddRecipeScreen from '../screens/AddRecipeScreen'; // Screen to add new recipes
 import EditRecipeScreen from '../screens/EditRecipeScreen'; // Screen to edit existing recipes
-import ProfileScreen from '../screens/ProfileScreen'; // User profile screen
+import ProfileStackNavigator from '../screens/ProfileScreen'; // Updated import for nested navigator
 import DashboardScreen from '../screens/DashboardScreen'; // Dashboard screen
 import LoginScreen from '../screens/LoginScreen'; // Login screen
 import RegisterScreen from '../screens/RegisterScreen'; // Register screen
@@ -46,7 +46,7 @@ const RecipeStack = () => (
     </Stack.Navigator>
 );
 
-// Tab navigator for authenticated users, providing access to Dashboard, Recipes, Add Recipe, and Profile
+// Tab navigator for authenticated users, providing access to core screens
 const AuthenticatedTabs = () => (
     <Tab.Navigator screenOptions={{ headerShown: true }}>
         {/* Dashboard tab */}
@@ -85,10 +85,10 @@ const AuthenticatedTabs = () => (
                 tabBarLabel: () => <Text>Add Recipe</Text>,
             }}
         />
-        {/* Profile tab */}
+        {/* Profile tab with nested navigator */}
         <Tab.Screen
             name="Tab_Profile"
-            component={ProfileScreen}
+            component={ProfileStackNavigator}
             options={{
                 tabBarIcon: ({ color, size }) => (
                     <Icon name="person" color={color} size={size} />
