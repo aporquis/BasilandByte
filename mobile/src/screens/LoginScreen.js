@@ -1,52 +1,48 @@
 // LoginScreen.js
 // Allows users to log in with their username and password.
 // On successful login, stores the token and navigates to the authenticated tabs.
+// Fixed: Updated endpoint to /api/recipes/login/ to match Django urls.py.
+// Note: Requires @react-native-async-storage/async-storage to be installed.
 
-import React, { useState } from 'react'; // Import React and useState hook
-import { View, Text, TextInput, Button, StyleSheet, Alert } from 'react-native'; // UI components
-import AsyncStorage from '@react-native-async-storage/async-storage'; // For token storage
-import axios from 'axios'; // HTTP client for API requests
-import { API_URL } from '@env'; // Environment variable for API endpoint
+import React, { useState } from 'react';
+import { View, Text, TextInput, Button, StyleSheet, Alert } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage'; // Now resolved with installed package
+import axios from 'axios';
+import { API_URL } from '@env';
 
-// LoginScreen component receives navigation prop for navigation actions
 const LoginScreen = ({ navigation }) => {
-    // State for login form inputs and error messages
-    const [username, setUsername] = useState(''); // State for username input
-    const [password, setPassword] = useState(''); // State for password input
-    const [error, setError] = useState(''); // State for error messages
-    const [isLoggedIn, setIsLoggedIn] = useState(false); // State to track login success
+    const [username, setUsername] = useState('');
+    const [password, setPassword] = useState('');
+    const [error, setError] = useState('');
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-    // Log API_URL for debugging
     console.log('API_URL:', API_URL);
 
-    // Handle login submission to the backend
     const handleLogin = async () => {
-        // Validate inputs
         if (!username || !password) {
             setError('Username and password are required!');
             return;
         }
 
-        setError(''); // Clear previous errors before attempting login
+        setError('');
         try {
-            console.log('Attempting to login to:', `${API_URL}/login/`); // Debug log
-            // Make POST request to login endpoint (matches urls.py under /api/recipes/)
-            const response = await axios.post(`${API_URL}/login/`, {
+            console.log('Attempting to login to:', `${API_URL}/api/recipes/login/`);
+            const response = await axios.post(`${API_URL}/api/recipes/login/`, {
                 username,
                 password,
             }, {
-                timeout: 10000, // 10 seconds timeout to avoid hanging
+                timeout: 10000,
             });
 
-            console.log('Login response:', response.data); // Debug log
-            // Extract token from response (matches views.py response)
-            const { access } = response.data.token; // Adjust if response structure differs
+            console.log('Login response:', response.data);
+            const { access, refresh } = response.data.token;
             if (access) {
-                // Store the token in AsyncStorage
                 await AsyncStorage.setItem('userToken', access);
-                setIsLoggedIn(true); // Update state to show continue button
-                setError(''); // Clear any previous errors
-                // Trigger re-render of AppNavigator to check authentication
+                await AsyncStorage.setItem('refresh_token', refresh);
+                console.log('🔑 Stored access token:', access);
+                console.log('🔑 Stored refresh token:', refresh);
+                setIsLoggedIn(true);
+                setError('');
                 navigation.reset({
                     index: 0,
                     routes: [{ name: 'AuthenticatedTabs' }],
@@ -59,9 +55,9 @@ const LoginScreen = ({ navigation }) => {
                 message: err.message,
                 code: err.code,
                 response: err.response?.data,
-                config: err.config?.url, // Log the requested URL for debugging
-                stack: err.stack, // Include stack trace for deeper debugging
-            }); // Log detailed error
+                config: err.config?.url,
+                stack: err.stack,
+            });
             if (err.code === 'ECONNABORTED') {
                 setError('Request timed out. Check your network or server.');
             } else if (err.response) {
@@ -72,11 +68,10 @@ const LoginScreen = ({ navigation }) => {
         }
     };
 
-    // Handle navigation to the dashboard after successful login (optional, can remove if reset works)
     const continueToDashboard = async () => {
-        const token = await AsyncStorage.getItem('userToken'); // Verify token exists
+        const token = await AsyncStorage.getItem('userToken');
         if (token) {
-            console.log('Navigating to AuthenticatedTabs with token:', token); // Debug log
+            console.log('Navigating to AuthenticatedTabs with token:', token);
             navigation.reset({
                 index: 0,
                 routes: [{ name: 'AuthenticatedTabs', params: { screen: 'Tab_Dashboard' } }],
@@ -89,18 +84,14 @@ const LoginScreen = ({ navigation }) => {
 
     return (
         <View style={styles.container}>
-            {/* Title for the login screen */}
             <Text style={styles.title}>Login</Text>
-            {/* Display error message if any */}
             {error ? <Text style={styles.error}>{error}</Text> : null}
-            {/* Username input */}
             <TextInput
                 placeholder="Username"
                 value={username}
                 onChangeText={setUsername}
                 style={styles.input}
             />
-            {/* Password input */}
             <TextInput
                 placeholder="Password"
                 value={password}
@@ -108,9 +99,7 @@ const LoginScreen = ({ navigation }) => {
                 secureTextEntry
                 style={styles.input}
             />
-            {/* Login button */}
             <Button title="Login" onPress={handleLogin} />
-            {/* Continue to Dashboard button, shown after successful login (optional) */}
             {isLoggedIn && (
                 <Button
                     title="Continue to Dashboard"
@@ -118,7 +107,6 @@ const LoginScreen = ({ navigation }) => {
                     style={styles.continueButton}
                 />
             )}
-            {/* Link to register screen */}
             <Text style={styles.registerLink} onPress={() => navigation.navigate('Register')}>
                 Don't have an account? Register
             </Text>
@@ -128,36 +116,36 @@ const LoginScreen = ({ navigation }) => {
 
 const styles = StyleSheet.create({
     container: {
-        flex: 1, // Use full screen height
-        padding: 20, // Padding around content
-        justifyContent: 'center', // Center content vertically
+        flex: 1,
+        padding: 20,
+        justifyContent: 'center',
     },
     title: {
-        fontSize: 24, // Large title text
-        fontWeight: 'bold', // Bold title
-        textAlign: 'center', // Center align
-        marginBottom: 20, // Margin below title
+        fontSize: 24,
+        fontWeight: 'bold',
+        textAlign: 'center',
+        marginBottom: 20,
     },
     error: {
-        color: 'red', // Red error text
-        textAlign: 'center', // Center align
-        marginBottom: 10, // Margin below error
+        color: 'red',
+        textAlign: 'center',
+        marginBottom: 10,
     },
     input: {
-        borderWidth: 1, // Border width
-        borderColor: '#ccc', // Light gray border
-        borderRadius: 4, // Rounded corners
-        padding: 10, // Padding inside input
-        marginVertical: 10, // Vertical margin
-        fontSize: 16, // Readable text size
+        borderWidth: 1,
+        borderColor: '#ccc',
+        borderRadius: 4,
+        padding: 10,
+        marginVertical: 10,
+        fontSize: 16,
     },
     continueButton: {
-        marginTop: 10, // Margin above continue button
+        marginTop: 10,
     },
     registerLink: {
-        color: 'blue', // Blue link text
-        textAlign: 'center', // Center align
-        marginTop: 20, // Margin above link
+        color: 'blue',
+        textAlign: 'center',
+        marginTop: 20,
     },
 });
 
