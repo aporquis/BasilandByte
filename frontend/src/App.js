@@ -1,7 +1,7 @@
 // App.js
 import React, { useEffect, useState } from "react";
 import { BrowserRouter as Router, Routes, Route, useNavigate } from "react-router-dom";
-import { fetchRecipes, addRecipe, editRecipe, deleteRecipe } from "./api"; 
+import { fetchRecipes, addRecipe, editRecipe, deleteRecipe } from "./api";
 import Navbar from "./Navbar";
 import Home from "./Home";
 import Login from "./Login";
@@ -26,8 +26,6 @@ function RecipeApp() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
 
-  const navigate = useNavigate();
-  
   // Determine if the user is logged in
   const isLoggedIn = !!localStorage.getItem("access_token");
 
@@ -244,10 +242,19 @@ function MainApp() {
       <Navbar />
       <Routes>
         <Route path="/" element={<Home />} />
+<<<<<<< HEAD
+=======
+        <Route path="/home" element={<Home />} />
+>>>>>>> hosting
         <Route path="/recipes" element={<RecipeApp />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/dashboard" element={<Dashboard />} />
+<<<<<<< HEAD
+=======
+        {/*Fallback route*/}
+        <Route path="*" element={<Home />} />
+>>>>>>> hosting
       </Routes>
     </Router>
   );
