@@ -15,3 +15,7 @@ Thumbs.db
 
 # Git
  .gitignore
+
+#Python Caches
+__pycache__/
+*.pyc
