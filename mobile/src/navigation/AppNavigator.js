@@ -16,8 +16,8 @@ import ProfileStackNavigator from '../screens/ProfileScreen';
 import DashboardScreen from '../screens/DashboardScreen';
 import LoginScreen from '../screens/LoginScreen';
 import RegisterScreen from '../screens/RegisterScreen';
-import SavedRecipesScreen from '../screens/SavedRecipesScreen'; // Added import
-import WeeklyPlannerScreen from '../screens/WeeklyPlannerScreen'; // Added import
+import SavedRecipesScreen from '../screens/SavedRecipesScreen';
+import WeeklyPlannerScreen from '../screens/WeeklyPlannerScreen';
 import Icon from 'react-native-vector-icons/Ionicons';
 
 const Tab = createBottomTabNavigator();
@@ -44,7 +44,7 @@ const RecipeStack = () => (
     </Stack.Navigator>
 );
 
-// Tab navigator for authenticated users, limited to Dashboard, Recipes, Add Recipe, and Profile
+// Tab navigator for authenticated users
 const AuthenticatedTabs = () => (
     <Tab.Navigator screenOptions={{ headerShown: true }}>
         <Tab.Screen
