@@ -8,10 +8,11 @@ function Dashboard() {
     const [user, setUser] = useState(null);
     const [error, setError] = useState("");
     const navigate = useNavigate();
+    navigate("/home");
 
     useEffect(() => {
         console.log("Dashboard Loaded!"); //lets users know that the paged worked (in the console side of things F12)!
- 
+
         const fetchUserInfo = async () => {
             const token = localStorage.getItem("access_token");
 
