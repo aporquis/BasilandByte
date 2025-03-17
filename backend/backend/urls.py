@@ -18,14 +18,18 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path, include
+from django.http import HttpResponse
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+
+def home(request):
+    return HttpResponse("Basil & Byte backend is running!")
 
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
     path("api/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
     path("api/recipes/", include("recipes.urls")),  # Recipe API
-   
+    path("", home) #handles the root route
 ]
 
 # Allow serving media files in development
