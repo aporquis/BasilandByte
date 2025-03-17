@@ -1,6 +1,7 @@
 // App.js
 import React, { useEffect, useState } from "react";
-import { BrowserRouter as Router, Routes, Route, useNavigate } from "react-router-dom";
+//import { BrowserRouter as Router, Routes, Route, useNavigate } from "react-router-dom";
+import { HashRouter as Router, Routes, Route } from "react-router-dom";
 import { fetchRecipes, addRecipe, editRecipe, deleteRecipe } from "./api";
 import Navbar from "./Navbar";
 import Home from "./Home";
@@ -25,8 +26,6 @@ function RecipeApp() {
   // New state variables for search and filtering
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
-
-  const navigate = useNavigate();
 
   // Determine if the user is logged in
   const isLoggedIn = !!localStorage.getItem("access_token");
