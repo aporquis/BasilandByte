@@ -21,7 +21,7 @@ SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "fallback-secret-key")
 DEBUG = os.getenv("DEBUG", "False") == "True"
 
 # Allowed Hosts Configuration
-ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
+ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "localhost").split(",")
 
 # CORS Configuration (Ensuring frontend can communicate with backend)
 CORS_ALLOW_ALL_ORIGINS = True
@@ -89,6 +89,11 @@ DATABASES = {
         "HOST": os.getenv("DB_HOST", "localhost"),
         "PORT": os.getenv("DB_PORT", "5432"),
     }
+}
+
+TEST = {
+    'NAME': 'test_capstone_recipe',
+    'CREATE_DB': True,
 }
 
 # Password validation
