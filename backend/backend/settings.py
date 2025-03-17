@@ -28,7 +28,7 @@ DEBUG = os.getenv("DEBUG", "").lower() == "true"
 ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "").replace(" ", "").split(",")
 
 # CORS Configuration (Ensuring frontend can communicate with backend)
-CORS_ALLOW_ALL_ORIGINS = False
+CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOWED_ORIGINS = [
     "https://basilandbyte.vercel.app",  # Frontend URL
     "https://basilandbyte.onrender.com", # Backend URL
