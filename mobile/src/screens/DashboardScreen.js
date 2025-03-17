@@ -1,21 +1,22 @@
-// DashboardScreen.js
-// Displays a welcome message for authenticated users with a logout option.
-// Enhanced: Added current time display and meal time determination (breakfast, lunch, dinner).
+// src/screens/DashboardScreen.js
+// Dashboard screen for authenticated users with welcome message, time display, meal time, and navigation to Weekly Planner.
 
 import React, { useState, useEffect } from 'react';
 import { View, Text, Button, ActivityIndicator, StyleSheet } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { API_URL } from '@env';
+import { useNavigation } from '@react-navigation/native';
 
-const DashboardScreen = ({ navigation }) => {
+const DashboardScreen = () => {
     const [userData, setUserData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [currentTime, setCurrentTime] = useState(new Date());
     const [mealTime, setMealTime] = useState('');
+    const navigation = useNavigation(); // Added for navigation
 
-    // Fetch user data and handle token refresh
+    // Fetch user data and handle token refresh on mount
     useEffect(() => {
         const fetchUserData = async () => {
             try {
@@ -85,16 +86,13 @@ const DashboardScreen = ({ navigation }) => {
             }
         };
 
-        // Initial call to set time and meal immediately
-        updateTimeAndMeal();
+        updateTimeAndMeal(); // Initial call
+        const timer = setInterval(updateTimeAndMeal, 60000); // Update every minute
 
-        // Update every minute
-        const timer = setInterval(updateTimeAndMeal, 60000);
-
-        // Cleanup on unmount
-        return () => clearInterval(timer);
+        return () => clearInterval(timer); // Cleanup on unmount
     }, []);
 
+    // Refresh token if access token expires
     const refreshToken = async () => {
         const refresh = await AsyncStorage.getItem('refresh_token');
         console.log('🔄 Attempting to refresh with:', refresh);
@@ -106,6 +104,7 @@ const DashboardScreen = ({ navigation }) => {
         return access;
     };
 
+    // Handle logout by clearing tokens and navigating to Welcome
     const handleLogout = async () => {
         await AsyncStorage.removeItem('userToken');
         await AsyncStorage.removeItem('refresh_token');
@@ -131,6 +130,7 @@ const DashboardScreen = ({ navigation }) => {
                         })}
                     </Text>
                     <Text style={styles.mealTime}>{mealTime}</Text>
+                    <Button title="Weekly Planner" onPress={() => navigation.navigate('WeeklyPlanner')} />
                     <Button title="Logout" onPress={handleLogout} />
                 </>
             ) : (
