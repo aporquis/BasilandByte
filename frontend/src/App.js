@@ -27,6 +27,7 @@ function RecipeApp() {
   const [selectedCategory, setSelectedCategory] = useState("All");
 
   const navigate = useNavigate();
+  navigate("/home");
   
   // Determine if the user is logged in
   const isLoggedIn = !!localStorage.getItem("access_token");
