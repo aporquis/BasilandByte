@@ -3,28 +3,37 @@ import os
 from dotenv import load_dotenv
 from pathlib import Path
 from datetime import timedelta
+import dj_database_url
 
 # Base directory
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Load .env file
-dotenv_path = BASE_DIR / ".env"
-if dotenv_path.exists():
-    load_dotenv(dotenv_path)
+if os.getenv("RENDER") == "true":
+    print("Running in Render production environment")
 else:
-    raise FileNotFoundError(f"Missing .env file at {dotenv_path}")
+    # Load dotenv for local development only
+    dotenv_path = BASE_DIR / ".env"
+    if dotenv_path.exists():
+        load_dotenv(dotenv_path)
+    else:
+        raise FileNotFoundError(f"Missing .env file at {dotenv_path}")
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "fallback-secret-key")
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.getenv("DEBUG", "False") == "True"
+# SECURITY WARNING
+DEBUG = os.getenv("DEBUG", "").lower() == "true"
 
 # Allowed Hosts Configuration
-ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "localhost").split(",")
+ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "").replace(" ", "").split(",")
 
 # CORS Configuration (Ensuring frontend can communicate with backend)
 CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOWED_ORIGINS = [
+    "https://basilandbyte.vercel.app",  # Frontend URL
+    "https://basilandbyte.onrender.com", # Backend URL
+]
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = os.getenv(
     "CORS_ALLOWED_ORIGINS", "http://localhost:3000,http://10.0.0.150:3000").split(",")
@@ -50,6 +59,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",  # Ensure CORS is loaded first
     "django.middleware.security.SecurityMiddleware",
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # Whitenoise added here
     "django.contrib.sessions.middleware.SessionMiddleware",
     # Temporarily disabled to test impact on DELETE requests
     # "django.middleware.common.CommonMiddleware", <--this is the problem for duplication of deleting
@@ -81,15 +91,13 @@ WSGI_APPLICATION = "backend.wsgi.application"
 
 # Database Configuration (PostgreSQL)
 DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.getenv("DB_NAME", "capstone_recipe"),
-        "USER": os.getenv("DB_USER", "capstone_user"),
-        "PASSWORD": os.getenv("DB_PASSWORD", "dbbytes_basil"),
-        "HOST": os.getenv("DB_HOST", "localhost"),
-        "PORT": os.getenv("DB_PORT", "5432"),
-    }
+    "default": dj_database_url.config(default=os.getenv("DATABASE_URL"))
 }
+
+CSRF_TRUSTED_ORIGINS = [
+    "https://basilandbyte.onrender.com",
+    "https://basilandbyte.vercel.app",
+]
 
 TEST = {
     'NAME': 'test_capstone_recipe',
@@ -113,6 +121,7 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 # Media files (Uploaded user images)
 MEDIA_URL = "/recipe_images/"
@@ -143,3 +152,17 @@ SIMPLE_JWT = {
 
 # Server-Side Timeout Configuration
 SOCKET_TIMEOUT = 30  # Matches client timeout of 30000ms
+
+# Server-Side Timeout Configuration
+SOCKET_TIMEOUT = 30  # Matches client timeout of 30000ms
+
+#Using secure cookies & HTTPS settings for production
+CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = True
+
+#HTTPS Redirect for Render
+SECURE_SSL_REDIRECT = True
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
+# Default primary key field type
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"

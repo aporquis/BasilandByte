@@ -1,23 +1,37 @@
 # Python
  __pycache__/
 *.py[cod]
-*.pyc
 *.pyo
-!migrations/__init__.py
-venv
-db.sqlite3
+
+# Environment files
 **.env
+.env/
+
+# Virtual Environment
+venv/
+
+# Logs
+*.log
+
+# Migrations
+!migrations/__init__.py
+*/migrations/*.pyc
+
+# StaticFiles
+backend/staticfiles/
+media/
 
 # Node.js (for react)
-node_modules/ <-it’s big that’s why we don’t include
+node_modules/
 build/
 
- # OS-specific files
+# OS-specific files
 .DS_Store
 Thumbs.db
 
 # Git
  .gitignore
+.vercel
 
 #Python Caches
 __pycache__/

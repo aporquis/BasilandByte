@@ -131,13 +131,11 @@ function MainApp() {
       <Navbar />
       <Routes>
         <Route path="/" element={<Home />} />
+        <Route path="/home" element={<Home />} />
         <Route path="/recipes" element={<RecipeApp />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/add-recipe" element={<AddRecipe />} />
-        <Route path="/saved-recipes" element={<SavedRecipes />} />
-        <Route path="/weekly-planner" element={<WeeklyPlanner />} /> {/* New route */}
       </Routes>
     </Router>
   );
