@@ -22,7 +22,6 @@ steps:
 - checkout: self
 
 - script: |
-- script: |
     echo "Current remote settings:"
     git remote -v
 
