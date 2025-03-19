@@ -1,7 +1,3 @@
 I am testing the mirroring.
 
-Pushes to Azure now reflect in Github!!
-
-Pushes to github now reflect in Azure! Let's go back and add a trigger in Azure.
-
-What happens if I commit to github?
+I am automatically updating the repositories when pushing to github. How do I do that for azure?
