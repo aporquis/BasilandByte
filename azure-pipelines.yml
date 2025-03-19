@@ -13,25 +13,29 @@ pool:
 
 variables:
   - group: GitHub-Secrets
-  - name: GITHUB_USER
-    value: $(GITHUB_USER) # Use from variable group
-  - name: GITHUB_PAT
-    value: $(GITHUB_PAT) # Use from variable group
 
 steps:
 - checkout: self
 
 - script: |
-    echo "Current remote settings:"
-    git remote -v
+    echo "Setting up GitHub remote..."
 
-    echo "Listing remote branches:"
-    git branch -a
+    if git remote get-url github; then
+      git remote set-url github https://$GITHUB_USER:$GITHUB_PAT@github.com/aporquis/BasilandByte.git
+    else
+      git remote add github https://$GITHUB_USER:$GITHUB_PAT@github.com/aporquis/BasilandByte.git
+    fi
 
     echo "Fetching remote refs..."
     git fetch --all
 
-    echo "Listing after fetch:"
-    git branch -a
+    echo "Current remote settings:"
+    git remote -v
+
+    echo "Pushing all branches to GitHub..."
+    git push github --all
+
+    echo "Pushing all tags to Github..."
+    git push github --tags
   displayName: 'Test GitHub Connection and Fetch'
   
