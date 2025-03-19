@@ -1,1 +1,5 @@
-I am testing the mirroring
+I am testing the mirroring.
+
+I committed this file to Azure. I will need to debug the pipeline.
+
+What happens if I commit to github?
