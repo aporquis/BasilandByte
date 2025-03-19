@@ -1,3 +1,0 @@
-I am testing the mirroring.
-
-I am automatically updating the repositories when pushing to github. How do I do that for azure?
