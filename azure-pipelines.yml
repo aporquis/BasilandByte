@@ -22,26 +22,15 @@ steps:
 - checkout: self
 
 - script: |
-    CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
-    echo "Current branch is $CURRENT_BRANCH"
+    echo "Checking GitHub connection..."
+    git remote remove github || true
 
-    echo "Setting up GitHub remote..."
-    if git remote get-url github; then
-      git remote set-url github https://$GITHUB_USER:$GITHUB_PAT@github.com/aporquis/BasilandByte.git
-    else
-      git remote add github https://$GITHUB_USER:$GITHUB_PAT@github.com/aporquis/BasilandByte.git
-    fi
+    git remote add github https://$GITHUB_USER:$GITHUB_PAT@github.com/aporquis/BasilandByte.git
 
-    echo "Checking for commits..."
-    if [ -z "$(git log --oneline)" ]; then
-      echo "No commits found. Creating an empty commit."
-      git commit --allow-empty -m "Initial commit to enable sync"
-    fi
+    echo "Current remote settings:"
+    git remote -v
 
-    echo "Pushing current branch to GitHub..."
-    git push github $CURRENT_BRANCH || echo "No branch to push"
-
-    echo "Pushing all tags..."
-    git push github --tags || echo "No tags to push"
-  displayName: 'Mirror all branches and tags to GitHub'
+    echo "Testing authentication..."
+    git ls-remote github
+  displayName: 'Test GitHub Connection'
   
