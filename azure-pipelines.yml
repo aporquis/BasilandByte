@@ -31,5 +31,8 @@ steps:
       git remote add github https://$GITHUB_USER:$GITHUB_PAT@github.com/aporquis/BasilandByte.git
     fi
     echo "Pushing branches to GitHub..."
-    git push github --all --tags
+    git push github --all
+    echo "Pushing all tags..."
+    git push github --tags
   displayName: 'Mirror all branches and tags to GitHub'
+  
