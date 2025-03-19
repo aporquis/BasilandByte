@@ -32,3 +32,7 @@ Thumbs.db
 # Git
  .gitignore
 .vercel
+
+#Python Caches
+__pycache__/
+*.pyc

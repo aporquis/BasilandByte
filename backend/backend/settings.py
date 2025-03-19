@@ -1,3 +1,4 @@
+# backend/settings.py
 import os
 from dotenv import load_dotenv
 from pathlib import Path
@@ -34,6 +35,11 @@ CORS_ALLOWED_ORIGINS = [
     "https://basilandbyte.onrender.com", # Backend URL
 ]
 CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOWED_ORIGINS = os.getenv(
+    "CORS_ALLOWED_ORIGINS", "http://localhost:3000,http://10.0.0.150:3000").split(",")
+
+CORS_ALLOW_METHODS = ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+CORS_ALLOW_HEADERS = ["*"]
 
 # Application definition
 INSTALLED_APPS = [
@@ -55,7 +61,8 @@ MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     'whitenoise.middleware.WhiteNoiseMiddleware',  # Whitenoise added here
     "django.contrib.sessions.middleware.SessionMiddleware",
-    "django.middleware.common.CommonMiddleware",
+    # Temporarily disabled to test impact on DELETE requests
+    # "django.middleware.common.CommonMiddleware", <--this is the problem for duplication of deleting
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
@@ -142,6 +149,12 @@ SIMPLE_JWT = {
     "BLACKLIST_AFTER_ROTATION": True,
     "AUTH_HEADER_TYPES": ("Bearer",),
 }
+
+# Server-Side Timeout Configuration
+SOCKET_TIMEOUT = 30  # Matches client timeout of 30000ms
+
+# Server-Side Timeout Configuration
+SOCKET_TIMEOUT = 30  # Matches client timeout of 30000ms
 
 #Using secure cookies & HTTPS settings for production
 CSRF_COOKIE_SECURE = True

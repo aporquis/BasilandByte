@@ -1,15 +1,26 @@
+<<<<<<< HEAD
 // Navbar.js
+=======
+>>>>>>> origin/main
 import React from "react";
 import { useNavigate } from "react-router-dom";
 
 function Navbar() {
   const navigate = useNavigate();
+<<<<<<< HEAD
   // Check if the user is logged in by looking for an access token
   const isLoggedIn = !!localStorage.getItem("access_token");
 
   const handleLogout = () => {
     // Clear token and navigate to login page
     localStorage.removeItem("access_token");
+=======
+  const isLoggedIn = !!localStorage.getItem("access_token");
+
+  const handleLogout = () => {
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("refresh_token");
+>>>>>>> origin/main
     navigate("/login");
   };
 

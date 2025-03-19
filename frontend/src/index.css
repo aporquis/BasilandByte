@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@300..700&family=Merriweather:ital,wght@0,300;0,400;0,700;0,900;1,300;1,400;1,700;1,900&display=swap');
+<<<<<<< HEAD
 body {
   font-family: 'Fira Code', monospace;
     margin: 20px;
@@ -97,4 +98,133 @@ form button[type="submit"]:hover {
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
+=======
+
+body {
+  font-family: 'Fira Code', monospace;
+  margin: 20px;
+  background-color: #ece6db;
+  /* light background */
+  color: #272727;
+  /* Dark text */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1,
+h2 {
+  font-family: 'Merriweather', serif;
+  color: #555;
+  /* Darker headers */
+>>>>>>> origin/main
+}
+
+ul {
+  list-style: none;
+  padding: 0;
+}
+
+/* Recipe list styling */
+ul li {
+  background-color: #ffffff;
+  /* White recipe card */
+  border: 1px solid #2e5436;
+  /* Card border */
+  margin-bottom: 10px;
+  padding: 20px;
+  border-radius: 8px;
+  /* Rounds cards corners */
+  box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+  /* Card shadow */
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  /* Smoother hover effect on card */
+}
+
+ul li:hover {
+  transform: translate(-2px);
+  /* Hover effect on card */
+  box-shadow: 4px 4px 8px rgba(0, 0, 0, 0.15);
+  /* Harsher shadow */
+}
+
+/* Recipe title styling */
+ul li strong {
+  font-size: 1.2em;
+  margin-bottom: 5px;
+  display: block;
+  /* Makes the recipe title a block element */
+}
+
+ul li em {
+  font-style: italic;
+  color: #777;
+  margin-right: 5px;
+}
+
+/* Global button styling applied to all buttons */
+button {
+  margin-top: 10px;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  background-color: #2e5436;
+  /* Dark green for all buttons */
+  color: white;
+  transition: background-color 0.2s ease;
+  /* Smooth hover transition */
+}
+
+button:hover {
+  background-color: #25442c;
+  /* Darker green on hover for all buttons */
+}
+
+button+button {
+  margin-left: 5px;
+  /* Space between adjacent buttons */
+}
+
+form {
+  background-color: #fff;
+  border: 1px solid #ddd;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+  margin-top: 20px;
+}
+
+form input[type="text"],
+form input[type="number"] {
+  width: calc(100% - 22px);
+  padding: 10px;
+  margin-bottom: 10px;
+  border: 1px solid #acc;
+  /* Assuming typo: acc -> #acc */
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+
+form select {
+  padding: 10px;
+  margin-bottom: 10px;
+  border: 1px solid #acc;
+  border-radius: 4px;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  ul li {
+    padding: 16px;
+  }
+
+  form input[type="text"],
+  form input[type="number"] {
+    width: calc(100% - 22px);
+  }
+}
+
+/* Code element designs */
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
 }
