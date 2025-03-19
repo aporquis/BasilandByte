@@ -32,10 +32,16 @@ steps:
     echo "Current remote settings:"
     git remote -v
 
-    echo "Pushing all branches to GitHub..."
-    git push github --all
+    CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+    echo "Current branch is $CURRENT_BRANCH"
 
-    echo "Pushing all tags to Github..."
-    git push github --tags
+    echo "Pushing current branch to GitHub..."
+    git push github $CURRENT_BRANCH --force || (echo "Failed to push branch" && exit 1)
+
+    echo "Pushing all branches to GitHub..."
+    git push github --all --force || (echo "Failed to push all branches" && exit 1)
+
+    echo "Pushing all tags to GitHub..."
+    git push github --tags || (echo "Failed to push tags" && exit 1)
   displayName: 'Test GitHub Connection and Fetch'
   
