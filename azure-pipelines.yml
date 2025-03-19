@@ -6,7 +6,7 @@
 trigger:
   branches:
     include:
-      - AzureMirror
+      - '*'
 
 pool:
   vmImage: ubuntu-latest
@@ -30,6 +30,6 @@ steps:
       echo "Adding remote 'github'..."
       git remote add github https://$GITHUB_USER:$GITHUB_PAT@github.com/aporquis/BasilandByte.git
     fi
-    echo "Pushing to GitHub..."
-    git push github main
-  displayName: 'Mirror to GitHub'
+    echo "Pushing branches to GitHub..."
+    git push github --all --tags
+  displayName: 'Mirror all branches and tags to GitHub'
