@@ -1,5 +1,5 @@
 I am testing the mirroring.
 
-I committed this file to Azure. I will need to debug the pipeline.
+Pushes to Azure now reflect in Github!! 
 
 What happens if I commit to github?
