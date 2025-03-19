@@ -2,7 +2,7 @@ name: Sync to Azure DevOps
 on:
   push:
     branches:
-      - main
+      - '**'
 
 jobs:
   sync:
@@ -11,10 +11,17 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      - name: Push to Azure DevOps
+      - name: Test Azure connection
         run: |
-          git remote add azure https://$AZURE_USER:$AZURE_PAT@dev.azure.com/CS480Spring25/BasilAndByte/_git/BasilAndByte
-          git push azure main
+          echo "Setting up Azure remote..."
+          git remote add azure https://$AZURE_USER:$AZURE_PAT@dev.azure.com/<organization>/<project>/_git/<repository> || \
+          git remote set-url azure https://$AZURE_USER:$AZURE_PAT@dev.azure.com/<organization>/<project>/_git/<repository>
+
+          echo "Current remotes:"
+          git remote -v
+
+          echo "Testing connection to Azure..."
+          git ls-remote azure
         env:
           AZURE_USER: ${{ secrets.AZURE_USER }}
           AZURE_PAT: ${{ secrets.AZURE_PAT }}
