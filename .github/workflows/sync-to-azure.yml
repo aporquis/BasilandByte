@@ -14,8 +14,8 @@ jobs:
       - name: Test Azure connection
         run: |
           echo "Setting up Azure remote..."
-          git remote add azure https://$AZURE_USER:$AZURE_PAT@dev.azure.com/<organization>/<project>/_git/<repository> || \
-          git remote set-url azure https://$AZURE_USER:$AZURE_PAT@dev.azure.com/<organization>/<project>/_git/<repository>
+          git remote add azure https://$AZURE_USER:$AZURE_PAT@dev.azure.com/CS480Spring25/BasilAndByte/_git/BasilAndByte || \
+          git remote set-url azure https://$AZURE_USER:$AZURE_PAT@dev.azure.com/CS480Spring25/BasilAndByte/_git/BasilAndByte
 
           echo "Current remotes:"
           git remote -v
