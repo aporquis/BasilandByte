@@ -22,15 +22,17 @@ steps:
 - checkout: self
 
 - script: |
-    echo "Checking GitHub connection..."
-    git remote remove github || true
-
-    git remote add github https://$GITHUB_USER:$GITHUB_PAT@github.com/aporquis/BasilandByte.git
-
+- script: |
     echo "Current remote settings:"
     git remote -v
 
-    echo "Testing authentication..."
-    git ls-remote github
-  displayName: 'Test GitHub Connection'
+    echo "Listing remote branches:"
+    git branch -a
+
+    echo "Fetching remote refs..."
+    git fetch --all
+
+    echo "Listing after fetch:"
+    git branch -a
+  displayName: 'Test GitHub Connection and Fetch'
   
