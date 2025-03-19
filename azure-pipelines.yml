@@ -4,15 +4,32 @@
 # https://aka.ms/yaml
 
 trigger:
-- main
+  branches:
+    include:
+      - main
 
 pool:
   vmImage: ubuntu-latest
+
+variables:
+  - group: GitHub-Secrets
+  - name: GITHUB_USER
+    value: $(GITHUB_USER) # Use from variable group
+  - name: GITHUB_PAT
+    value: $(GITHUB_PAT) # Use from variable group
 
 steps:
 - checkout: self
 
 - script: |
-    git remote add github https://$(GITHUB_USER):$(GITHUB_PAT)@github.com/aporquis/BasilandByte.git
+    echo "Setting up GitHub remote..."
+    if git remote get-url github; then
+      echo "Remote 'github' already exists. Updating URL..."
+      git remote set-url github https://$GITHUB_USER:$GITHUB_PAT@github.com/aporquis/BasilandByte.git
+    else
+      echo "Adding remote 'github'..."
+      git remote add github https://$GITHUB_USER:$GITHUB_PAT@github.com/aporquis/BasilandByte.git
+    fi
+    echo "Pushing to GitHub..."
     git push github main
-  displayName: 'Mirror to Github'
+  displayName: 'Mirror to GitHub'
