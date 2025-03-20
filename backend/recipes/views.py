@@ -8,7 +8,7 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
-from .models import Recipe, Ingredient, RecipeIngredient, FoodGroup, SavedItem, WeeklyPlan
+from .models import Recipe, Ingredient, RecipeIngredient, FoodGroup, SavedItem, WeeklyPlan, LoginEvent
 from .serializers import RecipeSerializer, UserRegisterSerializer, UserLoginSerializer, SavedItemSerializer, WeeklyPlanSerializer
 from django.http import JsonResponse, HttpResponse
 import json
@@ -275,3 +275,22 @@ def clear_day_plan(request, day):
     user = request.user
     WeeklyPlan.objects.filter(user=user, day=day).delete()
     return Response({"message": f"{day} plan cleared"}, status=status.HTTP_204_NO_CONTENT)
+
+
+@api_view(['POST'])
+def log_login_event(request):
+    # Log a login event without authentication requirement
+    username = request.data.get('username')
+    outcome = request.data.get('outcome')
+    # Default to 'unknown' if not provided
+    source = request.data.get('source', 'unknown')
+
+    if not username or not outcome:
+        return Response({'error': 'Username and outcome are required'}, status=status.HTTP_400_BAD_REQUEST)
+
+    LoginEvent.objects.create(
+        username=username,
+        outcome=outcome,
+        source=source
+    )
+    return Response({'message': 'Login event logged'}, status=status.HTTP_201_CREATED)
