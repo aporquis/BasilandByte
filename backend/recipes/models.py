@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.utils import timezone
 
 # The models below create tables. Primary keys are specified and foreign keys are referenced
 # We do not need to create a user model, as we are using Django's user model
@@ -8,8 +9,6 @@ from django.contrib.auth.models import User
 # The models below create tables. Primary keys are specified and foreign keys are referenced
 # We do not need to create a user model, as we are using Django's user model
 
-from django.db import models
-from django.contrib.auth.models import User
 
 
 class Recipe(models.Model):
@@ -91,4 +90,23 @@ class WeeklyPlan(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.day} {self.meal_type}: {self.recipe.recipe_name}"
+    
+
+class LoginEvent(models.Model):
+    username = models.CharField(max_length=150)  # Username attempted
+    timestamp = models.DateTimeField(
+        default=timezone.now)  # When the attempt occurred
+    outcome = models.CharField(max_length=10, choices=[(
+        'success', 'Success'), ('failure', 'Failure')])  # Result
+    source = models.CharField(max_length=10, choices=[(
+        # Source of attempt
+        'mobile', 'Mobile'), ('web', 'Web')], default='unknown')
+
+    def __str__(self):
+        return f"{self.username} - {self.timestamp} - {self.outcome} ({self.source})"
+
+    class Meta:
+        ordering = ['-timestamp']  # Latest events first
+    
+    
     
