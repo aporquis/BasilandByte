@@ -14,20 +14,24 @@ const LoginScreen = ({ navigation }) => {
     const [error, setError] = useState('');
     const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-    // Handle login form submission
+    // Handle login form submission with event logging
     const handleLogin = async () => {
         if (!username || !password) { // Validate inputs
             setError('Username and password are required!');
+            await logLoginEvent(username || 'unknown', 'failure', 'mobile'); // Log failed attempt due to missing fields
             return;
         }
 
         try {
+            await logLoginEvent(username, 'attempt', 'mobile'); // Log the login attempt
             await loginUser(username, password); // Attempt login via API
+            await logLoginEvent(username, 'success', 'mobile'); // Log successful login
             setIsLoggedIn(true); // Update UI state
             setError(''); // Clear any previous errors
             navigation.replace('AuthenticatedTabs'); // Navigate to authenticated tabs
         } catch (error) {
             const errorMessage = error.response?.data?.error || error.message; // Extract error message
+            await logLoginEvent(username, 'failure', 'mobile'); // Log failed login
             setError(`Login failed: ${errorMessage}`); // Display error to user
         }
     };

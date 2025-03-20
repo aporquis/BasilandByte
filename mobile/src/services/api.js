@@ -272,4 +272,22 @@ export const loginUser = async (username, password) => {
     }
 };
 
+// Log a login event at /log-login/ for GDPR compliance
+export const logLoginEvent = async (username, outcome, source) => {
+    console.log('Executing logLoginEvent for username:', username);
+    try {
+        const response = await api.post('/log-login/', { username, outcome, source });
+        console.log('logLoginEvent - Response:', response.status, response.data);
+        return response.data;
+    } catch (error) {
+        console.error('logLoginEvent - Error:', {
+            message: error.message,
+            response: error.response?.data,
+            status: error.response?.status,
+        });
+        // Don’t throw error to avoid blocking login; log and proceed
+        return null; // Return null to indicate failure but allow login to continue
+    }
+};
+
 export default api;
