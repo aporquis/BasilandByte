@@ -1,11 +1,10 @@
 # backend/backend/settings.py
 # Django settings for the backend project.
 # This file configures the Django application for both local development and hosted environments.
-# It uses a .env file for local development to manage environment variables like DATABASE_URL,
-# while keeping hosting URLs for CORS and CSRF configurations.
+# Hardcodes CORS and ALLOWED_HOSTS for production and local development, while keeping sensitive settings
+# (like DATABASE_URL and DJANGO_SECRET_KEY) configurable via environment variables (e.g., Render dashboard).
 
 import os
-from dotenv import load_dotenv  # For loading .env files in local development
 from pathlib import Path
 from datetime import timedelta
 import dj_database_url  # For parsing DATABASE_URL environment variable
@@ -13,48 +12,37 @@ import dj_database_url  # For parsing DATABASE_URL environment variable
 # Base directory of the project (parent of settings.py)
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Load environment variables from .env file for local development
-# If running on Render (production), skip .env loading
-if os.getenv("RENDER") == "true":
-    print("Running in Render production environment")
-else:
-    # Load .env file for local development
-    dotenv_path = BASE_DIR / ".env"
-    if dotenv_path.exists():
-        load_dotenv(dotenv_path)
-    else:
-        # Raise an error if .env is missing in local development
-        raise FileNotFoundError(f"Missing .env file at {dotenv_path}")
-
 # SECURITY WARNING: Keep the secret key used in production secret!
-# Use a secure key in production; fallback for local development
+# Use a secure key in production; set via environment variable (e.g., Render dashboard)
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "fallback-secret-key")
 
 # SECURITY WARNING: Debug should be False in production
-# Controlled via .env file; defaults to True for local development
+# Set via environment variable (e.g., Render dashboard); defaults to True for local development
 DEBUG = os.getenv("DEBUG", "True").lower() == "true"
 
 # Allowed hosts for the Django server
-# Controlled via .env file; defaults to localhost for local development
-# In production, Render sets RENDER_EXTERNAL_HOSTNAME
-ALLOWED_HOSTS = os.getenv(
-    "ALLOWED_HOSTS", "10.0.0.150,localhost,127.0.0.1").replace(" ", "").split(",")
+# Hardcoded to include production (Render) and generic local development hosts
+# Render sets RENDER_EXTERNAL_HOSTNAME, which is appended if present
+ALLOWED_HOSTS = [
+    "basilandbyte.onrender.com",  # Hosted backend domain
+    "localhost",  # Local development for all team members
+    "127.0.0.1",  # Local development for all team members
+]
 RENDER_EXTERNAL_HOSTNAME = os.getenv('RENDER_EXTERNAL_HOSTNAME')
 if RENDER_EXTERNAL_HOSTNAME:
     ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
 
 # CORS Configuration: Allows frontend to communicate with backend
-# Hardcoded hosting URLs for production; overridden by .env for local development
+# Hardcoded to include production and local development origins for all team members
 CORS_ALLOW_ALL_ORIGINS = False  # Disable allow-all for security
-# Hosting URLs for production (Render and Vercel) and local development
 CORS_ALLOWED_ORIGINS = [
     "https://basilandbyte.vercel.app",  # Frontend URL (production)
     "https://basilandbyte.onrender.com",  # Backend URL (production)
-    "http://localhost:3000",  # Web frontend (local development)
-    "http://10.0.0.150:19000",  # React Native dev server (local development)
+    # Web frontend (local development for all team members)
+    "http://localhost:3000",
+    # React Native dev server (local development for all team members)
+    "http://localhost:19000",
 ]
-# Extend with .env for additional origins if needed
-CORS_ALLOWED_ORIGINS.extend(os.getenv("CORS_ALLOWED_ORIGINS", "").split(","))
 CORS_ALLOW_CREDENTIALS = True  # Allow cookies and credentials in CORS requests
 CORS_ALLOW_METHODS = ["GET", "POST", "PUT",
                       "DELETE", "OPTIONS"]  # Allowed HTTP methods
@@ -118,7 +106,8 @@ TEMPLATES = [
 WSGI_APPLICATION = "backend.wsgi.application"
 
 # Database configuration: Uses dj_database_url to parse DATABASE_URL
-# Defaults to SQLite if DATABASE_URL is not set
+# In production, DATABASE_URL is set via Render environment variables
+# Defaults to SQLite for local development
 DATABASES = {
     "default": dj_database_url.config(default='sqlite:///db.sqlite3')
 }
@@ -150,7 +139,8 @@ STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 # Media files (Uploaded user images)
 MEDIA_URL = "/recipe_images/"
-MEDIA_ROOT = os.getenv("RECIPE_IMAGE_PATH", str(BASE_DIR / "recipe_images"))
+# Hardcode the media root for local development; in production, set via Render environment variable
+MEDIA_ROOT = str(BASE_DIR / "recipe_images")
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
