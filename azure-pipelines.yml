@@ -1,0 +1,47 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+trigger:
+  branches:
+    include:
+      - '*'
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+  - group: GitHub-Secrets
+
+steps:
+- checkout: self
+
+- script: |
+    echo "Setting up GitHub remote..."
+
+    if git remote get-url github; then
+      git remote set-url github https://$GITHUB_USER:$GITHUB_PAT@github.com/aporquis/BasilandByte.git
+    else
+      git remote add github https://$GITHUB_USER:$GITHUB_PAT@github.com/aporquis/BasilandByte.git
+    fi
+
+    echo "Fetching remote refs..."
+    git fetch --all
+
+    echo "Current remote settings:"
+    git remote -v
+
+    CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+    echo "Current branch is $CURRENT_BRANCH"
+
+    echo "Pushing current branch to GitHub..."
+    git push github $CURRENT_BRANCH --force || (echo "Failed to push branch" && exit 1)
+
+    echo "Pushing all branches to GitHub..."
+    git push github --all --force || (echo "Failed to push all branches" && exit 1)
+
+    echo "Pushing all tags to GitHub..."
+    git push github --tags || (echo "Failed to push tags" && exit 1)
+  displayName: 'Test GitHub Connection and Fetch'
+  

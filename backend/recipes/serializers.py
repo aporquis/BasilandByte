@@ -1,9 +1,14 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers
+<<<<<<< HEAD
+from .models import Recipe
+class UserRegisterSerializer(serializers.ModelSerializer): #serializer for registering a new user
+=======
 from .models import Recipe, Ingredient, RecipeIngredient, FoodGroup, SavedItem, WeeklyPlan
 
 
 class UserRegisterSerializer(serializers.ModelSerializer):
+>>>>>>> origin/main
     password2 = serializers.CharField(write_only=True)
 
     class Meta:
@@ -18,6 +23,19 @@ class UserRegisterSerializer(serializers.ModelSerializer):
         return data
 
     def create(self, validated_data):
+<<<<<<< HEAD
+        validated_data.pop("password2")  # Remove password2 field before saving
+        user = User.objects.create_user(**validated_data)
+        return user
+    
+class UserLoginSerializer(serializers.Serializer): #serializer for users that already have an account and want to login.
+    username = serializers.CharField()
+    password = serializers.CharField(write_only=True)
+
+class RecipeSerializer(serializers.ModelSerializer): #serializer for recipes
+    image = serializers.ImageField(required=False) #gives the user the ability to add a recipe and NOT have to include an image. 
+    user = serializers.StringRelatedField(read_only=True)  # shows the username
+=======
         validated_data.pop("password2")
         user = User.objects.create_user(**validated_data)
         return user
@@ -42,12 +60,24 @@ class RecipeSerializer(serializers.ModelSerializer):
     user = serializers.PrimaryKeyRelatedField(read_only=True)
     username = serializers.SerializerMethodField()
     recipe_ingredients = RecipeIngredientSerializer(many=True, read_only=True)
+>>>>>>> origin/main
 
     class Meta:
         model = Recipe
         fields = "__all__"
 
     def create(self, validated_data):
+<<<<<<< HEAD
+        request = self.context.get('request')
+        # Automatically assign the logged-in user
+        return Recipe.objects.create(user=request.user, **validated_data)
+        fields = "__all__"
+
+    def create(self, validated_data):
+        request = self.context.get('request')
+        # Automatically assign the logged-in user
+        return Recipe.objects.create(user=request.user, **validated_data)
+=======
         return Recipe.objects.create(**validated_data)
 
     def update(self, instance, validated_data):
@@ -76,3 +106,4 @@ class WeeklyPlanSerializer(serializers.ModelSerializer):
         model = WeeklyPlan
         fields = ['id', 'recipe', 'recipe_name',
                   'day', 'meal_type', 'created_at']
+>>>>>>> origin/main
