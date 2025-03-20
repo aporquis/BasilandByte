@@ -1,29 +1,27 @@
-import React, { useState } from "react";
-import axios from "axios";
-import { useNavigate } from "react-router-dom";
+// frontend/src/Login.js
+// Login component for user authentication.
+// Uses loginUser from api.js to authenticate and store tokens.
+// Redirects to /recipes on success.
 
-// Base URL for API
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "http://localhost:8000";
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { loginUser } from "./api"; // Import login function
 
 function Login() {
-  const [username, setUsername] = useState(""); // Username input state
-  const [password, setPassword] = useState(""); // Password input state
-  const [message, setMessage] = useState(""); // Success/error message state
-  const navigate = useNavigate(); // For redirecting after login
+  const [username, setUsername] = useState(""); // State for username input
+  const [password, setPassword] = useState(""); // State for password input
+  const [message, setMessage] = useState(""); // State for success/error messages
+  const navigate = useNavigate(); // Hook for navigation
 
-  // Handle form submission to log in
+  // Handle login form submission
   const handleSubmit = async (e) => {
     e.preventDefault(); // Prevent default form submission
     try {
-      const response = await axios.post(`${API_BASE_URL}/api/token/`, { username, password });
-      console.log("Login Response:", response.data); // Debug: Log response
-      const { access, refresh } = response.data; // Extract tokens
-      localStorage.setItem("access_token", access); // Store access token
-      localStorage.setItem("refresh_token", refresh); // Store refresh token
+      await loginUser(username, password); // Attempt login via API
       setMessage("✅ Login successful! Redirecting...");
-      setTimeout(() => navigate("/recipes"), 1000); // Redirect to recipes after 1s
+      setTimeout(() => navigate("/recipes"), 1000); // Redirect after 1s
     } catch (error) {
-      console.error("Login Error:", error.response?.data || error);
+      console.error("Login Error:", error.message);
       setMessage(error.response?.data?.detail || "Login failed! Check your credentials.");
     }
   };
@@ -56,7 +54,7 @@ function Login() {
       </form>
       <div style={{ marginTop: "20px" }}>
         <p>Don't have an account?</p>
-        <button onClick={() => navigate("/register")}>Create New User</button>
+        <button onClick={() => navigate("/register")}>Create New User</button> {/* Navigate to register */}
       </div>
     </div>
   );

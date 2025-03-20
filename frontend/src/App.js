@@ -1,6 +1,11 @@
+// frontend/src/App.js
+// Main application component managing routing and recipe data.
+// Displays a list of recipes with search and filter options.
+// Uses BrowserRouter for navigation and integrates with api.js functions.
+
 import React, { useEffect, useState } from "react";
 import { BrowserRouter as Router, Routes, Route, useNavigate } from "react-router-dom";
-import { fetchRecipes, saveRecipe, getSavedRecipes, unsaveRecipe } from "./api";
+import { fetchRecipes, saveRecipe, getSavedRecipes, unsaveRecipe } from "./api"; // Import API functions
 import Navbar from "./Navbar";
 import Home from "./Home";
 import Login from "./Login";
@@ -8,31 +13,32 @@ import Register from "./Register";
 import Dashboard from "./Dashboard";
 import AddRecipe from "./AddRecipe";
 import SavedRecipes from "./SavedRecipes";
-import WeeklyPlanner from "./WeeklyPlanner"; // New import
-
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "http://localhost:8000";
+import WeeklyPlanner from "./WeeklyPlanner";
 
 function RecipeApp() {
+  // State for recipes, saved recipes, and filters
   const [recipes, setRecipes] = useState([]);
   const [savedRecipes, setSavedRecipes] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const navigate = useNavigate();
-  const isLoggedIn = !!localStorage.getItem("access_token");
+  const isLoggedIn = !!localStorage.getItem("access_token"); // Check login status
 
+  // Fetch recipes and saved recipes on mount or login status change
   useEffect(() => {
     const loadData = async () => {
-      const recipeData = await fetchRecipes();
+      const recipeData = await fetchRecipes(); // Fetch all recipes
       if (recipeData) setRecipes(recipeData);
 
       if (isLoggedIn) {
-        const savedData = await getSavedRecipes();
+        const savedData = await getSavedRecipes(); // Fetch saved recipes if logged in
         if (savedData) setSavedRecipes(savedData);
       }
     };
     loadData();
   }, [isLoggedIn]);
 
+  // Filter recipes based on search term and category
   const filteredRecipes = recipes.filter(recipe => {
     const matchesSearch =
       recipe.recipe_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -42,25 +48,30 @@ function RecipeApp() {
     return matchesSearch && matchesCategory;
   });
 
+  // Save a recipe and update state
   const handleSaveRecipe = async (recipeId) => {
     try {
       const savedData = await saveRecipe(recipeId);
       if (savedData) setSavedRecipes([...savedRecipes, savedData]);
     } catch (error) {
-      console.error("Error saving recipe:", error);
+      console.error("Error saving recipe:", error.message);
     }
   };
 
+  // Unsave a recipe and update state
   const handleUnsaveRecipe = async (savedItemId) => {
     try {
       const success = await unsaveRecipe(savedItemId);
       if (success) setSavedRecipes(savedRecipes.filter(sr => sr.id !== savedItemId));
     } catch (error) {
-      console.error("Error unsaving recipe:", error);
+      console.error("Error unsaving recipe:", error.message);
     }
   };
 
+  // Check if a recipe is saved
   const isRecipeSaved = (recipeId) => savedRecipes.some(sr => sr.recipe === recipeId);
+
+  // Get the saved item ID for unsaving
   const getSavedItemId = (recipeId) => {
     const saved = savedRecipes.find(sr => sr.recipe === recipeId);
     return saved ? saved.id : null;
@@ -68,6 +79,7 @@ function RecipeApp() {
 
   return (
     <div>
+      {/* Search and filter controls */}
       <div style={{ marginBottom: "20px" }}>
         <input
           type="text"
@@ -83,6 +95,7 @@ function RecipeApp() {
         <button onClick={() => setSelectedCategory("Side Dishes")}>Side Dishes</button>
       </div>
 
+      {/* Recipe list */}
       <h2>All Recipes</h2>
       <ul>
         {filteredRecipes.map((recipe) => (
@@ -103,7 +116,7 @@ function RecipeApp() {
             <br />
             {recipe.image && (
               <img
-                src={`${API_BASE_URL}/${recipe.image}`}
+                src={`${API_BASE_URL}/${recipe.image}`} // Use hardcoded URL
                 alt={recipe.recipe_name}
                 style={{ width: "200px", height: "150px", objectFit: "cover", marginTop: "10px" }}
               />
@@ -125,10 +138,11 @@ function RecipeApp() {
   );
 }
 
+// Main app with routing
 function MainApp() {
   return (
     <Router>
-      <Navbar />
+      <Navbar /> {/* Navigation bar */}
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/home" element={<Home />} />
@@ -136,6 +150,9 @@ function MainApp() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/add-recipe" element={<AddRecipe />} /> {/* Added route */}
+        <Route path="/saved-recipes" element={<SavedRecipes />} /> {/* Added route */}
+        <Route path="/weekly-planner" element={<WeeklyPlanner />} /> {/* Added route */}
       </Routes>
     </Router>
   );
