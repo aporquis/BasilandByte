@@ -13,16 +13,25 @@ function Login() {
   const [message, setMessage] = useState(""); // State for success/error messages
   const navigate = useNavigate(); // Hook for navigation
 
-  // Handle login form submission
+// Handle login form submission with GDPR-compliant event logging
   const handleSubmit = async (e) => {
     e.preventDefault(); // Prevent default form submission
+    if (!username || !password) { // Validate inputs
+      setMessage("Username and password are required!");
+      await logLoginEvent(username || 'unknown', 'failure', 'web'); // Log failed attempt due to missing fields
+      return;
+    }
+
     try {
+      await logLoginEvent(username, 'attempt', 'web'); // Log login attempt
       await loginUser(username, password); // Attempt login via API
-      setMessage("✅ Login successful! Redirecting...");
+      await logLoginEvent(username, 'success', 'web'); // Log successful login
+      setMessage("✅ Login successful! Redirecting..."); // Update UI
       setTimeout(() => navigate("/recipes"), 1000); // Redirect after 1s
     } catch (error) {
       console.error("Login Error:", error.message);
-      setMessage(error.response?.data?.detail || "Login failed! Check your credentials.");
+      await logLoginEvent(username, 'failure', 'web'); // Log failed login
+      setMessage(error.response?.data?.detail || "Login failed! Check your credentials."); // Display error
     }
   };
 
