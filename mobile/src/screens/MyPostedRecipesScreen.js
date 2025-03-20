@@ -1,15 +1,12 @@
-// mobile/src/screens/MyPostedRecipesScreen.js
-// Displays a list of recipes posted by the logged-in user, with options to delete or edit each recipe.
-// Fixed: Updated endpoint to /api/recipes/ and added user filtering logic.
-// Fixed: Updated delete endpoint to /api/recipes/delete/<int:recipe_id>/.
-// Fixed: Handle 204 responses, network errors, and 404 retries for delete operation.
-// Enhanced: Refine retry logic, reduce retries to 1, and improve feedback for network issues.
+// src/screens/MyPostedRecipesScreen.js
+// Displays recipes posted by the authenticated user with edit and delete options.
+// Uses fetchRecipes and deleteRecipe from api.js.
+// Filters recipes by a hardcoded username (adjust as needed).
 
 import React, { useState, useEffect } from 'react';
 import { View, Text, FlatList, StyleSheet, Image, TouchableOpacity, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import axios from 'axios';
-import { API_URL } from '@env';
+import { fetchRecipes, deleteRecipe } from '../services/api'; // Import from api.js
 import { useNavigation } from '@react-navigation/native';
 
 const MyPostedRecipesScreen = () => {
@@ -18,6 +15,7 @@ const MyPostedRecipesScreen = () => {
     const [isLoading, setIsLoading] = useState(false);
     const navigation = useNavigation();
 
+    // Fetch user's posted recipes
     const fetchMyRecipes = async () => {
         setIsLoading(true);
         const token = await AsyncStorage.getItem('userToken');
@@ -28,99 +26,45 @@ const MyPostedRecipesScreen = () => {
         }
 
         try {
-            console.log('📡 Requesting My Recipes:', `${API_URL}/api/recipes/`);
-            const response = await axios.get(`${API_URL}/api/recipes/`, {
-                headers: { Authorization: `Bearer ${token}` },
-                timeout: 30000,
-            });
-            console.log('📡 Fetched My Posted Recipes:', response.data);
-            const userRecipes = response.data.filter(recipe => recipe.username === 'ljchrislock');
+            const allRecipes = await fetchRecipes();
+            // Filter by username; adjust 'ljchrislock' to dynamic user if needed
+            const userRecipes = allRecipes.filter(recipe => recipe.username === 'ljchrislock');
             setRecipes(userRecipes);
             setError('');
-        } catch (err) {
-            console.error('Error fetching my recipes:', {
-                message: err.message,
-                response: err.response?.data,
-                status: err.response?.status,
-                config: err.config?.url,
-            });
-            setError('Failed to fetch your recipes. Please try again.');
+        } catch (error) {
+            setError('Failed to fetch your recipes: ' + (error.response?.data?.error || error.message));
         } finally {
             setIsLoading(false);
         }
     };
 
-    const deleteRecipe = async (recipeId, retries = 1) => {
-        const token = await AsyncStorage.getItem('userToken');
-        if (!token) {
-            setError('Please log in to delete recipes.');
-            return;
-        }
-
+    // Delete a recipe with confirmation
+    const handleDeleteRecipe = async (recipeId) => {
         try {
-            const url = `${API_URL}/api/recipes/delete/${recipeId}/`;
-            console.log(`📡 Attempting to delete recipe at: ${url}, retries left: ${retries}`);
-            const response = await axios.delete(url, {
-                headers: { Authorization: `Bearer ${token}` },
-                timeout: 30000,
-                validateStatus: (status) => status === 204 || status === 404,
-            });
-            console.log('📡 Delete Response:', response.status, response.data || 'No content');
-            if (response.status === 204) {
-                Alert.alert('Success', 'Recipe deleted successfully!');
-            } else if (response.status === 404) {
-                Alert.alert('Info', 'Recipe not found, it may have already been deleted.');
-            }
-        } catch (err) {
-            console.error('Error deleting recipe:', {
-                message: err.message,
-                code: err.code,
-                response: err.response?.data,
-                status: err.response?.status,
-                config: err.config?.url,
-            });
-
-            if (err.code === 'ERR_NETWORK' || err.code === 'ECONNABORTED') {
-                if (retries > 0) {
-                    console.log(`Retrying deletion for recipe ${recipeId}, ${retries} attempts left`);
-                    await new Promise(resolve => setTimeout(resolve, 1000));
-                    return deleteRecipe(recipeId, retries - 1);
-                } else {
-                    await fetchMyRecipes();
-                    if (!recipes.find(recipe => recipe.id === recipeId)) {
-                        Alert.alert('Success', 'Recipe deleted successfully despite network issue.');
-                    } else {
-                        Alert.alert('Warning', 'Network issue occurred, deletion may have failed. Please try again.');
-                    }
-                }
-            } else if (err.response?.status === 403) {
-                Alert.alert('Error', 'You do not have permission to delete this recipe.');
-            } else {
-                Alert.alert('Error', 'Failed to delete recipe: ' + (err.response?.data?.error || err.message || 'Network issue, check server.'));
-            }
-        } finally {
+            await deleteRecipe(recipeId);
+            Alert.alert('Success', 'Recipe deleted successfully!');
+            fetchMyRecipes();
+        } catch (error) {
+            const status = error.response?.status;
+            if (status === 403) Alert.alert('Error', 'You do not have permission to delete this recipe.');
+            else if (status === 404) Alert.alert('Info', 'Recipe not found, it may have already been deleted.');
+            else Alert.alert('Error', 'Failed to delete recipe: ' + (error.response?.data?.error || error.message));
             fetchMyRecipes();
         }
     };
 
     const confirmDelete = (recipeId, recipeName) => {
-        Alert.alert(
-            'Delete Recipe',
-            `Are you sure you want to delete "${recipeName}"? This action cannot be undone.`,
-            [
-                { text: 'Cancel', style: 'cancel' },
-                { text: 'Delete', style: 'destructive', onPress: () => deleteRecipe(recipeId) },
-            ]
-        );
+        Alert.alert('Delete Recipe', `Are you sure you want to delete "${recipeName}"?`, [
+            { text: 'Cancel', style: 'cancel' },
+            { text: 'Delete', style: 'destructive', onPress: () => handleDeleteRecipe(recipeId) },
+        ]);
     };
 
+    // Navigate to edit screen
     const editRecipe = (recipe) => {
         navigation.navigate('AuthenticatedTabs', {
             screen: 'Tab_Recipes',
-            params: {
-                screen: 'Recipe_Edit',
-                params: { recipe },
-            },
+            params: { screen: 'Recipe_Edit', params: { recipe } },
         });
     };
 
@@ -129,10 +73,7 @@ const MyPostedRecipesScreen = () => {
     }, []);
 
     useEffect(() => {
-        const unsubscribe = navigation.addListener('focus', () => {
-            console.log('Screen focused, refetching my recipes');
-            fetchMyRecipes();
-        });
+        const unsubscribe = navigation.addListener('focus', fetchMyRecipes);
         return unsubscribe;
     }, [navigation]);
 
@@ -142,24 +83,12 @@ const MyPostedRecipesScreen = () => {
             <Text style={styles.username}>Posted by: {item.username || 'Unknown User'}</Text>
             <Text style={styles.recipeDescription}>{item.description || 'No Description'}</Text>
             <Text style={styles.recipeInstructions}>{item.instructions || 'No Instructions'}</Text>
-            {item.image && (
-                <Image
-                    source={{ uri: `${API_URL}${item.image}` }}
-                    style={styles.recipeImage}
-                    resizeMode="cover"
-                />
-            )}
+            {item.image && <Image source={{ uri: `https://basilandbyte.onrender.com${item.image}` }} style={styles.recipeImage} resizeMode="cover" />}
             <View style={styles.buttonContainer}>
-                <TouchableOpacity
-                    style={[styles.button, styles.editButton]}
-                    onPress={() => editRecipe(item)}
-                >
+                <TouchableOpacity style={[styles.button, styles.editButton]} onPress={() => editRecipe(item)}>
                     <Text style={styles.buttonText}>Edit</Text>
                 </TouchableOpacity>
-                <TouchableOpacity
-                    style={[styles.button, styles.deleteButton]}
-                    onPress={() => confirmDelete(item.id, item.recipe_name)}
-                >
+                <TouchableOpacity style={[styles.button, styles.deleteButton]} onPress={() => confirmDelete(item.id, item.recipe_name)}>
                     <Text style={styles.buttonText}>Delete</Text>
                 </TouchableOpacity>
             </View>

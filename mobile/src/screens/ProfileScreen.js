@@ -1,13 +1,12 @@
-// ProfileScreen.js
-// Displays user profile information and navigation buttons for saved recipes, posted recipes, and weekly planner.
-// Uses a nested Stack Navigator to handle navigation to new screens.
-// Fixed: Updated endpoint to /api/recipes/user-info/ to match Django urls.py.
+// src/screens/ProfileScreen.js
+// Displays user profile info and navigation buttons to sub-screens.
+// Uses getUserInfo from api.js to fetch username.
+// Sets up a stack navigator for SavedRecipes, MyPostedRecipes, and WeeklyPlanner.
 
 import React, { useState, useEffect } from 'react';
-import { View, Text, Button, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import axios from 'axios';
-import { API_URL } from '@env';
+import { getUserInfo } from '../services/api'; // Import from api.js
 import { createStackNavigator } from '@react-navigation/stack';
 import SavedRecipesScreen from './SavedRecipesScreen';
 import MyPostedRecipesScreen from './MyPostedRecipesScreen';
@@ -19,6 +18,7 @@ const ProfileScreen = ({ navigation }) => {
     const [username, setUsername] = useState('');
     const [error, setError] = useState('');
 
+    // Fetch user info on mount
     useEffect(() => {
         const fetchUserInfo = async () => {
             const token = await AsyncStorage.getItem('userToken');
@@ -29,21 +29,11 @@ const ProfileScreen = ({ navigation }) => {
             }
 
             try {
-                console.log('📡 Requesting Profile Info:', `${API_URL}/api/recipes/user-info/`); // Debug log
-                const response = await axios.get(`${API_URL}/api/recipes/user-info/`, {
-                    headers: { Authorization: `Bearer ${token}` },
-                });
-                console.log('📡 Profile Data Response:', response.data);
-                setUsername(response.data.username);
+                const data = await getUserInfo();
+                setUsername(data.username);
                 setError('');
-            } catch (err) {
-                console.error('Error fetching user info:', {
-                    message: err.message,
-                    response: err.response?.data,
-                    status: err.response?.status,
-                    config: err.config?.url,
-                });
-                setError('Failed to fetch user info. Please try again.');
+            } catch (error) {
+                setError('Failed to fetch user info: ' + (error.response?.data?.detail || error.message));
             }
         };
         fetchUserInfo();
@@ -69,26 +59,10 @@ const ProfileScreen = ({ navigation }) => {
 
 const ProfileStackNavigator = () => (
     <ProfileStack.Navigator initialRouteName="Profile">
-        <ProfileStack.Screen
-            name="Profile"
-            component={ProfileScreen}
-            options={{ headerShown: false }}
-        />
-        <ProfileStack.Screen
-            name="SavedRecipes"
-            component={SavedRecipesScreen}
-            options={{ headerTitle: () => <Text>Saved Recipes</Text> }}
-        />
-        <ProfileStack.Screen
-            name="MyPostedRecipes"
-            component={MyPostedRecipesScreen}
-            options={{ headerTitle: () => <Text>My Posted Recipes</Text> }}
-        />
-        <ProfileStack.Screen
-            name="WeeklyPlanner"
-            component={WeeklyPlannerScreen}
-            options={{ headerTitle: () => <Text>Weekly Planner</Text> }}
-        />
+        <ProfileStack.Screen name="Profile" component={ProfileScreen} options={{ headerShown: false }} />
+        <ProfileStack.Screen name="SavedRecipes" component={SavedRecipesScreen} options={{ headerTitle: () => <Text>Saved Recipes</Text> }} />
+        <ProfileStack.Screen name="MyPostedRecipes" component={MyPostedRecipesScreen} options={{ headerTitle: () => <Text>My Posted Recipes</Text> }} />
+        <ProfileStack.Screen name="WeeklyPlanner" component={WeeklyPlannerScreen} options={{ headerTitle: () => <Text>Weekly Planner</Text> }} />
     </ProfileStack.Navigator>
 );
 

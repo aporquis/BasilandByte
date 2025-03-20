@@ -1,91 +1,52 @@
-// LoginScreen.js
-// Allows users to log in with their username and password.
-// On successful login, stores the token and navigates to the authenticated tabs.
-// Fixed: Updated endpoint to /api/recipes/login/ to match Django urls.py.
-// Note: Requires @react-native-async-storage/async-storage to be installed.
+// src/screens/LoginScreen.js
+// Handles user login by calling loginUser from api.js.
+// Navigates to AuthenticatedTabs on success using replace instead of reset.
+// Includes input validation and error handling.
 
 import React, { useState } from 'react';
 import { View, Text, TextInput, Button, StyleSheet, Alert } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage'; // Now resolved with installed package
-import axios from 'axios';
-import { API_URL } from '@env';
+import { loginUser } from '../services/api'; // Import login function from api.js
 
 const LoginScreen = ({ navigation }) => {
+    // State for form inputs and UI control
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-    console.log('API_URL:', API_URL);
-
+    // Handle login form submission
     const handleLogin = async () => {
-        if (!username || !password) {
+        if (!username || !password) { // Validate inputs
             setError('Username and password are required!');
             return;
         }
 
-        setError('');
         try {
-            console.log('Attempting to login to:', `${API_URL}/api/recipes/login/`);
-            const response = await axios.post(`${API_URL}/api/recipes/login/`, {
-                username,
-                password,
-            }, {
-                timeout: 10000,
-            });
-
-            console.log('Login response:', response.data);
-            const { access, refresh } = response.data.token;
-            if (access) {
-                await AsyncStorage.setItem('userToken', access);
-                await AsyncStorage.setItem('refresh_token', refresh);
-                console.log('🔑 Stored access token:', access);
-                console.log('🔑 Stored refresh token:', refresh);
-                setIsLoggedIn(true);
-                setError('');
-                navigation.reset({
-                    index: 0,
-                    routes: [{ name: 'AuthenticatedTabs' }],
-                });
-            } else {
-                setError('Login failed: No token received.');
-            }
-        } catch (err) {
-            console.error('Login error:', {
-                message: err.message,
-                code: err.code,
-                response: err.response?.data,
-                config: err.config?.url,
-                stack: err.stack,
-            });
-            if (err.code === 'ECONNABORTED') {
-                setError('Request timed out. Check your network or server.');
-            } else if (err.response) {
-                setError(`Login failed: ${err.response.data.error || err.message}`);
-            } else {
-                setError('Network error. Ensure the server is running and reachable at ' + (err.config?.url || API_URL));
-            }
+            await loginUser(username, password); // Attempt login via API
+            setIsLoggedIn(true); // Update UI state
+            setError(''); // Clear any previous errors
+            navigation.replace('AuthenticatedTabs'); // Navigate to authenticated tabs
+        } catch (error) {
+            const errorMessage = error.response?.data?.error || error.message; // Extract error message
+            setError(`Login failed: ${errorMessage}`); // Display error to user
         }
     };
 
+    // Navigate to dashboard if token is present
     const continueToDashboard = async () => {
-        const token = await AsyncStorage.getItem('userToken');
+        const token = await AsyncStorage.getItem('userToken'); // Check for stored token
         if (token) {
-            console.log('Navigating to AuthenticatedTabs with token:', token);
-            navigation.reset({
-                index: 0,
-                routes: [{ name: 'AuthenticatedTabs', params: { screen: 'Tab_Dashboard' } }],
-            });
+            navigation.replace('AuthenticatedTabs', { screen: 'Tab_Dashboard' }); // Navigate to dashboard
         } else {
-            setError('Token not found. Please log in again.');
-            setIsLoggedIn(false);
+            setError('Token not found. Please log in again.'); // Show error if no token
+            setIsLoggedIn(false); // Reset login state
         }
     };
 
     return (
         <View style={styles.container}>
             <Text style={styles.title}>Login</Text>
-            {error ? <Text style={styles.error}>{error}</Text> : null}
+            {error ? <Text style={styles.error}>{error}</Text> : null} {/* Display error if present */}
             <TextInput
                 placeholder="Username"
                 value={username}
@@ -99,14 +60,8 @@ const LoginScreen = ({ navigation }) => {
                 secureTextEntry
                 style={styles.input}
             />
-            <Button title="Login" onPress={handleLogin} />
-            {isLoggedIn && (
-                <Button
-                    title="Continue to Dashboard"
-                    onPress={continueToDashboard}
-                    style={styles.continueButton}
-                />
-            )}
+            <Button title="Login" onPress={handleLogin} /> {/* Trigger login */}
+            {isLoggedIn && <Button title="Continue to Dashboard" onPress={continueToDashboard} />} {/* Optional dashboard button */}
             <Text style={styles.registerLink} onPress={() => navigation.navigate('Register')}>
                 Don't have an account? Register
             </Text>
@@ -114,38 +69,39 @@ const LoginScreen = ({ navigation }) => {
     );
 };
 
+// Styles for the LoginScreen layout
 const styles = StyleSheet.create({
     container: {
         flex: 1,
         padding: 20,
-        justifyContent: 'center',
+        justifyContent: 'center', // Center content vertically
     },
     title: {
         fontSize: 24,
         fontWeight: 'bold',
         textAlign: 'center',
-        marginBottom: 20,
+        marginBottom: 20, // Space below title
     },
     error: {
         color: 'red',
         textAlign: 'center',
-        marginBottom: 10,
+        marginBottom: 10, // Space below error
     },
     input: {
         borderWidth: 1,
         borderColor: '#ccc',
         borderRadius: 4,
         padding: 10,
-        marginVertical: 10,
+        marginVertical: 10, // Vertical spacing between inputs
         fontSize: 16,
     },
     continueButton: {
-        marginTop: 10,
+        marginTop: 10, // Space above continue button
     },
     registerLink: {
         color: 'blue',
         textAlign: 'center',
-        marginTop: 20,
+        marginTop: 20, // Space above register link
     },
 });
 

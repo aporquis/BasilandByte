@@ -1,19 +1,19 @@
-// WelcomeScreen.js
-// Displays the app's welcome screen with a logo and two buttons: "Current Users Login" and "Register."
-// Serves as the initial entry point for users before navigating to Login or Register screens.
+// src/screens/WelcomeScreen.js
+// Displays the app's welcome screen with a logo and buttons for Login and Register.
+// No API calls, just navigation handling.
+// Uses a local logo asset (update path as needed).
 
 import React from 'react';
 import { View, Text, Button, Image, StyleSheet } from 'react-native';
 
-// WelcomeScreen component receives navigation prop for navigation actions
 const WelcomeScreen = ({ navigation }) => {
     // Log navigation prop for debugging
     console.log('Navigation prop:', navigation);
 
-    // Placeholder for your app logo (replace with your actual logo URL or local asset)
+    // Placeholder for your app logo (replace with your actual logo asset)
     const logoSource = require('../assets/logo.png'); // Update this path to your logo asset
 
-    // Handle navigation with a safeguard to ensure navigation is ready
+    // Handle navigation with a safeguard
     const handleNavigate = (screenName) => {
         console.log(`Navigating to ${screenName}`);
         if (navigation && navigation.navigate) {
@@ -25,11 +25,8 @@ const WelcomeScreen = ({ navigation }) => {
 
     return (
         <View style={styles.container}>
-            {/* App logo */}
             <Image source={logoSource} style={styles.logo} resizeMode="contain" />
-            {/* Welcome title wrapped in <Text> */}
             <Text style={styles.title}>Welcome to the Recipe App!</Text>
-            {/* Buttons for login and registration */}
             <Button
                 title="Current Users Login"
                 onPress={() => handleNavigate('Login')}
@@ -39,36 +36,35 @@ const WelcomeScreen = ({ navigation }) => {
                 title="Register"
                 onPress={() => handleNavigate('Register')}
                 style={styles.button}
-                color="#4CAF50" // Green color for the Register button to differentiate
+                color="#4CAF50"
             />
         </View>
     );
 };
 
-// Styles for the WelcomeScreen layout
 const styles = StyleSheet.create({
     container: {
-        flex: 1, // Takes full screen height
-        justifyContent: 'center', // Centers content vertically
-        alignItems: 'center', // Centers content horizontally
-        padding: 20, // Adds padding around the content
-        backgroundColor: '#F5F5F5', // Light background for a clean look
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 20,
+        backgroundColor: '#F5F5F5',
     },
     logo: {
-        width: 200, // Logo width
-        height: 200, // Logo height
-        marginBottom: 20, // Space below the logo
+        width: 200,
+        height: 200,
+        marginBottom: 20,
     },
     title: {
-        fontSize: 24, // Large font for the title
-        fontWeight: 'bold', // Bold text for emphasis
-        textAlign: 'center', // Centers the text
-        marginBottom: 30, // Adds spacing below the title
-        color: '#333', // Dark gray for readability
+        fontSize: 24,
+        fontWeight: 'bold',
+        textAlign: 'center',
+        marginBottom: 30,
+        color: '#333',
     },
     button: {
-        marginVertical: 10, // Vertical margin between buttons
-        width: 200, // Fixed button width for consistency
+        marginVertical: 10,
+        width: 200,
     },
 });
 

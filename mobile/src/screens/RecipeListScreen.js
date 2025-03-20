@@ -1,12 +1,12 @@
 // src/screens/RecipeListScreen.js
-// Displays a list of all recipes for authenticated users, including the posting user.
-// Enhanced: Added Save button to save recipes to user's saved list.
+// Displays a list of all recipes with a save option.
+// Uses fetchRecipes and saveRecipe from api.js.
+// Refreshes on focus and pull-to-refresh.
 
 import React, { useState, useEffect } from 'react';
 import { View, Text, FlatList, StyleSheet, Image, TouchableOpacity, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import axios from 'axios';
-import { API_URL } from '@env';
+import { fetchRecipes, saveRecipe } from '../services/api'; // Import from api.js
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 
 const RecipeListScreen = () => {
@@ -15,7 +15,8 @@ const RecipeListScreen = () => {
     const [isLoading, setIsLoading] = useState(false);
     const navigation = useNavigation();
 
-    const fetchRecipes = async () => {
+    // Fetch all recipes
+    const fetchAllRecipes = async () => {
         setIsLoading(true);
         const token = await AsyncStorage.getItem('userToken');
         if (!token) {
@@ -26,61 +27,38 @@ const RecipeListScreen = () => {
         }
 
         try {
-            console.log('📡 Requesting Recipes:', `${API_URL}/api/recipes/`);
-            const response = await axios.get(`${API_URL}/api/recipes/`, {
-                headers: { Authorization: `Bearer ${token}` },
-            });
-            console.log('📡 Fetched Recipes:', response.data);
-            setRecipes(response.data);
+            const data = await fetchRecipes();
+            setRecipes(data);
             setError('');
-        } catch (err) {
-            console.error('Error fetching recipes:', {
-                message: err.message,
-                response: err.response?.data,
-                status: err.response?.status,
-                config: err.config?.url,
-            });
-            setError('Failed to fetch recipes. Please try again.');
+        } catch (error) {
+            setError('Failed to fetch recipes: ' + (error.response?.data?.error || error.message));
         } finally {
             setIsLoading(false);
         }
     };
 
-    const saveRecipe = async (recipeId) => {
+    // Save a recipe
+    const handleSaveRecipe = async (recipeId) => {
         const token = await AsyncStorage.getItem('userToken');
         if (!token) {
-            setError('Please log in to save recipes.');
             navigation.navigate('Login');
             return;
         }
 
         try {
-            console.log('📡 Saving Recipe:', `${API_URL}/api/recipes/save/`);
-            const response = await axios.post(`${API_URL}/api/recipes/save/`, { recipe_id: recipeId }, {
-                headers: { Authorization: `Bearer ${token}` },
-                timeout: 30000,
-            });
-            console.log('📡 Save Recipe Response:', response.data);
-            Alert.alert('Success', response.data.message);
-        } catch (err) {
-            console.error('❌ Error saving recipe:', {
-                message: err.message,
-                response: err.response?.data,
-                status: err.response?.status,
-                config: err.config?.url,
-            });
-            Alert.alert('Error', 'Failed to save recipe: ' + (err.response?.data?.error || err.message));
+            const data = await saveRecipe(recipeId);
+            Alert.alert('Success', data.message || 'Recipe saved!');
+        } catch (error) {
+            Alert.alert('Error', 'Failed to save recipe: ' + (error.response?.data?.error || error.message));
         }
     };
 
-    useFocusEffect(
-        React.useCallback(() => {
-            fetchRecipes();
-        }, [])
-    );
+    useFocusEffect(React.useCallback(() => {
+        fetchAllRecipes();
+    }, []));
 
     useEffect(() => {
-        fetchRecipes();
+        fetchAllRecipes();
     }, [navigation]);
 
     const renderRecipeItem = ({ item }) => (
@@ -89,17 +67,8 @@ const RecipeListScreen = () => {
             <Text style={styles.username}>Posted by: {item.username || 'Unknown User'}</Text>
             <Text style={styles.recipeDescription}>{item.description || 'No Description'}</Text>
             <Text style={styles.recipeInstructions}>{item.instructions || 'No Instructions'}</Text>
-            {item.image && (
-                <Image
-                    source={{ uri: `${API_URL}${item.image}` }}
-                    style={styles.recipeImage}
-                    resizeMode="cover"
-                />
-            )}
-            <TouchableOpacity
-                style={styles.saveButton}
-                onPress={() => saveRecipe(item.id)}
-            >
+            {item.image && <Image source={{ uri: `https://basilandbyte.onrender.com${item.image}` }} style={styles.recipeImage} resizeMode="cover" />}
+            <TouchableOpacity style={styles.saveButton} onPress={() => handleSaveRecipe(item.id)}>
                 <Text style={styles.saveButtonText}>Save</Text>
             </TouchableOpacity>
         </View>
@@ -116,7 +85,7 @@ const RecipeListScreen = () => {
                 keyExtractor={(item) => item.id.toString()}
                 ListEmptyComponent={<Text style={styles.emptyText}>No recipes available.</Text>}
                 refreshing={isLoading}
-                onRefresh={fetchRecipes}
+                onRefresh={fetchAllRecipes}
             />
         </View>
     );
@@ -164,7 +133,7 @@ const styles = StyleSheet.create({
         marginBottom: 5,
     },
     recipeImage: {
-        width: '100%', // Fixed from '100'
+        width: '100%',
         height: 150,
         marginTop: 5,
         borderRadius: 5,

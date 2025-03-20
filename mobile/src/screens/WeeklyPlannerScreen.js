@@ -1,11 +1,13 @@
 // src/screens/WeeklyPlannerScreen.js
-// Displays a weekly meal planner synced with the backend, with day status boxes and clear options.
+// Displays a weekly meal planner with day status boxes and clear options.
+// Uses getWeeklyPlan, clearWeeklyPlan, clearDayPlan, and fetchRecipes from api.js.
+// Syncs with the backend and updates UI on changes.
 
 import React, { useState, useEffect } from 'react';
 import { View, Text, Button, FlatList, StyleSheet, TouchableOpacity, Alert } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage'; // Added import
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
-import { getWeeklyPlan, clearWeeklyPlan, clearDayPlan, fetchRecipes } from '../services/api';
+import { getWeeklyPlan, clearWeeklyPlan, clearDayPlan, fetchRecipes } from '../services/api'; // Import from api.js
 
 const WeeklyPlannerScreen = () => {
     const [weeklyPlan, setWeeklyPlan] = useState({});
@@ -28,15 +30,13 @@ const WeeklyPlannerScreen = () => {
                     return;
                 }
 
-                console.log('📡 Fetching Weekly Plan');
                 const planData = await getWeeklyPlan();
                 setWeeklyPlan(planData);
 
-                console.log('📡 Fetching Recipes');
                 const recipeData = await fetchRecipes();
                 setRecipes(recipeData);
             } catch (err) {
-                setError('Failed to load planner: ' + (err.message || 'Unknown error'));
+                setError('Failed to load planner: ' + (err.response?.data?.error || err.message));
                 console.error('❌ Error loading planner:', err);
             } finally {
                 setLoading(false);
@@ -45,12 +45,12 @@ const WeeklyPlannerScreen = () => {
         loadData();
     }, [navigation]);
 
-    // Calculate the number of meals planned for a day
+    // Calculate meal count for a day
     const getMealCount = (day) => {
         return (weeklyPlan[day] || []).length;
     };
 
-    // Determine the color of the day box based on meal count
+    // Determine day box color based on meal count
     const getDayBoxColor = (day) => {
         const mealCount = getMealCount(day);
         if (mealCount === 0) return '#FF3B30'; // Red: No meals
@@ -104,16 +104,14 @@ const WeeklyPlannerScreen = () => {
                                 style: 'destructive',
                                 onPress: async () => {
                                     try {
-                                        const success = await clearDayPlan(day);
-                                        if (success) {
-                                            setWeeklyPlan(prev => {
-                                                const newPlan = { ...prev };
-                                                delete newPlan[day];
-                                                return newPlan;
-                                            });
-                                        }
+                                        await clearDayPlan(day);
+                                        setWeeklyPlan(prev => {
+                                            const newPlan = { ...prev };
+                                            delete newPlan[day];
+                                            return newPlan;
+                                        });
                                     } catch (err) {
-                                        Alert.alert('Error', `Failed to clear ${day}.`);
+                                        Alert.alert('Error', `Failed to clear ${day}: ${err.message}`);
                                         console.error('❌ Error clearing day:', err);
                                     }
                                 },
@@ -141,28 +139,32 @@ const WeeklyPlannerScreen = () => {
                     </View>
                 ))}
             </View>
-            <Button title="Refresh Week" onPress={() => {
-                Alert.alert(
-                    'Confirm Refresh',
-                    'Are you sure you want to reset the weekly plan? This will delete all meals.',
-                    [
-                        { text: 'Cancel', style: 'cancel' },
-                        {
-                            text: 'Reset',
-                            style: 'destructive',
-                            onPress: async () => {
-                                try {
-                                    const success = await clearWeeklyPlan();
-                                    if (success) setWeeklyPlan({});
-                                } catch (err) {
-                                    Alert.alert('Error', 'Failed to clear weekly plan.');
-                                    console.error('❌ Error clearing weekly plan:', err);
-                                }
+            <Button
+                title="Refresh Week"
+                onPress={() => {
+                    Alert.alert(
+                        'Confirm Refresh',
+                        'Are you sure you want to reset the weekly plan? This will delete all meals.',
+                        [
+                            { text: 'Cancel', style: 'cancel' },
+                            {
+                                text: 'Reset',
+                                style: 'destructive',
+                                onPress: async () => {
+                                    try {
+                                        await clearWeeklyPlan();
+                                        setWeeklyPlan({});
+                                    } catch (err) {
+                                        Alert.alert('Error', 'Failed to clear weekly plan: ' + (err.message || 'Unknown error'));
+                                        console.error('❌ Error clearing weekly plan:', err);
+                                    }
+                                },
                             },
-                        },
-                    ]
-                );
-            }} color="#FF3B30" />
+                        ]
+                    );
+                }}
+                color="#FF3B30"
+            />
         </View>
     );
 
