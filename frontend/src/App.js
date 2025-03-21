@@ -14,6 +14,7 @@ import Dashboard from "./Dashboard";
 import AddRecipe from "./AddRecipe";
 import SavedRecipes from "./SavedRecipes";
 import WeeklyPlanner from "./WeeklyPlanner";
+import { API_BASE_URL } from "./api";
 
 function RecipeApp() {
   // State for recipes, saved recipes, and filters
