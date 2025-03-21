@@ -1,4 +1,104 @@
 @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@300..700&family=Merriweather:ital,wght@0,300;0,400;0,700;0,900;1,300;1,400;1,700;1,900&display=swap');
+<<<<<<< HEAD
+body {
+  font-family: 'Fira Code', monospace;
+    margin: 20px;
+    background-color: #ece6db; /* light background */
+     color:#272727; /*Dark text */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+h1, h2 {
+font-family: 'Merriweather', serif;
+color:#555; /*Darker headers*/
+}
+ul {
+  list-style: none;
+  padding: 0;
+}
+/*Recipe list styling*/
+ul li {
+  background-color: #ffffff; /*White recipe card*/
+  border: 1px solid #2e5436; /*Card border*/
+  margin-bottom: 10px;
+  padding: 20px;
+  border-radius: 8px; /*Rounds cards corners*/
+  box-shadow: 2px 2px 5px rgba(0,0,0,0.1); /*Card shadow*/
+  transition: transform 0.2s ease, box-shadow 0.2s ease; /*Smoother hover effect on card*/
+}
+ul li:hover {
+  transform: translate(-2px); /*Hover effect on card*/
+  box-shadow: 4px 4px 8px rgba(0,0,0,0.15); /*Harsher shadow*/
+}
+/* Recipe title styling */
+ul li strong {
+  font-size: 1.2em;
+  margin-bottom: 5px;
+  display: block; /*Makes the recipe title a block element*/
+}
+ul li em {
+  font-style: italic;
+  color:#777;
+  margin-right: 5px;
+}
+ul li button {
+  margin-top: 10px;
+  padding: 8px 16px;
+  border:none;
+  border-radius:  4px;
+  cursor: pionter;
+  background-color: #2e5436; /* Controls the color of the cards button*/
+  color:white;
+  transition: background-color o.2s ease; /* Controls card buttons hover animation*/
+}
+ul li button:hover {
+  background-color: #25442c; /* Cards button is darker on hover*/
+}
+ ul li button + button { /*Space between buttons */
+  margin-left: 5px;
+}
+form {
+  background-color: #fff;
+  border: 1px solid #ddd;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
+  margin-top: 20px;
+}
+form input[type="text"] {
+  width: calc(100% - 22px);
+  padding: 10px;
+  margin-bottom: 10px;
+  border:  1px solid #acc;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+form button[type="submit"] {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  background-color: #28a745;
+  color: white;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+form button[type="submit"]:hover {
+  background-color: #208838;
+}
+/* Resposive design */
+@media (max-width: 768px) {
+  ul li {
+    padding: 16px;
+  }
+  form input[type="text"] {
+    width: calc(100% -22px);
+  }
+}
+/*Code element designs*/
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+=======
 
 body {
   font-family: 'Fira Code', monospace;

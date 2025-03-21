@@ -16,6 +16,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Use a secure key in production; set via environment variable (e.g., Render dashboard)
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "fallback-secret-key")
 
+# SECURITY WARNING
+DEBUG = os.getenv("DEBUG", "").lower() == "true"
+
+# Allowed Hosts Configuration
+ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "").replace(" ", "").split(",")
 # SECURITY WARNING: Debug should be False in production
 # Set via environment variable (e.g., Render dashboard); defaults to True for local development
 DEBUG = os.getenv("DEBUG", "True").lower() == "true"
