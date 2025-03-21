@@ -5,12 +5,6 @@ from django.utils import timezone
 # The models below create tables. Primary keys are specified and foreign keys are referenced
 # We do not need to create a user model, as we are using Django's user model
 
-
-# The models below create tables. Primary keys are specified and foreign keys are referenced
-# We do not need to create a user model, as we are using Django's user model
-
-
-
 class Recipe(models.Model):
     user = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name="recipes")
