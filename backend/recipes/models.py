@@ -5,12 +5,6 @@ from django.utils import timezone
 # The models below create tables. Primary keys are specified and foreign keys are referenced
 # We do not need to create a user model, as we are using Django's user model
 
-
-# The models below create tables. Primary keys are specified and foreign keys are referenced
-# We do not need to create a user model, as we are using Django's user model
-
-
-
 class Recipe(models.Model):
     user = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name="recipes")
@@ -30,12 +24,10 @@ class Ingredient(models.Model):
     food_group = models.ForeignKey(
         "FoodGroup", on_delete=models.SET_NULL, null=True, related_name="ingredients")
     specific_species = models.CharField(max_length=100, null=True, blank=True)
->>>>>>> origin/main
     created_at = models.DateTimeField(auto_now_add=True)
     image = models.ImageField(upload_to='recipe_images/', null=True, blank =True)
 
     def __str__(self):
-<<<<<<< HEAD
         """Returns a string that represents the recipe (the title)."""
         return self.recipe_name
 
@@ -69,7 +61,6 @@ class RecipeIngredient(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-<<<<<<< HEAD
         """Returns a f-string of the recipe name and the ingredient name"""
         return f"{self.recipe.recipe_name} - {self.ingredient.ingredient_name}"
 
@@ -82,7 +73,7 @@ class SavedItem(models.Model):
     def __str__(self):
         """Returns a f-string of the username and the saved recipe name"""
         return f"{self.user.username} - {self.recipe.recipe_name}"
-=======
+
         return f"{self.recipe.recipe_name} - {self.ingredient.ingredient_name}"
 
 
@@ -127,7 +118,7 @@ class WeeklyPlan(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.day} {self.meal_type}: {self.recipe.recipe_name}"
-    
+
 
 class LoginEvent(models.Model):
     username = models.CharField(max_length=150)  # Username attempted
@@ -144,7 +135,3 @@ class LoginEvent(models.Model):
 
     class Meta:
         ordering = ['-timestamp']  # Latest events first
-    
-    
->>>>>>> origin/main
-    
