@@ -36,3 +36,5 @@ Thumbs.db
 #Python Caches
 __pycache__/
 *.pyc
+
+mobile.zip
