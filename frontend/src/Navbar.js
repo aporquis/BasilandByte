@@ -1,27 +1,20 @@
-<<<<<<< HEAD
-// Navbar.js
-=======
->>>>>>> origin/main
+// frontend/src/Navbar.js
+// Navigation bar component for the web app.
+// Displays links based on login status and handles logout.
+// No API calls, just navigation logic.
+
 import React from "react";
 import { useNavigate } from "react-router-dom";
 
 function Navbar() {
-  const navigate = useNavigate();
-<<<<<<< HEAD
-  // Check if the user is logged in by looking for an access token
-  const isLoggedIn = !!localStorage.getItem("access_token");
+  const navigate = useNavigate(); // Hook for navigation
+  const isLoggedIn = !!localStorage.getItem("access_token"); // Check login status
 
+  // Handle logout by clearing tokens and redirecting
   const handleLogout = () => {
-    // Clear token and navigate to login page
-    localStorage.removeItem("access_token");
-=======
-  const isLoggedIn = !!localStorage.getItem("access_token");
-
-  const handleLogout = () => {
-    localStorage.removeItem("access_token");
-    localStorage.removeItem("refresh_token");
->>>>>>> origin/main
-    navigate("/login");
+    localStorage.removeItem("access_token"); // Clear access token
+    localStorage.removeItem("refresh_token"); // Clear refresh token
+    navigate("/login"); // Redirect to login
   };
 
   return (

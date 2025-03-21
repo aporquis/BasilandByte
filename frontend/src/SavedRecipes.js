@@ -1,52 +1,58 @@
+// frontend/src/SavedRecipes.js
+// Component to display and manage saved recipes.
+// Allows unsaving recipes and adding them to the weekly planner.
+// Uses api.js functions for data fetching and updates.
+
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { fetchRecipes, getSavedRecipes, unsaveRecipe, addToWeeklyPlan } from "./api";
-
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "http://localhost:8000";
+import { fetchRecipes, getSavedRecipes, unsaveRecipe, addToWeeklyPlan } from "./api"; // Import API functions
 
 function SavedRecipes() {
-  const [recipes, setRecipes] = useState([]);
-  const [savedRecipes, setSavedRecipes] = useState([]);
-  const [selectedDay, setSelectedDay] = useState(""); // For planning
-  const [selectedMeal, setSelectedMeal] = useState(""); // For planning
-  const navigate = useNavigate();
-  const isLoggedIn = !!localStorage.getItem("access_token");
+  const [recipes, setRecipes] = useState([]); // State for all recipes (for lookup)
+  const [savedRecipes, setSavedRecipes] = useState([]); // State for saved recipes
+  const [selectedDay, setSelectedDay] = useState(""); // State for selected day in planner
+  const [selectedMeal, setSelectedMeal] = useState(""); // State for selected meal type in planner
+  const navigate = useNavigate(); // Hook for navigation
+  const isLoggedIn = !!localStorage.getItem("access_token"); // Check login status
 
+  // Fetch recipes and saved recipes on mount
   useEffect(() => {
     const loadData = async () => {
       if (!isLoggedIn) {
-        navigate("/login");
+        navigate("/login"); // Redirect to login if not authenticated
         return;
       }
-      const recipeData = await fetchRecipes();
+      const recipeData = await fetchRecipes(); // Fetch all recipes
       if (recipeData) setRecipes(recipeData);
-      const savedData = await getSavedRecipes();
+      const savedData = await getSavedRecipes(); // Fetch saved recipes
       if (savedData) setSavedRecipes(savedData);
     };
     loadData();
   }, [isLoggedIn, navigate]);
 
+  // Handle unsaving a recipe
   const handleUnsaveRecipe = async (savedItemId) => {
     try {
-      const success = await unsaveRecipe(savedItemId);
-      if (success) setSavedRecipes(savedRecipes.filter(sr => sr.id !== savedItemId));
+      const success = await unsaveRecipe(savedItemId); // Call API to unsave
+      if (success) setSavedRecipes(savedRecipes.filter(sr => sr.id !== savedItemId)); // Update state
     } catch (error) {
-      console.error("Error unsaving recipe:", error);
+      console.error("Error unsaving recipe:", error.message); // Log error
     }
   };
 
+  // Handle adding a recipe to the weekly planner
   const handleAddToPlan = async (recipeId) => {
     if (!selectedDay || !selectedMeal) {
-      alert("Please select a day and meal type.");
+      alert("Please select a day and meal type."); // Validate selection
       return;
     }
     try {
-      await addToWeeklyPlan(recipeId, selectedDay, selectedMeal);
-      alert(`Added to ${selectedDay} - ${selectedMeal}`);
-      setSelectedDay(""); // Reset selection
-      setSelectedMeal("");
+      await addToWeeklyPlan(recipeId, selectedDay, selectedMeal); // Call API to add to plan
+      alert(`Added to ${selectedDay} - ${selectedMeal}`); // Notify user
+      setSelectedDay(""); // Reset day selection
+      setSelectedMeal(""); // Reset meal selection
     } catch (error) {
-      console.error("Error adding to plan:", error);
+      console.error("Error adding to plan:", error.message); // Log error
     }
   };
 
@@ -55,6 +61,7 @@ function SavedRecipes() {
       <h2>Your Saved Recipes</h2>
       {isLoggedIn ? (
         <>
+          {/* Dropdowns for selecting day and meal type */}
           <div style={{ marginBottom: "20px" }}>
             <select
               value={selectedDay}
@@ -80,10 +87,11 @@ function SavedRecipes() {
               <option value="Dinner">Dinner</option>
             </select>
           </div>
+          {/* List of saved recipes */}
           <ul>
             {savedRecipes.map((saved) => {
-              const recipe = recipes.find(r => r.id === saved.recipe);
-              if (!recipe) return null;
+              const recipe = recipes.find(r => r.id === saved.recipe); // Match saved recipe to full recipe
+              if (!recipe) return null; // Skip if no match
               return (
                 <li key={saved.id}>
                   <strong>{recipe.recipe_name}</strong> - {recipe.description}
@@ -102,7 +110,7 @@ function SavedRecipes() {
                   <br />
                   {recipe.image && (
                     <img
-                      src={`${API_BASE_URL}/${recipe.image}`}
+                      src={`https://basilandbyte.onrender.com/api/recipes/${recipe.image}`} // Hardcoded URL
                       alt={recipe.recipe_name}
                       style={{ width: "200px", height: "150px", objectFit: "cover", marginTop: "10px" }}
                     />
@@ -116,7 +124,7 @@ function SavedRecipes() {
           </ul>
         </>
       ) : (
-        <p>Please log in to view your saved recipes.</p>
+        <p>Please log in to view your saved recipes.</p> // Message for unauthenticated users
       )}
     </div>
   );

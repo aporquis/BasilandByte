@@ -1,12 +1,12 @@
-// EditRecipeScreen.js
+// src/screens/EditRecipeScreen.js
 // Allows users to edit an existing recipe.
-// Fixed: Updated endpoint to /api/recipes/update/<int:recipe_id>/ to match Django urls.py.
+// Uses updateRecipe from api.js to send updates to /api/recipes/update/<recipe_id>/.
+// Handles image updates and form submission.
 
-import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, Alert, Platform } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, TextInput, Button, StyleSheet, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import axios from 'axios';
-import { API_URL } from '@env';
+import { updateRecipe } from '../services/api'; // Import from api.js
 import * as ImagePicker from 'react-native-image-picker';
 
 const EditRecipeScreen = ({ route, navigation }) => {
@@ -17,17 +17,13 @@ const EditRecipeScreen = ({ route, navigation }) => {
     const [image, setImage] = useState(recipe.image || null);
     const [error, setError] = useState('');
 
+    // Handle image selection
     const pickImage = async () => {
-        const options = {
-            mediaType: 'photo',
-            quality: 1,
-        };
-
+        const options = { mediaType: 'photo', quality: 1 };
         ImagePicker.launchImageLibrary(options, (response) => {
             if (response.didCancel) {
                 console.log('User cancelled image picker');
             } else if (response.errorCode) {
-                console.log('ImagePicker Error: ', response.errorMessage);
                 setError('Failed to pick image: ' + response.errorMessage);
             } else if (response.assets && response.assets.length > 0) {
                 setImage(response.assets[0].uri);
@@ -35,7 +31,8 @@ const EditRecipeScreen = ({ route, navigation }) => {
         });
     };
 
-    const updateRecipe = async () => {
+    // Submit updated recipe
+    const handleUpdateRecipe = async () => {
         if (!recipeName || !description || !instructions) {
             setError('Recipe name, description, and instructions are required!');
             return;
@@ -47,39 +44,21 @@ const EditRecipeScreen = ({ route, navigation }) => {
             return;
         }
 
-        let formData = new FormData();
+        const formData = new FormData();
         formData.append('recipe_name', recipeName);
         formData.append('description', description);
         formData.append('instructions', instructions);
         if (image && image !== recipe.image) {
-            formData.append('image', {
-                uri: image,
-                type: 'image/jpeg',
-                name: 'recipe.jpg',
-            });
+            formData.append('image', { uri: image, type: 'image/jpeg', name: 'recipe.jpg' });
         }
 
         try {
-            const url = `${API_URL}/api/recipes/update/${recipe.id}/`; // Fixed endpoint
-            console.log('📡 Attempting to update recipe at:', url);
-            const response = await axios.put(url, formData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data',
-                    Authorization: `Bearer ${token}`,
-                },
-            });
-            console.log('📡 Update Response:', response.data);
+            await updateRecipe(recipe.id, formData);
             Alert.alert('Success', 'Recipe updated successfully!');
             navigation.goBack();
-        } catch (err) {
-            console.error('Error updating recipe:', {
-                message: err.message,
-                code: err.code,
-                response: err.response?.data,
-                status: err.response?.status,
-                config: err.config?.url,
-            });
-            setError('Failed to update recipe: ' + (err.response?.data?.detail || err.message));
+        } catch (error) {
+            setError('Failed to update recipe: ' + (error.response?.data?.detail || error.message));
+            Alert.alert('Error', 'Failed to update recipe.');
         }
     };
 
@@ -108,7 +87,7 @@ const EditRecipeScreen = ({ route, navigation }) => {
                 multiline
             />
             <Button title="Pick an Image" onPress={pickImage} />
-            <Button title="Update Recipe" onPress={updateRecipe} style={styles.submitButton} />
+            <Button title="Update Recipe" onPress={handleUpdateRecipe} style={styles.submitButton} />
         </View>
     );
 };

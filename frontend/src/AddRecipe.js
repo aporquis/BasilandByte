@@ -1,10 +1,14 @@
+// frontend/src/AddRecipe.js
+// Component to add a new recipe with ingredients.
+// Uses addRecipe and addRecipeIngredient from api.js for backend interaction.
+// Navigates to /recipes on successful submission.
+
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { addRecipe, addRecipeIngredient } from "./api";
-
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "http://localhost:8000";
+import { addRecipe, addRecipeIngredient } from "./api"; // Import API functions
 
 function AddRecipe() {
+  // State for recipe form fields
   const [recipeName, setRecipeName] = useState("");
   const [description, setDescription] = useState("");
   const [ingredients, setIngredients] = useState([{ name: "", quantity: "", unit: "" }]);
@@ -12,27 +16,31 @@ function AddRecipe() {
   const [image, setImage] = useState(null);
   const navigate = useNavigate();
 
+  // Add a new empty ingredient field
   const handleAddIngredient = () => {
     setIngredients([...ingredients, { name: "", quantity: "", unit: "" }]);
   };
 
+  // Update ingredient field values
   const handleIngredientChange = (index, field, value) => {
     const newIngredients = [...ingredients];
     newIngredients[index][field] = value;
     setIngredients(newIngredients);
   };
 
+  // Handle form submission to add recipe and ingredients
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    e.preventDefault(); // Prevent default form submission
     const formData = new FormData();
     formData.append("recipe_name", recipeName);
     formData.append("description", description);
     formData.append("instructions", instructions);
-    if (image) formData.append("image", image);
+    if (image) formData.append("image", image); // Add image if selected
 
     try {
-      const addedRecipe = await addRecipe(formData);
+      const addedRecipe = await addRecipe(formData); // Add recipe via API
       if (addedRecipe) {
+        // Add each ingredient if all fields are filled
         for (const ingr of ingredients) {
           if (ingr.name && ingr.quantity && ingr.unit) {
             await addRecipeIngredient(addedRecipe.id, {
@@ -42,16 +50,17 @@ function AddRecipe() {
             });
           }
         }
+        // Reset form fields
         setRecipeName("");
         setDescription("");
         setIngredients([{ name: "", quantity: "", unit: "" }]);
         setInstructions("");
         setImage(null);
-        navigate("/recipes");
+        navigate("/recipes"); // Redirect to recipes page
       }
     } catch (error) {
-      console.error("Error adding recipe:", error.message || error);
-      alert("Failed to add recipe. Please try again.");
+      console.error("Error adding recipe:", error.message);
+      alert("Failed to add recipe. Please try again."); // Show error to user
     }
   };
 

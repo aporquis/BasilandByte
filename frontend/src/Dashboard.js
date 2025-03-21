@@ -1,128 +1,36 @@
+// frontend/src/Dashboard.js
+// Dashboard component for logged-in users.
+// Fetches user info and provides options to download data and navigate.
+// Uses getUserInfo and exportUserData from api.js.
+
 import React, { useEffect, useState } from "react";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
-
-<<<<<<< HEAD
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL?.replace(/\/$/, "") || "http://10.0.0.150:8000";
+import { getUserInfo, exportUserData } from "./api"; // Import API functions
 
 function Dashboard() {
-    const [user, setUser] = useState(null);
-    const [error, setError] = useState("");
-    const navigate = useNavigate();
-    navigate("/home");
+  const [user, setUser] = useState(null); // State for user data
+  const [error, setError] = useState(""); // State for error messages
+  const navigate = useNavigate(); // Hook for navigation
 
-    useEffect(() => {
-        console.log("Dashboard Loaded!"); //lets users know that the paged worked (in the console side of things F12)!
-
-        const fetchUserInfo = async () => {
-            const token = localStorage.getItem("access_token");
-
-            console.log("🔑 Stored Token in LocalStorage:", token); // Debugging for the chrome console
-
-            if (!token) {
-                setError("No authentication token found.");
-                console.error("❌ No authentication token found.");
-                return;
-            }
-
-            try {
-                const response = await axios.get(`${API_BASE_URL}/api/recipes/user-info/`, {
-                    headers: {
-                        Authorization: `Bearer ${token}`, // If using JWT, change to `Bearer ${token}` THIS IS WHAT I MESSED UP ON!!! FIXED NOW HAHA!
-                        "Content-Type": "application/json",
-                    },
-                });
-
-                console.log(" API Response:", response.data); // Debugging
-                setUser(response.data);
-            } catch (err) {
-                console.error(" Error fetching user info:", err);
-                setError(err.response?.data?.detail || "Failed to fetch user info.");
-            }
-        };
-
-        fetchUserInfo();
-    }, []);
-
-    // Function to Download User Data for specific LOGGED IN user
-    const downloadUserData = async () => {
-    const token = localStorage.getItem("access_token");
-
-    try {
-        const response = await axios.get(`${API_BASE_URL}/api/recipes/export-user-data/`, {
-            headers: {
-                Authorization: `Bearer ${token}`, // If using JWT, change to `Bearer ${token}` this was the issue that I was having as said above in the lost function!
-                "Content-Type": "application/json",
-            },
-            responseType: "blob", // Force the response as a file for users to have their own data for logged in account
-        });
-
-        // Convert blob response to JSON file for easy reading when downloaded can open in an app like notes
-        const blob = new Blob([response.data], { type: "application/json" });
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.href = url;
-        link.setAttribute("download", `${user.username}_data.json`);
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-
-        console.log(" User data downloaded successfully!");
-    } catch (err) {
-        console.error(" Error downloading user data:", err);
-        setError("Failed to download user data.");
-    }
-};
-
-//all of the stuff below should show in the UI
-    return (
-        <div>
-            <h2> Dashboard Loaded </h2> {/* This should appear in UI */}
-            {error && <p style={{ color: "red" }}>{error}</p>}
-            {user ? (
-                <>
-                    <h3>Welcome, {user.username}!</h3> {/* Display username */}
-                    <button onClick={downloadUserData}>📥 Download My Data</button> {/* Added Button for downloading user data! */}
-                </>
-            ) : (
-                <p>Loading user data...</p>
-            )}
-        </div>
-    );
-}
-
-export default Dashboard;
-=======
-const API_BASE_URL = (process.env.REACT_APP_API_BASE_URL || "http://10.0.0.150:8000").replace(/\/$/, "");
-
-function Dashboard() {
-  const [user, setUser] = useState(null);
-  const [error, setError] = useState("");
-  const navigate = useNavigate();
-
+  // Fetch user info on mount
   useEffect(() => {
     console.log("Dashboard Loaded!");
     const fetchUserInfo = async () => {
-      const token = localStorage.getItem("access_token");
+      const token = localStorage.getItem("access_token"); // Check for token
       console.log("🔑 Stored Token in LocalStorage:", token);
       if (!token) {
         setError("No authentication token found.");
         console.error("❌ No authentication token found.");
-        navigate("/login");
+        navigate("/login"); // Redirect to login if no token
         return;
       }
 
       try {
-        const response = await axios.get(`${API_BASE_URL}/api/recipes/user-info/`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        });
-        console.log("API Response:", response.data);
-        setUser(response.data);
+        const data = await getUserInfo(); // Fetch user info via API
+        console.log("API Response:", data);
+        setUser(data);
       } catch (err) {
-        console.error("Error fetching user info:", err);
+        console.error("Error fetching user info:", err.message);
         setError(err.response?.data?.detail || "Failed to fetch user info.");
       }
     };
@@ -130,29 +38,20 @@ function Dashboard() {
     fetchUserInfo();
   }, [navigate]);
 
+  // Download user data as JSON file
   const downloadUserData = async () => {
-    const token = localStorage.getItem("access_token");
     try {
-      const response = await axios.get(`${API_BASE_URL}/api/recipes/export-user-data/`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        responseType: "blob",
-      });
-
-      const blob = new Blob([response.data], { type: "application/json" });
-      const url = window.URL.createObjectURL(blob);
+      const blob = await exportUserData(); // Fetch user data blob
+      const url = window.URL.createObjectURL(blob); // Create downloadable URL
       const link = document.createElement("a");
       link.href = url;
-      link.setAttribute("download", `${user.username}_data.json`);
+      link.setAttribute("download", `${user.username}_data.json`); // Set filename
       document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-
+      link.click(); // Trigger download
+      document.body.removeChild(link); // Clean up
       console.log("User data downloaded successfully!");
     } catch (err) {
-      console.error("Error downloading user data:", err);
+      console.error("Error downloading user data:", err.message);
       setError("Failed to download user data.");
     }
   };
@@ -160,7 +59,7 @@ function Dashboard() {
   return (
     <div>
       <h2>Dashboard Loaded</h2>
-      {error && <p style={{ color: "red" }}>{error}</p>}
+      {error && <p style={{ color: "red" }}>{error}</p>} {/* Display error if present */}
       {user ? (
         <>
           <h3>Welcome, {user.username}!</h3>
@@ -173,11 +72,10 @@ function Dashboard() {
           <button onClick={() => navigate("/weekly-planner")}>Weekly Planner</button>
         </>
       ) : (
-        <p>Loading user data...</p>
+        <p>Loading user data...</p> // Loading state
       )}
     </div>
   );
 }
 
 export default Dashboard;
->>>>>>> origin/main

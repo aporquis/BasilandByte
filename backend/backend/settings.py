@@ -1,25 +1,19 @@
-# backend/settings.py
+# backend/backend/settings.py
+# Django settings for the backend project.
+# This file configures the Django application for both local development and hosted environments.
+# Hardcodes CORS and ALLOWED_HOSTS for production and local development, while keeping sensitive settings
+# (like DATABASE_URL and DJANGO_SECRET_KEY) configurable via environment variables (e.g., Render dashboard).
+
 import os
-from dotenv import load_dotenv
 from pathlib import Path
 from datetime import timedelta
-import dj_database_url
+import dj_database_url  # For parsing DATABASE_URL environment variable
 
-# Base directory
+# Base directory of the project (parent of settings.py)
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Load .env file
-if os.getenv("RENDER") == "true":
-    print("Running in Render production environment")
-else:
-    # Load dotenv for local development only
-    dotenv_path = BASE_DIR / ".env"
-    if dotenv_path.exists():
-        load_dotenv(dotenv_path)
-    else:
-        raise FileNotFoundError(f"Missing .env file at {dotenv_path}")
-
-# SECURITY WARNING: keep the secret key used in production secret!
+# SECURITY WARNING: Keep the secret key used in production secret!
+# Use a secure key in production; set via environment variable (e.g., Render dashboard)
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "fallback-secret-key")
 
 # SECURITY WARNING
@@ -27,55 +21,81 @@ DEBUG = os.getenv("DEBUG", "").lower() == "true"
 
 # Allowed Hosts Configuration
 ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "").replace(" ", "").split(",")
+# SECURITY WARNING: Debug should be False in production
+# Set via environment variable (e.g., Render dashboard); defaults to True for local development
+DEBUG = os.getenv("DEBUG", "True").lower() == "true"
 
-# CORS Configuration (Ensuring frontend can communicate with backend)
-CORS_ALLOW_ALL_ORIGINS = True
+# Allowed hosts for the Django server
+# Hardcoded to include production (Render) and generic local development hosts
+# Render sets RENDER_EXTERNAL_HOSTNAME, which is appended if present
+ALLOWED_HOSTS = [
+    "basilandbyte.onrender.com",  # Hosted backend domain
+    "localhost",  # Local development for all team members
+    "127.0.0.1",  # Local development for all team members
+]
+RENDER_EXTERNAL_HOSTNAME = os.getenv('RENDER_EXTERNAL_HOSTNAME')
+if RENDER_EXTERNAL_HOSTNAME:
+    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
+
+# CORS Configuration: Allows frontend to communicate with backend
+# Hardcoded to include production and local development origins for all team members
+CORS_ALLOW_ALL_ORIGINS = False  # Disable allow-all for security
 CORS_ALLOWED_ORIGINS = [
-    "https://basilandbyte.vercel.app",  # Frontend URL
-    "https://basilandbyte.onrender.com", # Backend URL
+    "https://basilandbyte.vercel.app",  # Frontend URL (production)
+    "https://basilandbyte.onrender.com",  # Backend URL (production)
+    # Web frontend (local development for all team members)
+    "http://localhost:3000",
+    # React Native dev server (local development for all team members)
+    "http://localhost:19000",
 ]
-CORS_ALLOW_CREDENTIALS = True
-CORS_ALLOWED_ORIGINS = os.getenv(
-    "CORS_ALLOWED_ORIGINS", "http://localhost:3000,http://10.0.0.150:3000").split(",")
+CORS_ALLOW_CREDENTIALS = True  # Allow cookies and credentials in CORS requests
+CORS_ALLOW_METHODS = ["GET", "POST", "PUT",
+                      "DELETE", "OPTIONS"]  # Allowed HTTP methods
+CORS_ALLOW_HEADERS = ["*"]  # Allow all headers
 
-CORS_ALLOW_METHODS = ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
-CORS_ALLOW_HEADERS = ["*"]
+# CSRF Trusted Origins: Required for POST requests in production
+CSRF_TRUSTED_ORIGINS = [
+    "https://basilandbyte.onrender.com",
+    "https://basilandbyte.vercel.app",
+]
 
-# Application definition
+# Application definition: List of installed Django apps
 INSTALLED_APPS = [
-    "corsheaders",
-    "django.contrib.admin",
-    "django.contrib.auth",
-    "django.contrib.contenttypes",
-    "django.contrib.sessions",
-    "django.contrib.messages",
-    "django.contrib.staticfiles",
-    "recipes",  # Our app
-    "django_extensions",
-    "rest_framework",
-    "rest_framework_simplejwt.token_blacklist",  # Required for JWT Blacklist
+    "corsheaders",  # For CORS support
+    "django.contrib.admin",  # Django admin interface
+    "django.contrib.auth",  # Authentication system
+    "django.contrib.contenttypes",  # Content types framework
+    "django.contrib.sessions",  # Session management
+    "django.contrib.messages",  # Messaging framework
+    "django.contrib.staticfiles",  # Static file handling
+    "recipes",  # Your custom app
+    "django_extensions",  # Useful Django extensions
+    "rest_framework",  # Django REST Framework for API
+    "rest_framework_simplejwt.token_blacklist",  # JWT token blacklist support
 ]
 
+# Middleware configuration: Order matters
 MIDDLEWARE = [
-    "corsheaders.middleware.CorsMiddleware",  # Ensure CORS is loaded first
-    "django.middleware.security.SecurityMiddleware",
-    'whitenoise.middleware.WhiteNoiseMiddleware',  # Whitenoise added here
-    "django.contrib.sessions.middleware.SessionMiddleware",
-    # Temporarily disabled to test impact on DELETE requests
-    # "django.middleware.common.CommonMiddleware", <--this is the problem for duplication of deleting
-    "django.middleware.csrf.CsrfViewMiddleware",
-    "django.contrib.auth.middleware.AuthenticationMiddleware",
-    "django.contrib.messages.middleware.MessageMiddleware",
-    "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "corsheaders.middleware.CorsMiddleware",  # Must be first for CORS
+    "django.middleware.security.SecurityMiddleware",  # Security enhancements
+    "whitenoise.middleware.WhiteNoiseMiddleware",  # Serve static files in production
+    "django.contrib.sessions.middleware.SessionMiddleware",  # Session handling
+    # "django.middleware.common.CommonMiddleware",  # Disabled to avoid DELETE request issues
+    "django.middleware.csrf.CsrfViewMiddleware",  # CSRF protection
+    "django.contrib.auth.middleware.AuthenticationMiddleware",  # Authentication
+    "django.contrib.messages.middleware.MessageMiddleware",  # Messages
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",  # Clickjacking protection
 ]
 
+# URL configuration
 ROOT_URLCONF = "backend.urls"
 
+# Template configuration
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
-        "APP_DIRS": True,
+        "DIRS": [],  # Add custom template directories if needed
+        "APP_DIRS": True,  # Look for templates in app directories
         "OPTIONS": {
             "context_processors": [
                 "django.template.context_processors.debug",
@@ -87,18 +107,17 @@ TEMPLATES = [
     },
 ]
 
+# WSGI application for production
 WSGI_APPLICATION = "backend.wsgi.application"
 
-# Database Configuration (PostgreSQL)
+# Database configuration: Uses dj_database_url to parse DATABASE_URL
+# In production, DATABASE_URL is set via Render environment variables
+# Defaults to SQLite for local development
 DATABASES = {
-    "default": dj_database_url.config(default=os.getenv("DATABASE_URL"))
+    "default": dj_database_url.config(default='sqlite:///db.sqlite3')
 }
 
-CSRF_TRUSTED_ORIGINS = [
-    "https://basilandbyte.onrender.com",
-    "https://basilandbyte.vercel.app",
-]
-
+# Test database configuration
 TEST = {
     'NAME': 'test_capstone_recipe',
     'CREATE_DB': True,
@@ -125,7 +144,8 @@ STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 # Media files (Uploaded user images)
 MEDIA_URL = "/recipe_images/"
-MEDIA_ROOT = os.getenv("RECIPE_IMAGE_PATH", str(BASE_DIR / "recipe_images"))
+# Hardcode the media root for local development; in production, set via Render environment variable
+MEDIA_ROOT = str(BASE_DIR / "recipe_images")
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
@@ -153,16 +173,34 @@ SIMPLE_JWT = {
 # Server-Side Timeout Configuration
 SOCKET_TIMEOUT = 30  # Matches client timeout of 30000ms
 
-# Server-Side Timeout Configuration
-SOCKET_TIMEOUT = 30  # Matches client timeout of 30000ms
+# Secure cookies & HTTPS settings for production
+# Changed to not DEBUG to allow cookies over HTTP in local development
+CSRF_COOKIE_SECURE = not DEBUG  # Disable in debug mode (local development)
+SESSION_COOKIE_SECURE = not DEBUG  # Disable in debug mode (local development)
 
-#Using secure cookies & HTTPS settings for production
-CSRF_COOKIE_SECURE = True
-SESSION_COOKIE_SECURE = True
-
-#HTTPS Redirect for Render
-SECURE_SSL_REDIRECT = True
+# HTTPS Redirect for Render (production)
+# Disabled in debug mode to prevent redirect to HTTPS in local development
+SECURE_SSL_REDIRECT = not DEBUG
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
-# Default primary key field type
-DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+# Logging configuration to debug issues
+# Logs Django and authentication messages to the console
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+        },
+        'django.contrib.auth': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+        },
+    },
+}

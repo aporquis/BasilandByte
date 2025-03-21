@@ -1,19 +1,14 @@
 // src/screens/SavedRecipesScreen.js
-// Displays a list of saved recipes for the authenticated user with options to unsave and add to planner with day/meal selection.
+// Displays a list of saved recipes with unsave and add-to-planner options.
+// Uses getSavedRecipes, unsaveRecipe, and addToWeeklyPlan from api.js.
+// Includes a modal for selecting day and meal type.
 
 import React, { useState, useEffect } from 'react';
 import { View, Text, FlatList, StyleSheet, TouchableOpacity, Alert, Modal } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
-import { Picker } from '@react-native-picker/picker'; // Explicit import
-import { getSavedRecipes, unsaveRecipe, addToWeeklyPlan } from '../services/api';
-
-console.log('SavedRecipesScreen loaded, verifying imports:', {
-    getSavedRecipes: typeof getSavedRecipes,
-    unsaveRecipe: typeof unsaveRecipe,
-    addToWeeklyPlan: typeof addToWeeklyPlan,
-    Picker: typeof Picker,
-});
+import { Picker } from '@react-native-picker/picker';
+import { getSavedRecipes, unsaveRecipe, addToWeeklyPlan } from '../services/api'; // Import from api.js
 
 const SavedRecipesScreen = () => {
     const [savedRecipes, setSavedRecipes] = useState([]);
@@ -27,83 +22,54 @@ const SavedRecipesScreen = () => {
 
     // Fetch saved recipes on mount
     useEffect(() => {
-        console.log('useEffect triggered in SavedRecipesScreen');
         const fetchSavedRecipes = async () => {
             try {
                 const token = await AsyncStorage.getItem('userToken');
-                console.log('Token retrieved:', token ? 'Found' : 'Not found');
                 if (!token) {
                     setError('Please log in to view saved recipes.');
-                    setLoading(false);
                     navigation.navigate('Login');
                     return;
                 }
-
-                console.log('📡 Requesting Saved Recipes');
-                const data = await getSavedRecipes().catch(err => {
-                    console.error('getSavedRecipes promise rejected:', err);
-                    return null;
-                });
-                console.log('📡 Fetched Saved Recipes data:', data);
-                setSavedRecipes(Array.isArray(data) ? data : []); // Ensure array
-            } catch (err) {
-                console.error('❌ Error in fetchSavedRecipes:', {
-                    message: err.message,
-                    response: err.response?.data,
-                    status: err.response?.status,
-                });
-                setError('Failed to fetch saved recipes: ' + (err.message || 'Unknown error'));
+                const data = await getSavedRecipes();
+                setSavedRecipes(Array.isArray(data) ? data : []);
+            } catch (error) {
+                setError('Failed to fetch saved recipes: ' + (error.response?.data?.error || error.message));
             } finally {
-                console.log('Loading state set to false');
                 setLoading(false);
             }
         };
-
         fetchSavedRecipes();
     }, [navigation]);
 
     // Unsave a recipe
     const handleUnsaveRecipe = async (savedItemId) => {
         try {
-            console.log('Attempting to unsave recipe with ID:', savedItemId);
             await unsaveRecipe(savedItemId);
-            setSavedRecipes(prevRecipes => prevRecipes.filter(item => item.id !== savedItemId));
+            setSavedRecipes(prev => prev.filter(item => item.id !== savedItemId));
             Alert.alert('Success', 'Recipe unsaved successfully!');
-        } catch (err) {
-            console.error('❌ Error unsaving recipe:', {
-                message: err.message,
-                response: err.response?.data,
-                status: err.response?.status,
-            });
-            setError('Failed to unsave recipe: ' + (err.message || 'Unknown error'));
+        } catch (error) {
+            setError('Failed to unsave recipe: ' + (error.response?.data?.error || error.message));
             Alert.alert('Error', 'Failed to unsave recipe.');
         }
     };
 
-    // Open modal to select day and meal for planning
+    // Open modal for planner
     const openPlannerModal = (recipe) => {
-        console.log('Opening modal for recipe:', recipe);
         setSelectedRecipe(recipe);
         setModalVisible(true);
     };
 
-    // Add recipe to weekly planner via API
-    const addToPlanner = async () => {
-        console.log('Adding to planner:', { selectedRecipe, selectedDay, selectedMeal });
+    // Add recipe to weekly planner
+    const handleAddToPlanner = async () => {
         if (selectedRecipe && selectedDay && selectedMeal) {
             try {
                 await addToWeeklyPlan(selectedRecipe.recipe, selectedDay, selectedMeal);
                 Alert.alert('Success', `Added to ${selectedDay} - ${selectedMeal}`);
                 setModalVisible(false);
-                setSelectedDay('Monday'); // Reset
-                setSelectedMeal('Breakfast'); // Reset
-            } catch (err) {
-                console.error('❌ Error adding to planner:', {
-                    message: err.message,
-                    response: err.response?.data,
-                    status: err.response?.status,
-                });
-                setError('Failed to add to planner: ' + (err.message || 'Unknown error'));
+                setSelectedDay('Monday');
+                setSelectedMeal('Breakfast');
+            } catch (error) {
+                setError('Failed to add to planner: ' + (error.response?.data?.error || error.message));
                 Alert.alert('Error', 'Failed to add to planner.');
             }
         } else {
@@ -115,31 +81,17 @@ const SavedRecipesScreen = () => {
         <View style={styles.recipeItem}>
             <Text style={styles.recipeName}>{item?.recipe_name || 'Unnamed Recipe'}</Text>
             <View style={styles.buttonContainer}>
-                <TouchableOpacity
-                    style={styles.unsaveButton}
-                    onPress={() => handleUnsaveRecipe(item.id)}
-                    disabled={!item?.id}
-                >
+                <TouchableOpacity style={styles.unsaveButton} onPress={() => handleUnsaveRecipe(item.id)} disabled={!item?.id}>
                     <Text style={styles.unsaveButtonText}>Unsave</Text>
                 </TouchableOpacity>
-                <TouchableOpacity
-                    style={styles.plannerButton}
-                    onPress={() => openPlannerModal(item)}
-                    disabled={!item?.recipe}
-                >
+                <TouchableOpacity style={styles.plannerButton} onPress={() => openPlannerModal(item)} disabled={!item?.recipe}>
                     <Text style={styles.plannerButtonText}>Add to Planner</Text>
                 </TouchableOpacity>
             </View>
         </View>
     );
 
-    if (loading) {
-        return (
-            <View style={styles.loadingContainer}>
-                <Text style={styles.loadingText}>Loading...</Text>
-            </View>
-        );
-    }
+    if (loading) return <View style={styles.loadingContainer}><Text style={styles.loadingText}>Loading...</Text></View>;
 
     return (
         <View style={styles.container}>
@@ -148,27 +100,15 @@ const SavedRecipesScreen = () => {
             <FlatList
                 data={savedRecipes}
                 renderItem={renderSavedRecipe}
-                keyExtractor={(item) => item.id?.toString() || Math.random().toString()} // Fallback key
+                keyExtractor={(item) => item.id?.toString() || Math.random().toString()}
                 ListEmptyComponent={<Text style={styles.emptyText}>No saved recipes yet.</Text>}
             />
-            <Modal
-                animationType="slide"
-                transparent={true}
-                visible={modalVisible}
-                onRequestClose={() => setModalVisible(false)}
-            >
+            <Modal animationType="slide" transparent={true} visible={modalVisible} onRequestClose={() => setModalVisible(false)}>
                 <View style={styles.modalContainer}>
                     <View style={styles.modalView}>
                         <Text style={styles.modalTitle}>Add to Weekly Planner</Text>
                         <Text style={styles.modalSubtitle}>Select Day:</Text>
-                        <Picker
-                            selectedValue={selectedDay}
-                            style={styles.picker}
-                            onValueChange={(itemValue) => {
-                                console.log('Picker Day changed to:', itemValue);
-                                setSelectedDay(itemValue);
-                            }}
-                        >
+                        <Picker selectedValue={selectedDay} style={styles.picker} onValueChange={setSelectedDay}>
                             <Picker.Item label="Monday" value="Monday" />
                             <Picker.Item label="Tuesday" value="Tuesday" />
                             <Picker.Item label="Wednesday" value="Wednesday" />
@@ -178,29 +118,16 @@ const SavedRecipesScreen = () => {
                             <Picker.Item label="Sunday" value="Sunday" />
                         </Picker>
                         <Text style={styles.modalSubtitle}>Select Meal:</Text>
-                        <Picker
-                            selectedValue={selectedMeal}
-                            style={styles.picker}
-                            onValueChange={(itemValue) => {
-                                console.log('Picker Meal changed to:', itemValue);
-                                setSelectedMeal(itemValue);
-                            }}
-                        >
+                        <Picker selectedValue={selectedMeal} style={styles.picker} onValueChange={setSelectedMeal}>
                             <Picker.Item label="Breakfast" value="Breakfast" />
                             <Picker.Item label="Lunch" value="Lunch" />
                             <Picker.Item label="Dinner" value="Dinner" />
                         </Picker>
                         <View style={styles.modalButtonContainer}>
-                            <TouchableOpacity
-                                style={styles.modalButton}
-                                onPress={addToPlanner}
-                            >
+                            <TouchableOpacity style={styles.modalButton} onPress={handleAddToPlanner}>
                                 <Text style={styles.modalButtonText}>Add</Text>
                             </TouchableOpacity>
-                            <TouchableOpacity
-                                style={[styles.modalButton, styles.cancelButton]}
-                                onPress={() => setModalVisible(false)}
-                            >
+                            <TouchableOpacity style={[styles.modalButton, styles.cancelButton]} onPress={() => setModalVisible(false)}>
                                 <Text style={styles.modalButtonText}>Cancel</Text>
                             </TouchableOpacity>
                         </View>

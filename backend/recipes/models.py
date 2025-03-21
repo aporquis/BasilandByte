@@ -1,31 +1,17 @@
 from django.db import models
 from django.contrib.auth.models import User
-
-# The models below create tables. Primary keys are specified and foreign keys are referenced
-# We do not need to create a user model, as we are using Django's user model
-<<<<<<< HEAD
-=======
-
+from django.utils import timezone
 
 # The models below create tables. Primary keys are specified and foreign keys are referenced
 # We do not need to create a user model, as we are using Django's user model
 
-from django.db import models
-from django.contrib.auth.models import User
->>>>>>> origin/main
 
 # The models below create tables. Primary keys are specified and foreign keys are referenced
 # We do not need to create a user model, as we are using Django's user model
+
+
 
 class Recipe(models.Model):
-<<<<<<< HEAD
-    """Stores recipes with recipe_id as the PK and user_id as a FK.
-    Also holds recipe name, image, description, instructions, and a created at timestamp"""
-    user =models.ForeignKey(User, on_delete=models.CASCADE, related_name="recipes")
-    recipe_name = models.CharField(max_length=255)
-    description = models.TextField()
-    instructions = models.TextField()
-=======
     user = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name="recipes")
     recipe_name = models.CharField(max_length=255)
@@ -70,14 +56,6 @@ class Ingredient(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        """Returns a string that represents the ingredient name."""
-        return self.ingredient_name
-
-class RecipeIngredient(models.Model):
-    """This is a basic model for storing recipe ingredients; it will have a many to many relationship with other tables"""
-    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE, related_name="recipe_ingredients")
-    ingredient = models.ForeignKey(Ingredient, on_delete=models.CASCADE, related_name="ingredient_recipes")
-=======
         return self.ingredient_name
 
 
@@ -86,7 +64,6 @@ class RecipeIngredient(models.Model):
         Recipe, on_delete=models.CASCADE, related_name="recipe_ingredients")
     ingredient = models.ForeignKey(
         Ingredient, on_delete=models.CASCADE, related_name="ingredient_recipes")
->>>>>>> origin/main
     quantity = models.DecimalField(max_digits=3, decimal_places=2)
     unit = models.CharField(max_length=50)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -150,5 +127,24 @@ class WeeklyPlan(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.day} {self.meal_type}: {self.recipe.recipe_name}"
+    
+
+class LoginEvent(models.Model):
+    username = models.CharField(max_length=150)  # Username attempted
+    timestamp = models.DateTimeField(
+        default=timezone.now)  # When the attempt occurred
+    outcome = models.CharField(max_length=10, choices=[(
+        'success', 'Success'), ('failure', 'Failure')])  # Result
+    source = models.CharField(max_length=10, choices=[(
+        # Source of attempt
+        'mobile', 'Mobile'), ('web', 'Web')], default='unknown')
+
+    def __str__(self):
+        return f"{self.username} - {self.timestamp} - {self.outcome} ({self.source})"
+
+    class Meta:
+        ordering = ['-timestamp']  # Latest events first
+    
+    
 >>>>>>> origin/main
     

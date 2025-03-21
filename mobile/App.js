@@ -1,20 +1,16 @@
+// App.js
+// The root component of the React Native app, wrapping the navigation in a NavigationContainer.
+// Sets up the main app structure using AppNavigator for authentication and navigation handling.
+
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import HomeScreen from './src/screens/HomeScreen';
-import RecipesScreen from './src/screens/RecipeListScreen';
-import AddRecipeScreen from './src/screens/AddRecipeScreen';
+import AppNavigator from './src/navigation/AppNavigator'; // Updated import path to match project structure
 
-const Tab = createBottomTabNavigator();
+// App component
+const App = () => (
+    <NavigationContainer>
+        <AppNavigator /> {/* Use the complex navigation setup with authentication and tabs */}
+    </NavigationContainer>
+);
 
-export default function App() {
-    return (
-        <NavigationContainer>
-            <Tab.Navigator>
-                <Tab.Screen name="Home" component={HomeScreen} />
-                <Tab.Screen name="Recipes" component={RecipesScreen} />
-                <Tab.Screen name="Add Recipe" component={AddRecipeScreen} />
-            </Tab.Navigator>
-        </NavigationContainer>
-    );
-}
+export default App;
