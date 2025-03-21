@@ -39,7 +39,7 @@ if RENDER_EXTERNAL_HOSTNAME:
 
 # CORS Configuration: Allows frontend to communicate with backend
 # Hardcoded to include production and local development origins for all team members
-CORS_ALLOW_ALL_ORIGINS = False  # Disable allow-all for security
+CORS_ALLOW_ALL_ORIGINS = False # Disable allow-all for security
 CORS_ALLOWED_ORIGINS = [
     "https://basilandbyte.vercel.app",  # Frontend URL (production)
     "https://basilandbyte.onrender.com",  # Backend URL (production)

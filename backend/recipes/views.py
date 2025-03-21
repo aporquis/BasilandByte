@@ -163,7 +163,7 @@ def delete_recipe(request, recipe_id):
         logger.warning(
             f"Permission denied for user {request.user.username} on recipe {recipe_id}")
         return Response({"error": "You can only delete your own recipes."}, status=status.HTTP_403_FORBIDDEN)
-    if recipe.image:
+    if recipe.image and recipe.image.name:
         default_storage.delete(recipe.image.path)
     recipe.delete()
     logger.info(f"Deleted recipe {recipe_id} for user {request.user.username}")
@@ -284,7 +284,8 @@ def log_login_event(request):
     outcome = request.data.get('outcome')
     # Default to 'unknown' if not provided
     source = request.data.get('source', 'unknown')
-
+    if source not in ['mobile', 'web']:
+        source = 'unknown'
     if not username or not outcome:
         return Response({'error': 'Username and outcome are required'}, status=status.HTTP_400_BAD_REQUEST)
 
