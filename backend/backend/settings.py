@@ -143,9 +143,12 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 # Media files (Uploaded user images)
-MEDIA_URL = "/recipe_images/"
+MEDIA_URL = "/media/"
 # Hardcode the media root for local development; in production, set via Render environment variable
-MEDIA_ROOT = str(BASE_DIR / "recipe_images")
+if os.getenv('RENDER'):
+    MEDIA_ROOT = "/persistent/media/"
+else:
+    MEDIA_ROOT = str(BASE_DIR / "recipe_images")
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
