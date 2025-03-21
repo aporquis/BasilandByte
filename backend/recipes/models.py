@@ -52,10 +52,8 @@ class RecipeIngredient(models.Model):
 
 class SavedItem(models.Model):
     """Stores saved recipes for users"""
-    user = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name="saved_recipes")
-    recipe = models.ForeignKey(
-        Recipe, on_delete=models.CASCADE, related_name="saved_by_users")
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="saved_recipes")
+    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE, related_name="saved_by_users")
     saved_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -86,10 +84,10 @@ class WeeklyPlan(models.Model):
 
 
 class LoginEvent(models.Model):
-    username = models.CharField(max_length=150)
-    timestamp = models.DateTimeField(default=timezone.now)
+    username = models.CharField(max_length=150)  # Username attempted
+    timestamp = models.DateTimeField(default=timezone.now)  # When the attempt occurred
     outcome = models.CharField(max_length=10, choices=[
-        ('success', 'Success'), ('failure', 'Failure')])
+        ('success', 'Success'), ('failure', 'Failure')])  # Result
     source = models.CharField(max_length=10, choices=[
         ('mobile', 'Mobile'), ('web', 'Web')], default='unknown')
 
@@ -97,4 +95,4 @@ class LoginEvent(models.Model):
         return f"{self.username} - {self.timestamp} - {self.outcome} ({self.source})"
 
     class Meta:
-        ordering = ['-timestamp']
+        ordering = ['-timestamp']  # Latest events first
