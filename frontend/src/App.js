@@ -5,7 +5,7 @@
 
 import React, { useEffect, useState } from "react";
 import { BrowserRouter as Router, Routes, Route, useNavigate } from "react-router-dom";
-import { fetchRecipes, saveRecipe, getSavedRecipes, unsaveRecipe } from "./api"; // Import API functions
+import { fetchRecipes, saveRecipe, getSavedRecipes, unsaveRecipe, API_BASE_URL } from "./api"; // Import API functions
 import Navbar from "./Navbar";
 import Home from "./Home";
 import Login from "./Login";

@@ -17,11 +17,11 @@ function Home() {
         alt="Capstone Recipes Logo Graphic"
         style={{ width: "400px", marginBottom: "20px" }} // Logo styling
       />
-      <h1>Welcome to the Basil and Bytes Recipe Website!</h1>
-      <p>Discover and share your favorite recipes with others!</p>
-      <p>If you have an account please login here to continue!</p>
-      <p>New here? Lets get you registered to join in on the fun!</p>
-      <button onClick={() => navigate("/recipes")}>View Recipes</button> {/* Navigate to recipes */}
+      <h1>Welcome to the Basil & Byte -- Your Go To Recipe Hub!</h1>
+      <p>Find, share, and level up your favorite recipes with the community.</p>
+      <p>Already have an account? Jump back in and keep the magic going!</p>
+      <p>New here? Let’s get you signed up. You don’t want to miss out.</p>
+      <button onClick={() => navigate("/recipes")}>Explore Recipes</button> {/* Navigate to recipes */}
     </div>
   );
 }
