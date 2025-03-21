@@ -1,5 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@300..700&family=Merriweather:ital,wght@0,300;0,400;0,700;0,900;1,300;1,400;1,700;1,900&display=swap');
-<<<<<<< HEAD
+
 body {
   font-family: 'Fira Code', monospace;
     margin: 20px;
@@ -46,10 +46,10 @@ ul li button {
   padding: 8px 16px;
   border:none;
   border-radius:  4px;
-  cursor: pionter;
+  cursor: pointer;
   background-color: #2e5436; /* Controls the color of the cards button*/
   color:white;
-  transition: background-color o.2s ease; /* Controls card buttons hover animation*/
+  transition: background-color 0.2s ease; /* Controls card buttons hover animation*/
 }
 ul li button:hover {
   background-color: #25442c; /* Cards button is darker on hover*/
@@ -98,7 +98,7 @@ form button[type="submit"]:hover {
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
-=======
+}
 
 body {
   font-family: 'Fira Code', monospace;
