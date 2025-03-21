@@ -5,7 +5,7 @@
 
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { loginUser } from "./api"; // Import login function
+import { loginUser, logLoginEvent } from "./api"; // Import login function
 
 function Login() {
   const [username, setUsername] = useState(""); // State for username input
