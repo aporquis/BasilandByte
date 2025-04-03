@@ -71,7 +71,7 @@ function Dashboard() {
           <br />
           <button onClick={() => navigate("/pantry")} >Personal Pantry</button>
           <br />
-          <button onClick={downloadUserData}>📥 Download My Data</button>
+          <button onClick={downloadUserData}>Download My Data</button>
           <br />
           <button onClick={() => navigate("/policies")} >Basil Byte Polices</button>
         </>
