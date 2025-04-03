@@ -70,6 +70,10 @@ function Dashboard() {
           <button onClick={() => navigate("/saved-recipes")}>View Saved Recipes</button>
           <br />
           <button onClick={() => navigate("/weekly-planner")}>Weekly Planner</button>
+          <br />
+          <button onClick={() => navigate("/policies")} >Basil Byte Polices</button>
+          <br />
+          <button onClick={() => navigate("/pantry")} >Personal Pantry</button>
         </>
       ) : (
         <p>Loading user data...</p> // Loading state
