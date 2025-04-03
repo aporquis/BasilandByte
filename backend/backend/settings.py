@@ -51,7 +51,14 @@ CORS_ALLOWED_ORIGINS = [
 CORS_ALLOW_CREDENTIALS = True  # Allow cookies and credentials in CORS requests
 CORS_ALLOW_METHODS = ["GET", "POST", "PUT",
                       "DELETE", "OPTIONS"]  # Allowed HTTP methods
-CORS_ALLOW_HEADERS = ["*"]  # Allow all headers
+CORS_ALLOW_HEADERS = [
+    "accept",
+    "authorization",
+    "content-type",
+    "x-csrftoken",
+    "x-requested-with",
+]  # Allow all headers
+CORS_EXPOSE_HEADERS = ["Authorization", "Content-Type"]
 
 # CSRF Trusted Origins: Required for POST requests in production
 CSRF_TRUSTED_ORIGINS = [
