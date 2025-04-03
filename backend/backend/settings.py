@@ -42,6 +42,7 @@ if RENDER_EXTERNAL_HOSTNAME:
 CORS_ALLOW_ALL_ORIGINS = False  # Disable allow-all for security
 CORS_ALLOWED_ORIGINS = [
     "https://basilandbyte.vercel.app",  # Frontend URL (production)
+    r"^https:\/\/.*\.vercel\.app$",     # Frontend (previews)
     "https://basilandbyte.onrender.com",  # Backend URL (production)
     # Web frontend (local development for all team members)
     "http://localhost:3000",
@@ -64,6 +65,7 @@ CORS_EXPOSE_HEADERS = ["Authorization", "Content-Type"]
 CSRF_TRUSTED_ORIGINS = [
     "https://basilandbyte.onrender.com",
     "https://basilandbyte.vercel.app",
+    "https://*.vercel.app",
 ]
 
 # Application definition: List of installed Django apps
