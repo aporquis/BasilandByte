@@ -1,6 +1,6 @@
 import React from 'react';
 
-function BasilByte() {
+function BasilBytePolicies() {
     return (
         <div>
             <h1>Basil and Byte Polices</h1>
@@ -9,4 +9,4 @@ function BasilByte() {
     )
 }
 
-export default BasilBytePolices;
+export default BasilBytePolicies;
