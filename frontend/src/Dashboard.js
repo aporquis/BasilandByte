@@ -63,17 +63,17 @@ function Dashboard() {
       {user ? (
         <>
           <h3>Welcome, {user.username}!</h3>
-          <button onClick={downloadUserData}>📥 Download My Data</button>
-          <br />
           <button onClick={() => navigate("/add-recipe")}>Add a Recipe</button>
           <br />
           <button onClick={() => navigate("/saved-recipes")}>View Saved Recipes</button>
           <br />
           <button onClick={() => navigate("/weekly-planner")}>Weekly Planner</button>
           <br />
-          <button onClick={() => navigate("/policies")} >Basil Byte Polices</button>
-          <br />
           <button onClick={() => navigate("/pantry")} >Personal Pantry</button>
+          <br />
+          <button onClick={downloadUserData}>📥 Download My Data</button>
+          <br />
+          <button onClick={() => navigate("/policies")} >Basil Byte Polices</button>
         </>
       ) : (
         <p>Loading user data...</p> // Loading state
