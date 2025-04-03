@@ -18,19 +18,6 @@ class Recipe(models.Model):
     def __str__(self):
         return self.recipe_name
 
-
-class Ingredient(models.Model):
-    ingredient_name = models.CharField(max_length=100)
-    food_group = models.ForeignKey(
-        "FoodGroup", on_delete=models.SET_NULL, null=True, related_name="ingredients")
-    specific_species = models.CharField(max_length=100, null=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    image = models.ImageField(upload_to='recipe_images/', null=True, blank =True)
-
-    def __str__(self):
-        """Returns a string that represents the recipe (the title)."""
-        return self.recipe_name
-
 class FoodGroup(models.Model):
     """This is a basic model for storing food groups"""
     food_group_name = models.CharField(max_length=100, unique=True)
@@ -41,11 +28,12 @@ class FoodGroup(models.Model):
         return self.food_group_name
 
 class Ingredient(models.Model):
-    """This is a basic model for storing all ingredients"""
     ingredient_name = models.CharField(max_length=100)
-    food_group = models.ForeignKey(FoodGroup, on_delete=models.SET_NULL, null=True, related_name= "ingredients")
+    food_group = models.ForeignKey(
+        "FoodGroup", on_delete=models.SET_NULL, null=True, related_name="ingredients")
     specific_species = models.CharField(max_length=100, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    image = models.ImageField(upload_to='recipe_images/', null=True, blank =True)
 
     def __str__(self):
         return self.ingredient_name
@@ -64,28 +52,9 @@ class RecipeIngredient(models.Model):
         """Returns a f-string of the recipe name and the ingredient name"""
         return f"{self.recipe.recipe_name} - {self.ingredient.ingredient_name}"
 
+
 class SavedItem(models.Model):
     """Stores saved recipes for users"""
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="saved_recipes")
-    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE, related_name="saved_by_users")
-    saved_at = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        """Returns a f-string of the username and the saved recipe name"""
-        return f"{self.user.username} - {self.recipe.recipe_name}"
-
-        return f"{self.recipe.recipe_name} - {self.ingredient.ingredient_name}"
-
-
-class FoodGroup(models.Model):
-    food_group_name = models.CharField(max_length=100, unique=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return self.food_group_name
-
-
-class SavedItem(models.Model):
     user = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name="saved_recipes")
     recipe = models.ForeignKey(
@@ -93,6 +62,7 @@ class SavedItem(models.Model):
     saved_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
+        """Returns a f-string of the username and the saved recipe name"""
         return f"{self.user.username} - {self.recipe.recipe_name}"
 
 
@@ -130,8 +100,8 @@ class LoginEvent(models.Model):
         # Source of attempt
         'mobile', 'Mobile'), ('web', 'Web')], default='unknown')
 
-    def __str__(self):
-        return f"{self.username} - {self.timestamp} - {self.outcome} ({self.source})"
-
     class Meta:
         ordering = ['-timestamp']  # Latest events first
+        
+    def __str__(self):
+        return f"{self.username} - {self.timestamp} - {self.outcome} ({self.source})"
