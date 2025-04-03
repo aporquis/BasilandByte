@@ -40,14 +40,21 @@ if RENDER_EXTERNAL_HOSTNAME:
 # CORS Configuration: Allows frontend to communicate with backend
 # Hardcoded to include production and local development origins for all team members
 CORS_ALLOW_ALL_ORIGINS = False  # Disable allow-all for security
-CORS_ALLOWED_ORIGINS = [
-    "https://basilandbyte.vercel.app",  # Frontend URL (production)
-    r"^https:\/\/.*\.vercel\.app$",     # Frontend (previews)
-    "https://basilandbyte.onrender.com",  # Backend URL (production)
+#CORS_ALLOWED_ORIGINS = [
+#    "https://basilandbyte.vercel.app",  # Frontend URL (production)
+#    "https://basilandbyte.onrender.com",  # Backend URL (production)
     # Web frontend (local development for all team members)
-    "http://localhost:3000",
+#    "http://localhost:3000",
     # React Native dev server (local development for all team members)
-    "http://localhost:19000",
+#    "http://localhost:19000",
+#]
+CORS_ALLOWED_ORIGIN_REGEXES = [
+    r"^https:\/\/.*\.vercel\.app$",  # Frontend URL (production)
+    r"^https:\/\/basilandbyte\.onrender\.com$",  # Backend URL (production)
+    # Web frontend (local development for all team members)
+    r"^http:\/\/localhost:3000$",
+    # React Native dev server (local development for all team members)
+    r"^http:\/\/localhost:19000$",
 ]
 CORS_ALLOW_CREDENTIALS = True  # Allow cookies and credentials in CORS requests
 CORS_ALLOW_METHODS = ["GET", "POST", "PUT",
