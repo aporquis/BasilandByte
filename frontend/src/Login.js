@@ -24,7 +24,7 @@ function Login() {
 
     try {
       await logLoginEvent(username, 'attempt', 'web'); // Log login attempt
-      await loginUser(username, password); // Attempt login via API
+      await loginUser(username, password, "web"); // Attempt login via API
       await logLoginEvent(username, 'success', 'web'); // Log successful login
       setMessage("✅ Login successful! Redirecting..."); // Update UI
       setTimeout(() => navigate("/recipes"), 1000); // Redirect after 1s

@@ -241,7 +241,7 @@ export const registerUser = async (username, password, firstName, lastName, emai
 };
 
 // Log in a user at /login/
-export const loginUser = async (username, password) => {
+export const loginUser = async (username, password, source = "web") => {
   try {
     const response = await api.post('/login/', { username, password });
     console.log('loginUser - Response:', response.data);
