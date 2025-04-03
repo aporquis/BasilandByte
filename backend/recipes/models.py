@@ -102,6 +102,6 @@ class LoginEvent(models.Model):
 
     class Meta:
         ordering = ['-timestamp']  # Latest events first
-        
+
     def __str__(self):
         return f"{self.username} - {self.timestamp} - {self.outcome} ({self.source})"
