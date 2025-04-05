@@ -8,8 +8,8 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
-from .models import Recipe, Ingredient, RecipeIngredient, FoodGroup, SavedItem, WeeklyPlan, LoginEvent
-from .serializers import RecipeSerializer, UserRegisterSerializer, UserLoginSerializer, SavedItemSerializer, WeeklyPlanSerializer
+from .models import Recipe, Ingredient, RecipeIngredient, FoodGroup, SavedItem, WeeklyPlan, LoginEvent, UserInventory
+from .serializers import RecipeSerializer, UserRegisterSerializer, UserLoginSerializer, SavedItemSerializer, WeeklyPlanSerializer, UserInventorySerializer
 from django.http import JsonResponse, HttpResponse
 import json
 import logging
@@ -294,3 +294,51 @@ def log_login_event(request):
         source=source
     )
     return Response({'message': 'Login event logged'}, status=status.HTTP_201_CREATED)
+
+#Added as of 4/4/2025 these are the views that are needed for the pantry models, named (userInventory)
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def get_user_inventory(request):
+    """Fetch all inventory items for the authenticated user."""
+    user = request.user
+    inventory_items = UserInventory.objects.filter(
+        user=user).select_related('ingredient')
+    serializer = UserInventorySerializer(
+        inventory_items, many=True, context={'request': request})
+    return Response(serializer.data)
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def add_to_inventory(request):
+    """Add an item to the user's inventory."""
+    serializer = UserInventorySerializer(
+        data=request.data, context={'request': request})
+    if serializer.is_valid():
+        serializer.save(user=request.user)  # Set the user automatically
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(["PUT"])
+@permission_classes([IsAuthenticated])
+def update_inventory_item(request, inventory_id):
+    """Update an existing inventory item."""
+    inventory_item = get_object_or_404(
+        UserInventory, id=inventory_id, user=request.user)
+    serializer = UserInventorySerializer(
+        inventory_item, data=request.data, partial=True, context={'request': request})
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(["DELETE"])
+@permission_classes([IsAuthenticated])
+def delete_inventory_item(request, inventory_id):
+    """Delete an inventory item."""
+    inventory_item = get_object_or_404(
+        UserInventory, id=inventory_id, user=request.user)
+    inventory_item.delete()
+    return Response({"message": "Inventory item deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
