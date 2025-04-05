@@ -118,6 +118,58 @@ class WeeklyPlan(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.day} {self.meal_type}: {self.recipe.recipe_name}"
+    
+
+class UserInventory(models.Model):
+    """Stores items that users have in their fridge or pantry"""
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="inventory_items"
+    )
+    ingredient = models.ForeignKey(
+        Ingredient,
+        on_delete=models.CASCADE,
+        related_name="user_inventories"
+    )
+    quantity = models.DecimalField(
+        max_digits=6,
+        decimal_places=2,
+        help_text="Quantity of the ingredient"
+    )
+    unit = models.CharField(
+        max_length=50,
+        help_text="Unit of measurement (e.g., grams, cups, pieces)"
+    )
+    storage_location = models.CharField(
+        max_length=20,
+        choices=[
+            ('fridge', 'Fridge'),
+            ('freezer', 'Freezer'),
+            ('pantry', 'Pantry')
+        ],
+        default='pantry'
+    )
+    added_at = models.DateTimeField(
+        auto_now_add=True
+    )
+    expires_at = models.DateField(
+        null=True,
+        blank=True,
+        help_text="Expiration date (optional)"
+    )
+    is_available = models.BooleanField(
+        default=True,
+        help_text="Whether the item is still available for use"
+    )
+
+    class Meta:
+        # Prevent duplicate entries for same user and ingredient
+        unique_together = ('user', 'ingredient', 'storage_location')
+        ordering = ['-added_at']
+
+    def __str__(self):
+        return f"{self.user.username}'s {self.ingredient.ingredient_name} ({self.quantity} {self.unit}) - {self.storage_location}"
 
 
 class LoginEvent(models.Model):
