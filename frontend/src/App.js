@@ -14,6 +14,8 @@ import Dashboard from "./Dashboard";
 import AddRecipe from "./AddRecipe";
 import SavedRecipes from "./SavedRecipes";
 import WeeklyPlanner from "./WeeklyPlanner";
+import BasilBytePolices from "./BasilBytePolicies";
+import PersonalPantry from "./PersonalPantry";
 import { API_BASE_URL } from "./api";
 
 function RecipeApp() {
@@ -141,6 +143,7 @@ function RecipeApp() {
 
 // Main app with routing
 function MainApp() {
+  const isLoggedIn = !!localStorage.getItem("access_token"); //added this to ensure that users are logged in to access the nav bar features
   return (
     <Router>
       <Navbar /> {/* Navigation bar */}
@@ -150,10 +153,12 @@ function MainApp() {
         <Route path="/recipes" element={<RecipeApp />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/add-recipe" element={<AddRecipe />} /> {/* Added route */}
-        <Route path="/saved-recipes" element={<SavedRecipes />} /> {/* Added route */}
-        <Route path="/weekly-planner" element={<WeeklyPlanner />} /> {/* Added route */}
+        <Route path="/dashboard" element={isLoggedIn ? <Dashboard /> : <Login />} /> //adjusted on 4/2/2025 to ensure that a user is logged in properly
+        <Route path="/add-recipe" element={isLoggedIn ? <AddRecipe /> : <Login />} /> //must be logged in to add recipe
+        <Route path="/saved-recipes" element={isLoggedIn ? <SavedRecipes /> : <Login />} />
+        <Route path="/weekly-planner" element={isLoggedIn ? <WeeklyPlanner /> : <Login />} />
+        <Route path="/policies" element={isLoggedIn ? <BasilBytePolices /> : <Login />} />//new as of 4/2/2025 for our new policies page
+        <Route path="/pantry" element={isLoggedIn ? <PersonalPantry /> : <Login />} />//new as of 4/2/2025 for our pantry page
       </Routes>
     </Router>
   );
