@@ -342,3 +342,79 @@ def delete_inventory_item(request, inventory_id):
         UserInventory, id=inventory_id, user=request.user)
     inventory_item.delete()
     return Response({"message": "Inventory item deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def suggest_recipes(request):
+    """Suggest recipes based on the user's inventory, including missing ingredients."""
+    user = request.user
+
+    # Get user's available inventory
+    inventory = UserInventory.objects.filter(user=user, is_available=True)
+    if not inventory.exists():
+        return Response({"message": "No items in inventory to suggest recipes", "suggested_recipes": []},
+                        status=status.HTTP_200_OK)
+
+    # Create a dictionary of available ingredients and their quantities
+    inventory_dict = {
+        item.ingredient.id: {
+            # Convert Decimal to float for comparison
+            "quantity": float(item.quantity),
+            "unit": item.unit
+        } for item in inventory
+    }
+
+    # Get all recipes with their ingredients
+    recipes = Recipe.objects.all().prefetch_related('recipe_ingredients__ingredient')
+    suggested_recipes = []
+
+    for recipe in recipes:
+        recipe_ingredients = recipe.recipe_ingredients.all()
+        can_make = True
+        missing_ingredients = []
+        partial_match = True
+
+        for ri in recipe_ingredients:
+            ingredient_id = ri.ingredient.id
+            required_quantity = float(ri.quantity)
+            required_unit = ri.unit
+            ingredient_name = ri.ingredient.ingredient_name
+
+            if ingredient_id not in inventory_dict:
+                can_make = False
+                missing_ingredients.append({
+                    "ingredient_name": ingredient_name,
+                    "required_quantity": required_quantity,
+                    "unit": required_unit
+                })
+                continue
+
+            # Check quantity and unit (assuming same units for now)
+            available = inventory_dict[ingredient_id]
+            if available["unit"] != required_unit or available["quantity"] < required_quantity:
+                can_make = False
+                missing_ingredients.append({
+                    "ingredient_name": ingredient_name,
+                    "required_quantity": required_quantity,
+                    "unit": required_unit,
+                    "available_quantity": available["quantity"],
+                    "available_unit": available["unit"]
+                })
+
+        # Add recipe to suggestions if fully or partially makable
+        # Allow up to 2 missing ingredients
+        if can_make or (len(missing_ingredients) <= 2):
+            suggested_recipes.append({
+                "recipe": RecipeSerializer(recipe, context={'request': request}).data,
+                "can_make": can_make,
+                "missing_ingredients": missing_ingredients
+            })
+
+    # Sort suggestions: fully makable recipes first
+    suggested_recipes.sort(key=lambda x: x["can_make"], reverse=True)
+
+    return Response({
+        "suggested_recipes": suggested_recipes,
+        "inventory_count": inventory.count()
+    }, status=status.HTTP_200_OK)
