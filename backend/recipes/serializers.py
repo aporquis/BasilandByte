@@ -98,3 +98,19 @@ class UserInventorySerializer(serializers.ModelSerializer):
         # Automatically set the user to the authenticated user
         validated_data['user'] = self.context['request'].user
         return super().create(validated_data)
+    
+
+class IngredientSerializer(serializers.ModelSerializer): #For specific ingredients that users have
+    class Meta:
+        model = Ingredient
+        fields = ['id', 'ingredient_name',
+                  'food_group', 'specific_species', 'image']
+        read_only_fields = ['id']
+
+    def create(self, validated_data):
+        normalized_name = validated_data['ingredient_name'].strip().title()
+        ingredient, _ = Ingredient.objects.get_or_create(
+            ingredient_name__iexact=normalized_name,
+            defaults={'ingredient_name': normalized_name, **validated_data}
+        )
+        return ingredient
