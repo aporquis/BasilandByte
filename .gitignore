@@ -13,6 +13,9 @@ venv/
 # Logs
 *.log
 
+#db.sqlite
+db.sqlite3
+
 # Migrations
 !migrations/__init__.py
 */migrations/*.pyc
