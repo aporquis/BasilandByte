@@ -5,7 +5,7 @@ from .views import (
     register_user, login_user, get_recipes, add_recipe, update_recipe, delete_recipe,
     get_user_info, export_user_data, save_recipe, get_saved_recipes, unsave_recipe,
     add_recipe_ingredient, add_to_weekly_plan, get_weekly_plan, clear_weekly_plan, clear_day_plan, 
-    log_login_event, add_to_inventory, get_user_inventory, update_inventory_item, delete_inventory_item
+    log_login_event, add_to_inventory, get_user_inventory, update_inventory_item, delete_inventory_item, suggest_recipes
 )
 
 urlpatterns = [
@@ -26,10 +26,11 @@ urlpatterns = [
     path("weekly-plan/clear/", clear_weekly_plan, name="clear_weekly_plan"),
     path("weekly-plan/clear/<str:day>/", clear_day_plan, name="clear_day_plan"),
     path('log-login/', log_login_event, name='log-login'),
-    path('inventory/', views.get_user_inventory, name='get_user_inventory'),
-    path('inventory/add/', views.add_to_inventory, name='add_to_inventory'),
-    path('inventory/update/<int:inventory_id>/', views.update_inventory_item, name='update_inventory_item'),
-    path('inventory/delete/<int:inventory_id>/', views.delete_inventory_item, name='delete_inventory_item'),
+    path('inventory/', get_user_inventory, name='get_user_inventory'),
+    path('inventory/add/', add_to_inventory, name='add_to_inventory'),
+    path('inventory/update/<int:inventory_id>/', update_inventory_item, name='update_inventory_item'),
+    path('inventory/delete/<int:inventory_id>/', delete_inventory_item, name='delete_inventory_item'),
+    path('recipes/suggest/', suggest_recipes, name='suggest_recipes'),
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
