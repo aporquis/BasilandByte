@@ -16,7 +16,8 @@ class FoodGroup(models.Model):
 
 class Ingredient(models.Model):
     """This is a basic model for storing all ingredients"""
-    ingredient_name = models.CharField(max_length=100)
+    ingredient_name = models.CharField(
+        max_length=100, unique=True)  # Add unique=True
     food_group = models.ForeignKey(
         "FoodGroup", on_delete=models.SET_NULL, null=True, related_name="ingredients")
     specific_species = models.CharField(max_length=100, null=True, blank=True)
@@ -27,6 +28,10 @@ class Ingredient(models.Model):
     def __str__(self):
         """Returns a string that represents the ingredient."""
         return self.ingredient_name  # Fixed to return ingredient_name instead of recipe_name
+    
+    class Meta:
+        indexes = [models.Index(
+            fields=['ingredient_name'], name='ingredient_name_idx')]
 
 
 class Recipe(models.Model):
@@ -38,6 +43,16 @@ class Recipe(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     image = models.ImageField(
         upload_to='recipe_images/', null=True, blank=True)
+    category = models.CharField(
+        max_length=50,
+        choices=[
+            ('Breakfast', 'Breakfast'),
+            ('Lunch', 'Lunch'),
+            ('Dinner', 'Dinner'),
+            ('Side Dishes', 'Side Dishes')
+        ],
+        default='Dinner'
+    )
 
     def __str__(self):
         return self.recipe_name
