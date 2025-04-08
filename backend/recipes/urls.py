@@ -5,7 +5,7 @@ from .views import (
     register_user, login_user, get_recipes, add_recipe, update_recipe, delete_recipe,
     get_user_info, export_user_data, save_recipe, get_saved_recipes, unsave_recipe,
     add_recipe_ingredient, add_to_weekly_plan, get_weekly_plan, clear_weekly_plan, clear_day_plan, 
-    log_login_event, add_to_inventory, get_user_inventory, update_inventory_item, delete_inventory_item, suggest_recipes
+    log_login_event, add_to_inventory, get_user_inventory, update_inventory_item, delete_inventory_item, suggest_recipes, get_ingredients
 )
 
 urlpatterns = [
@@ -31,6 +31,7 @@ urlpatterns = [
     path('inventory/update/<int:inventory_id>/', update_inventory_item, name='update_inventory_item'),
     path('inventory/delete/<int:inventory_id>/', delete_inventory_item, name='delete_inventory_item'),
     path('recipes/suggest/', suggest_recipes, name='suggest_recipes'),
+    path('ingredients/', get_ingredients, name='get_ingredients'),
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
