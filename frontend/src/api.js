@@ -6,7 +6,7 @@
 import axios from "axios";
 
 // Hardcode the base URL to the hosted backend on Render
-export const API_BASE_URL = 'https://basilandbyte.onrender.com/api/recipes';
+export const API_BASE_URL = 'https://basilandbyte.onrender.com/api/';
 
 // Log the base URL for debugging during initialization
 console.log('Initializing api.js - API_BASE_URL:', API_BASE_URL);
