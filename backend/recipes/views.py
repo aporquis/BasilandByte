@@ -9,10 +9,11 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
 from .models import Recipe, Ingredient, RecipeIngredient, FoodGroup, SavedItem, WeeklyPlan, LoginEvent, UserInventory
-from .serializers import RecipeSerializer, UserRegisterSerializer, UserLoginSerializer, SavedItemSerializer, WeeklyPlanSerializer, UserInventorySerializer
+from .serializers import RecipeSerializer, UserRegisterSerializer, UserLoginSerializer, SavedItemSerializer, WeeklyPlanSerializer, UserInventorySerializer, IngredientSerializer
 from django.http import JsonResponse, HttpResponse
 import json
 import logging
+from django.db.models import Q
 
 logger = logging.getLogger(__name__)
 
@@ -311,11 +312,31 @@ def get_user_inventory(request):
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def add_to_inventory(request):
-    """Add an item to the user's inventory."""
+    """Add an item to the user's inventory, creating the ingredient if it doesn't exist."""
+    ingredient_data = {'ingredient_name': request.data.get("ingredient_name")}
+    if not ingredient_data['ingredient_name']:
+        return Response({"error": "ingredient_name is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+    ingredient_serializer = IngredientSerializer(data=ingredient_data)
+    if ingredient_serializer.is_valid():
+        ingredient = ingredient_serializer.save()
+    else:
+        return Response(ingredient_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    data = {
+        "ingredient": ingredient.id,
+        "quantity": request.data.get("quantity"),
+        "unit": request.data.get("unit"),
+        "storage_location": request.data.get("storage_location", "pantry"),
+        "expires_at": request.data.get("expires_at", None),
+    }
+    if not all([data["quantity"], data["unit"]]):  # Added explicit validation
+        return Response({"error": "quantity and unit are required"}, status=status.HTTP_400_BAD_REQUEST)
+
     serializer = UserInventorySerializer(
-        data=request.data, context={'request': request})
+        data=data, context={'request': request})
     if serializer.is_valid():
-        serializer.save(user=request.user)  # Set the user automatically
+        serializer.save(user=request.user)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -343,6 +364,20 @@ def delete_inventory_item(request, inventory_id):
     inventory_item.delete()
     return Response({"message": "Inventory item deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
 
+
+def convert_units(quantity, from_unit, to_unit):
+    # Simple conversion table (expand as needed)
+    conversions = {
+        # Approximate, depends on ingredient
+        ('grams', 'cups'): lambda q: q / 240,
+        ('cups', 'grams'): lambda q: q * 240,
+    }
+    if from_unit == to_unit:
+        return quantity
+    key = (from_unit, to_unit)
+    if key in conversions:
+        return conversions[key](quantity)
+    return None  # No conversion available
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
@@ -418,3 +453,14 @@ def suggest_recipes(request):
         "suggested_recipes": suggested_recipes,
         "inventory_count": inventory.count()
     }, status=status.HTTP_200_OK)
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def get_ingredients(request):
+    ingredients = Ingredient.objects.all()
+    serializer = IngredientSerializer(ingredients, many=True)
+    return Response(serializer.data)
+
+
+
