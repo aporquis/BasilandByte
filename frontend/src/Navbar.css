@@ -12,13 +12,12 @@
 .navbar-container {
   display: flex;
   flex-direction: column; 
-  align-items: center;
 }
 
 .top-green-bar {
   background-color: #2e5436; 
-  height: 6px; 
-  width: 100% - 24px; 
+  height: 3px; 
+  width: 100%; 
 }
 
 .navbar-list {
