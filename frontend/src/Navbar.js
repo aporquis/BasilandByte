@@ -20,16 +20,26 @@ function Navbar() {
 
   return (
     <nav className="navbar">
-      <ul className="navbar-list">
-        <li className="navbar-item"><button onClick={() => navigate("/")}>Home</button></li>
-        {isLoggedIn && <li className="navbar-item"><button onClick={() => navigate("/dashboard")}>Dashboard</button></li>}
-        {isLoggedIn ? (
-          <li className="navbar-item"><button onClick={handleLogout}>Logout</button></li>
-        ) : (
-          <li className="navbar-item"><button onClick={() => navigate("/login")}>Login</button></li>
-        )}
-      </ul>
-    </nav>
+    <ul className="navbar-list">
+      <li className="navbar-item">
+        <Link to="/" className={location.pathname === "/" ? "active" : ""}>Home</Link>
+      </li>
+      {isLoggedIn && (
+        <li className="navbar-item">
+          <Link to="/dashboard" className={location.pathname === "/dashboard" ? "active" : ""}>Dashboard</Link>
+        </li>
+      )}
+      {isLoggedIn ? (
+        <li className="navbar-item">
+          <Link to="/login" onClick={handleLogout}>Logout</Link>
+        </li>
+      ) : (
+        <li className="navbar-item">
+          <Link to="/login" className={location.pathname === "/login" ? "active" : ""}>Login</Link>
+        </li>
+      )}
+    </ul>
+  </nav>
   );
 }
 
