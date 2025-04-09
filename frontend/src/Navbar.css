@@ -5,7 +5,7 @@
     border-radius: 4px;
     cursor: pointer;
     background-color: #2e5436; 
-    color: white;
+    color: rgb(255, 0, 0);
     transition: background-color 0.2s ease;
     font-size: 16px; 
   }

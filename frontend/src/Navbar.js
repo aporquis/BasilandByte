@@ -19,8 +19,8 @@ function Navbar() {
   };
 
   return (
-    <nav className="navbar"> {/* Add the navbar class here */}
-      <ul className="navbar-list"> {/* Add the navbar-list class here */}
+    <nav className="navbar"> 
+      <ul className="navbar-list"> 
         <li className="navbar-item"><button onClick={() => navigate("/")}>Home</button></li>
         {isLoggedIn && <li className="navbar-item"><button onClick={() => navigate("/dashboard")}>Dashboard</button></li>}
         {isLoggedIn ? (
