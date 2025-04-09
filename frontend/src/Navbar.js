@@ -5,6 +5,7 @@
 
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import "./Navbar.css"
 
 function Navbar() {
   const navigate = useNavigate(); // Hook for navigation
