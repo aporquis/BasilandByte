@@ -10,12 +10,18 @@ import "./Navbar.css" /*Import associated style sheet*/
 function Navbar() {
   const navigate = useNavigate(); // Hook for navigation
   const isLoggedIn = !!localStorage.getItem("access_token"); // Check login status
+  const [isMenuOpen, setIsMenuOpen] = useState(false); // Define state for menu
 
   // Handle logout by clearing tokens and redirecting
   const handleLogout = () => {
     localStorage.removeItem("access_token"); // Clear access token
     localStorage.removeItem("refresh_token"); // Clear refresh token
     navigate("/login"); // Redirect to login
+    setIsMenuOpen(false); // Close menu after logout
+  };
+
+  const toggleMenu = () => {
+    setIsMenuOpen(!isMenuOpen); // Toggle menu state
   };
 
   return (
