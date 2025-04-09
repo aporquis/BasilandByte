@@ -20,7 +20,7 @@
   top: 0;
   background-color: #2e5436; 
   height: 13px; 
-  width: 1840px; 
+  width: calc(100% - 64px);
 }
 
 .navbar-list {
