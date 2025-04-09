@@ -1,8 +1,11 @@
 .navbar {
   margin: 12px;
   background-color: #5555;
-  border-bottom: 1px solid #ddd;
-  box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.1);
+  border-top: 1px solid #e0e0e0; 
+  border-left: 1px solid #e0e0e0; 
+  border-bottom: 1px solid #c0c0c0; 
+  border-right: 1px solid #c0c0c0; 
+  box-shadow: inset 2px 3px 6px rgba(0, 0, 0, 0.1);
   padding: 10px 20px;
   border-radius: 9px;
 }
