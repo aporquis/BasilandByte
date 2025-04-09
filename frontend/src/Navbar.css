@@ -1,8 +1,9 @@
 .navbar {
   margin: 12px;
+  background-color: #5555;
   border-bottom: 1px solid #ddd;
   padding: 10px 20px;
-  border-radius: 6px;
+  border-radius: 9px;
 }
 
 .navbar-list {
