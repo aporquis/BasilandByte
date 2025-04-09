@@ -22,24 +22,24 @@ function Navbar() {
     <nav className="navbar">
       <div className="navbar-container">
         <div className="navbar-brand">
-          <button onClick={() => navigate("/")}>Home</button>
+          <button onClick={() => { navigate("/"); setIsMenuOpen(false); }}>Home</button>
         </div>
-        <ul className="navbar-menu">
+        <ul className={`navbar-menu ${isMenuOpen ? 'active' : ''}`}>
           {isLoggedIn && (
             <li className="navbar-item">
-              <button onClick={() => navigate("/dashboard")}>Dashboard</button>
+              <button onClick={() => { navigate("/dashboard"); setIsMenuOpen(false); }}>Dashboard</button>
             </li>
           )}
           <li className="navbar-item">
             {isLoggedIn ? (
               <button onClick={handleLogout}>Logout</button>
             ) : (
-              <button onClick={() => navigate("/login")}>Login</button>
+              <button onClick={() => { navigate("/login"); setIsMenuOpen(false); }}>Login</button>
             )}
           </li>
         </ul>
         {/* Responsive Menu Button */}
-        <button className="navbar-toggle">
+        <button className={`navbar-toggle ${isMenuOpen ? 'active' : ''}`} onClick={toggleMenu}>
           <span className="bar"></span>
           <span className="bar"></span>
           <span className="bar"></span>

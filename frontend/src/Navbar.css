@@ -49,12 +49,19 @@
   cursor: pointer;
   font-family: inherit;
   font-size: 1rem;
-  transition: background-color 0.3s ease, color 0.3s ease;
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }
 
 .navbar-item button:hover {
   background-color: #2e5436;
   color: white;
+  border-color: #25442c;
+}
+
+.navbar-item button:focus {
+  outline: none;
+  border-color: #25442c;
+  box-shadow: 0 0 0 0.2rem rgba(46, 84, 54, 0.25);
 }
 
 .navbar-toggle {
