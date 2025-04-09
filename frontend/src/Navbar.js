@@ -19,14 +19,14 @@ function Navbar() {
   };
 
   return (
-    <nav>
-      <ul style={{ display: "flex", listStyle: "none", padding: 0 }}>
-        <li style={{ marginRight: "10px" }}><button onClick={() => navigate("/")}>Home</button></li>
-        {isLoggedIn && <li style={{ marginRight: "10px" }}><button onClick={() => navigate("/dashboard")}>Dashboard</button></li>}
+    <nav className="navbar"> {/* Add the navbar class here */}
+      <ul className="navbar-list"> {/* Add the navbar-list class here */}
+        <li className="navbar-item"><button onClick={() => navigate("/")}>Home</button></li>
+        {isLoggedIn && <li className="navbar-item"><button onClick={() => navigate("/dashboard")}>Dashboard</button></li>}
         {isLoggedIn ? (
-          <li style={{ marginRight: "10px" }}><button onClick={handleLogout}>Logout</button></li>
+          <li className="navbar-item"><button onClick={handleLogout}>Logout</button></li>
         ) : (
-          <li style={{ marginRight: "10px" }}><button onClick={() => navigate("/login")}>Login</button></li>
+          <li className="navbar-item"><button onClick={() => navigate("/login")}>Login</button></li>
         )}
       </ul>
     </nav>
