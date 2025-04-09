@@ -19,6 +19,8 @@ function Navbar() {
   };
 
   return (
+      <div className="navbar-container">
+      <div className="top-green-bar"></div>
     <nav className="navbar">
     <ul className="navbar-list">
       <li className="navbar-item"><button onClick={() => navigate("/")}>Home</button></li>
@@ -30,6 +32,7 @@ function Navbar() {
       )}
     </ul>
   </nav>
+  </div>
 );
 }
 

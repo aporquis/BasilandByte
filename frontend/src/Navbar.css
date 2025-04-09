@@ -9,6 +9,16 @@
   padding: 10px 20px;
   border-radius: 9px;
 }
+.navbar-container {
+  display: flex;
+  flex-direction: column; 
+}
+
+.top-green-bar {
+  background-color: #2e5436; 
+  height: 3px; 
+  width: 100%; 
+}
 
 .navbar-list {
   display: flex;
