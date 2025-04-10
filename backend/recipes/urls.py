@@ -26,7 +26,7 @@ urlpatterns = [
     path("weekly-plan/clear/", clear_weekly_plan, name="clear_weekly_plan"),
     path("weekly-plan/clear/<str:day>/", clear_day_plan, name="clear_day_plan"),
     path('log-login/', log_login_event, name='log-login'),
-    path("recipes/request-account-deletion/", request_account_deletion, name="request_account_deletion"),
+    path("request-account-deletion/", request_account_deletion, name="request_account_deletion"),
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
