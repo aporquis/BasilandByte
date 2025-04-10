@@ -64,7 +64,7 @@ function Dashboard() {
     }
     try {
       const token = localStorage.getItem("access_token");
-      await axios.post("/api/request-account-deletion/", {}, {
+      await axios.post('https://basilandbyte.onrender.com/api/request-account-deletion/', {}, {
         headers: {
           Authorization: `Bearer ${token}`,
         }
