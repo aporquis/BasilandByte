@@ -1,0 +1,99 @@
+/* src/BasilBytePolicies.css */
+@import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@300..700&family=Merriweather:ital,wght@0,300;0,400;0,700;0,900;1,300;1,400;1,700;1,900&display=swap');
+
+.policies-container {
+    max-width: 800px;
+    margin: 20px auto;
+    /* Matches body margin from global CSS */
+    font-family: 'Fira Code', monospace;
+    color: #272727;
+    /* Dark text from global CSS */
+    background-color: #ece6db;
+    /* Light background from global CSS */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+.policies-container h1 {
+    font-family: 'Merriweather', serif;
+    font-size: 2.5rem;
+    /* Slightly larger for emphasis */
+    color: #555;
+    /* Darker headers from global CSS */
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.policy-card {
+    background-color: #ffffff;
+    /* White card like recipe list */
+    border: 1px solid #2e5436;
+    /* Card border from recipe list */
+    border-radius: 8px;
+    /* Rounded corners from recipe list */
+    padding: 20px;
+    /* Padding from recipe list */
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+    /* Card shadow from recipe list */
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    /* Hover effect from recipe list */
+}
+
+.policy-card:hover {
+    transform: translateY(-2px);
+    /* Hover effect from recipe list */
+    box-shadow: 4px 4px 8px rgba(0, 0, 0, 0.15);
+    /* Harsher shadow on hover */
+}
+
+.terms-content h2 {
+    font-family: 'Merriweather', serif;
+    font-size: 1.8rem;
+    /* Slightly larger than recipe titles */
+    color: #555;
+    /* Darker headers from global CSS */
+    margin: 30px 0 15px;
+}
+
+.terms-content h3 {
+    font-family: 'Merriweather', serif;
+    font-size: 1.4rem;
+    color: #777;
+    /* Lighter like <em> in recipe list */
+    margin: 20px 0 10px;
+}
+
+.terms-content p {
+    font-size: 1rem;
+    color: #272727;
+    /* Dark text from global CSS */
+    margin-bottom: 15px;
+    line-height: 1.6;
+    /* Improved readability */
+}
+
+.terms-content ul {
+    list-style: disc;
+    /* Matches your doc, differs from recipe list */
+    margin-left: 20px;
+    margin-bottom: 15px;
+}
+
+.terms-content li {
+    margin-bottom: 10px;
+}
+
+.terms-content strong {
+    font-size: 1.1em;
+    /* Slightly larger like recipe titles */
+    color: #2e5436;
+    /* Green from buttons/navbar for emphasis */
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .policy-card {
+        padding: 16px;
+        /* Matches recipe list responsive padding */
+    }
+}
