@@ -6,6 +6,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getUserInfo, exportUserData } from "./api"; // Import API functions
+import axios from "axios";
 
 function Dashboard() {
   const [user, setUser] = useState(null); // State for user data
@@ -56,6 +57,29 @@ function Dashboard() {
     }
   };
 
+  //Handle Delete Account
+  const deleteUserAccount = async () => {
+    if (!window.confirm("Are you sure? Your account will be deactivated immediately and permanently deleted after 6 months.")){
+      return;
+    }
+    try {
+      const token = localStorage.getItem("access_token");
+      await axios.post("/api/request-account-deletion/", {}, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        }
+      });
+
+      alert("Your account deletion was successful.");
+      localStorage.removeItem("access_token");
+      localStorage.removeItem("refresh_token");
+      navigate("/login");
+    } catch (err) {
+      console.error("Error requesting account deletion: ", err.message);
+      alert(err.response?.data?.error || "Failed to request account deletion.");
+    }
+  };
+
   return (
     <div>
       <h2>Dashboard Loaded</h2>
@@ -74,6 +98,9 @@ function Dashboard() {
           <button onClick={downloadUserData}>Download My Data</button>
           <br />
           <button onClick={() => navigate("/policies")} >Basil Byte Polices</button>
+          <br />
+          <button onClick={deleteUserAccount}
+          style={{ backgroundColor: "red", color: "white", padding: "10px", marginTop: "20px", borderRadius: "5px"}}> Delete my Account</button>
         </>
       ) : (
         <p>Loading user data...</p> // Loading state

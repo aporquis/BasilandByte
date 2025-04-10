@@ -8,7 +8,7 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
-from .models import Recipe, Ingredient, RecipeIngredient, FoodGroup, SavedItem, WeeklyPlan, LoginEvent
+from .models import Recipe, Ingredient, RecipeIngredient, FoodGroup, SavedItem, WeeklyPlan, LoginEvent, UserDeletion
 from .serializers import RecipeSerializer, UserRegisterSerializer, UserLoginSerializer, SavedItemSerializer, WeeklyPlanSerializer
 from django.http import JsonResponse, HttpResponse
 import json
@@ -294,3 +294,27 @@ def log_login_event(request):
         source=source
     )
     return Response({'message': 'Login event logged'}, status=status.HTTP_201_CREATED)
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def request_account_deletion(request):
+    # User Requests deletion of account
+    user = request.user
+    if hasattr(user, 'deletion_request'):
+        return Response({"error": "You have already requested account deletion. It will delete in 6 months from the time you deleted your account."}, status=status.HTTP_400_BAD_REQUEST)
+
+    # Mark user as inactive
+    user.is_active = False
+    user.save()
+
+    # Create deletion request record
+    UserDeletion.objects.create(user=user)
+
+    # Reassign user to Basil & Byte
+    basil_byte_user, created = User.objects.get_or_create(
+        username="basilandbyte",
+        defaults={"email":"admin@basilandbyte.com","password":User.objects.make_random_password()}
+    )
+    Recipe.objects.filter(user=user).update(user=basil_byte_user)
+
+    return Response({"message": "Account deletion requested successfully. Your account will be permanently deleted after 6 months."}, status=status.HTTP_200_OK)
