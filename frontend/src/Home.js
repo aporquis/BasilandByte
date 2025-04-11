@@ -12,7 +12,7 @@ function Home() {
   return (
     <div style={{ textAlign: "center", marginTop: "100px" }}>
       <img
-        src="/WebsiteLogo.png"
+        src="/websitelogo.png"
         alt="Capstone Recipes Logo Graphic"
         style={{ width: "400px", marginBottom: "20px" }} // Logo styling
       />
