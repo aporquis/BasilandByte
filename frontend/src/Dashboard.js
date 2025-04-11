@@ -19,6 +19,7 @@ function Dashboard() {
     const fetchUserInfo = async () => {
       const token = localStorage.getItem("access_token"); // Check for token
       console.log("🔑 Stored Token in LocalStorage:", token);
+
       if (!token) {
         setError("No authentication token found.");
         console.error("❌ No authentication token found.");
@@ -27,12 +28,14 @@ function Dashboard() {
       }
 
       try {
+        console.log("About to call getUserInfo() with token");
         const data = await getUserInfo(); // Fetch user info via API
-        console.log("API Response:", data);
+        console.log("User Information Response:", data);
         setUser(data);
       } catch (err) {
         console.error("Error fetching user info:", err.message);
         setError(err.response?.data?.detail || "Failed to fetch user info.");
+        navigate("/login");
       }
     };
 

@@ -257,9 +257,17 @@ export const loginUser = async (username, password, source = "web") => {
 
 // Fetch user info from /user-info/
 export const getUserInfo = async () => {
+  const token = localStorage.getItem("access_token");
+  if (!token) {
+    throw new Error("No access token found.");
+  }
+
   try {
-    const response = await api.get('/user-info/');
-    console.log('getUserInfo - Response:', response.data);
+    const response = await api.get('/user-info/', {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
     return response.data;
   } catch (error) {
     console.error('Error fetching user info:', error.message);

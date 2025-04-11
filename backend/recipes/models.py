@@ -12,8 +12,7 @@ class Recipe(models.Model):
     description = models.TextField()
     instructions = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
-    image = models.ImageField(
-        upload_to='recipe_images/', null=True, blank=True)
+    image_url = models.URLField(null=True, blank=True)
 
     def __str__(self):
         return self.recipe_name
@@ -33,7 +32,7 @@ class Ingredient(models.Model):
         "FoodGroup", on_delete=models.SET_NULL, null=True, related_name="ingredients")
     specific_species = models.CharField(max_length=100, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
-    image = models.ImageField(upload_to='recipe_images/', null=True, blank =True)
+    image_url = models.URLField(null=True, blank=True)
 
     def __str__(self):
         return self.ingredient_name
