@@ -5,7 +5,6 @@
 
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import WebsiteLogo from "./WebsiteLogo.png"; // Import logo asset
 
 function Home() {
   const navigate = useNavigate(); // Hook for navigation
@@ -13,7 +12,7 @@ function Home() {
   return (
     <div style={{ textAlign: "center", marginTop: "100px" }}>
       <img
-        src={WebsiteLogo}
+        src="/WebsiteLogo.png"
         alt="Capstone Recipes Logo Graphic"
         style={{ width: "400px", marginBottom: "20px" }} // Logo styling
       />
