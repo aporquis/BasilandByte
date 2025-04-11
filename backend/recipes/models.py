@@ -105,3 +105,10 @@ class LoginEvent(models.Model):
 
     def __str__(self):
         return f"{self.username} - {self.timestamp} - {self.outcome} ({self.source})"
+
+class UserDeletion(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='deletion_request')
+    delete_request_time = models.DateTimeField(default=timezone.now)
+
+    def __str__(self):
+        return f"Deletion requested for {self.user.username} at {self.delete_request_time}"

@@ -4,7 +4,8 @@ from django.urls import path
 from .views import (
     register_user, login_user, get_recipes, add_recipe, update_recipe, delete_recipe,
     get_user_info, export_user_data, save_recipe, get_saved_recipes, unsave_recipe,
-    add_recipe_ingredient, add_to_weekly_plan, get_weekly_plan, clear_weekly_plan, clear_day_plan, log_login_event
+    add_recipe_ingredient, add_to_weekly_plan, get_weekly_plan, clear_weekly_plan, clear_day_plan, log_login_event,
+    request_account_deletion
 )
 
 urlpatterns = [
@@ -25,6 +26,7 @@ urlpatterns = [
     path("weekly-plan/clear/", clear_weekly_plan, name="clear_weekly_plan"),
     path("weekly-plan/clear/<str:day>/", clear_day_plan, name="clear_day_plan"),
     path('log-login/', log_login_event, name='log-login'),
+    path("request-account-deletion/", request_account_deletion, name="request_account_deletion"),
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
