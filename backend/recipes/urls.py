@@ -5,7 +5,9 @@ from .views import (
     register_user, login_user, get_recipes, add_recipe, update_recipe, delete_recipe,
     get_user_info, export_user_data, save_recipe, get_saved_recipes, unsave_recipe,
     add_recipe_ingredient, add_to_weekly_plan, get_weekly_plan, clear_weekly_plan, clear_day_plan, log_login_event,
-    request_account_deletion, get_user_inventory, add_to_inventory, update_inventory_item, delete_inventory_item, suggest_recipes, get_ingredients
+    request_account_deletion, get_user_inventory, add_to_inventory, update_inventory_item, delete_inventory_item, suggest_recipes, 
+    get_ingredients, add_to_shopping_list, get_shopping_list, update_shopping_list_item,
+    delete_shopping_list_item, add_missing_ingredients_to_shopping_list,
 )
 
 urlpatterns = [
@@ -35,6 +37,14 @@ urlpatterns = [
          delete_inventory_item, name='delete_inventory_item'),
     path('recipes/suggest/', suggest_recipes, name='suggest_recipes'),
     path('ingredients/', get_ingredients, name='get_ingredients'),
+    path('shopping-list/add/', add_to_shopping_list, name='add_to_shopping_list'),
+    path('shopping-list/', get_shopping_list, name='get_shopping_list'),
+    path('shopping-list/update/<int:item_id>/',
+         update_shopping_list_item, name='update_shopping_list_item'),
+    path('shopping-list/delete/<int:item_id>/',
+         delete_shopping_list_item, name='delete_shopping_list_item'),
+    path('shopping-list/add-missing/<int:recipe_id>/', add_missing_ingredients_to_shopping_list,
+         name='add_missing_ingredients_to_shopping_list'),
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

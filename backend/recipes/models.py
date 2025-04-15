@@ -163,3 +163,20 @@ class UserInventory(models.Model):
 
     def __str__(self):
         return f"{self.user.username}'s {self.ingredient.ingredient_name} ({self.quantity} {self.unit}) - {self.storage_location}"
+
+
+class ShoppingListItem(models.Model):
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="shopping_list_items")
+    ingredient = models.ForeignKey(
+        Ingredient, on_delete=models.CASCADE, related_name="shopping_list_entries")
+    quantity = models.DecimalField(max_digits=6, decimal_places=2)
+    unit = models.CharField(max_length=50)
+    is_purchased = models.BooleanField(default=False)
+    added_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-added_at']
+
+    def __str__(self):
+        return f"{self.user.username}'s {self.ingredient.ingredient_name} ({self.quantity} {self.unit}) - {'Purchased' if self.is_purchased else 'Not Purchased'}"

@@ -1,6 +1,6 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers
-from .models import Recipe, Ingredient, RecipeIngredient, FoodGroup, SavedItem, WeeklyPlan, UserInventory
+from .models import Recipe, Ingredient, RecipeIngredient, FoodGroup, SavedItem, WeeklyPlan, UserInventory, ShoppingListItem
 
 
 class UserRegisterSerializer(serializers.ModelSerializer):
@@ -110,3 +110,18 @@ class IngredientSerializer(serializers.ModelSerializer):
             defaults={'ingredient_name': normalized_name, **validated_data}
         )
         return ingredient
+
+
+class ShoppingListItemSerializer(serializers.ModelSerializer):
+    ingredient_name = serializers.CharField(
+        source='ingredient.ingredient_name', read_only=True)
+
+    class Meta:
+        model = ShoppingListItem
+        fields = ['id', 'user', 'ingredient', 'ingredient_name',
+                  'quantity', 'unit', 'is_purchased', 'added_at']
+        read_only_fields = ['user', 'added_at']
+
+    def create(self, validated_data):
+        validated_data['user'] = self.context['request'].user
+        return super().create(validated_data)
