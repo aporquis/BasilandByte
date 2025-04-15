@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Recipe, Ingredient, RecipeIngredient, FoodGroup, SavedItem, LoginEvent, UserDeletion, UserInventory
+from .models import Recipe, Ingredient, RecipeIngredient, FoodGroup, SavedItem, LoginEvent, UserDeletion, UserInventory, ShoppingListItem
 
 # Register your models here.
 
@@ -11,3 +11,4 @@ admin.site.register(SavedItem)
 admin.site.register(LoginEvent)
 admin.site.register(UserDeletion)
 admin.site.register(UserInventory)
+admin.site.register(ShoppingListItem)
