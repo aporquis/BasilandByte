@@ -13,6 +13,7 @@ from .serializers import RecipeSerializer, UserRegisterSerializer, UserLoginSeri
 from django.http import JsonResponse, HttpResponse
 import json
 import logging
+import re
 
 logger = logging.getLogger(__name__)
 
@@ -414,63 +415,73 @@ def convert_units(quantity, from_unit, to_unit):
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def suggest_recipes(request):
-    """Suggest recipes based on the user's inventory, including missing ingredients."""
+    """Suggest recipes based on user's inventory with fuzzy name matching."""
     user = request.user
-
-    # Get user's available inventory
     inventory = UserInventory.objects.filter(user=user, is_available=True)
     if not inventory.exists():
-        return Response({"message": "No items in inventory to suggest recipes", "suggested_recipes": []},
-                        status=status.HTTP_200_OK)
+        return Response({"message": "No items in inventory to suggest recipes", "suggested_recipes": []}, status=status.HTTP_200_OK)
 
-    # Create a dictionary of available ingredients and their quantities
-    inventory_dict = {
-        item.ingredient.id: {
-            # Convert Decimal to float for comparison
+    # Normalize inventory ingredient names
+    inventory_dict = {}
+    for item in inventory:
+        name = item.ingredient.ingredient_name.lower()
+        # Remove common modifiers
+        name = re.sub(r'\b(finely|shredded|cooked|boneless|skinless)\b',
+                      '', name, flags=re.IGNORECASE).strip()
+        inventory_dict[item.ingredient.id] = {
+            "name": name,
             "quantity": float(item.quantity),
-            "unit": item.unit
-        } for item in inventory
-    }
+            "unit": item.unit,
+            "original_name": item.ingredient.ingredient_name
+        }
 
-    # Get all recipes with their ingredients
     recipes = Recipe.objects.all().prefetch_related('recipe_ingredients__ingredient')
     suggested_recipes = []
-
     for recipe in recipes:
         recipe_ingredients = recipe.recipe_ingredients.all()
         can_make = True
         missing_ingredients = []
-        partial_match = True
+        matched_ingredient_ids = set()
 
         for ri in recipe_ingredients:
             ingredient_id = ri.ingredient.id
             required_quantity = float(ri.quantity)
             required_unit = ri.unit
-            ingredient_name = ri.ingredient.ingredient_name
+            recipe_name = ri.ingredient.ingredient_name.lower()
+            # Normalize recipe ingredient name
+            normalized_recipe_name = re.sub(
+                r'\b(finely|shredded|cooked|boneless|skinless)\b', '', recipe_name, flags=re.IGNORECASE).strip()
 
-            if ingredient_id not in inventory_dict:
+            # Check for match by ID or name
+            found_match = False
+            for inv_id, inv_data in inventory_dict.items():
+                if inv_id == ingredient_id or normalized_recipe_name in inv_data["name"] or inv_data["name"] in normalized_recipe_name:
+                    if inv_id in matched_ingredient_ids:
+                        continue  # Skip if already used
+                    # Simplified unit check (relaxed for now)
+                    available_quantity = inv_data["quantity"]
+                    if available_quantity < required_quantity:
+                        can_make = False
+                        missing_ingredients.append({
+                            "ingredient_name": ri.ingredient.ingredient_name,
+                            "required_quantity": required_quantity,
+                            "unit": required_unit,
+                            "available_quantity": available_quantity,
+                            "available_unit": inv_data["unit"]
+                        })
+                    else:
+                        matched_ingredient_ids.add(inv_id)
+                    found_match = True
+                    break
+
+            if not found_match:
                 can_make = False
                 missing_ingredients.append({
-                    "ingredient_name": ingredient_name,
+                    "ingredient_name": ri.ingredient.ingredient_name,
                     "required_quantity": required_quantity,
                     "unit": required_unit
                 })
-                continue
 
-            # Check quantity and unit (assuming same units for now)
-            available = inventory_dict[ingredient_id]
-            if available["unit"] != required_unit or available["quantity"] < required_quantity:
-                can_make = False
-                missing_ingredients.append({
-                    "ingredient_name": ingredient_name,
-                    "required_quantity": required_quantity,
-                    "unit": required_unit,
-                    "available_quantity": available["quantity"],
-                    "available_unit": available["unit"]
-                })
-
-        # Add recipe to suggestions if fully or partially makable
-        # Allow up to 2 missing ingredients
         if can_make or (len(missing_ingredients) <= 2):
             suggested_recipes.append({
                 "recipe": RecipeSerializer(recipe, context={'request': request}).data,
@@ -478,9 +489,7 @@ def suggest_recipes(request):
                 "missing_ingredients": missing_ingredients
             })
 
-    # Sort suggestions: fully makable recipes first
     suggested_recipes.sort(key=lambda x: x["can_make"], reverse=True)
-
     return Response({
         "suggested_recipes": suggested_recipes,
         "inventory_count": inventory.count()
