@@ -334,36 +334,42 @@ def get_user_inventory(request):
     return Response(serializer.data)
 
 
+# In backend/recipes/views.py (only add_to_inventory)
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def add_to_inventory(request):
-    """Add an item to the user's inventory, creating the ingredient if it doesn't exist."""
-    ingredient_data = {'ingredient_name': request.data.get("ingredient_name")}
-    if not ingredient_data['ingredient_name']:
-        return Response({"error": "ingredient_name is required"}, status=status.HTTP_400_BAD_REQUEST)
-
-    ingredient_serializer = IngredientSerializer(data=ingredient_data)
-    if ingredient_serializer.is_valid():
+    try:
+        ingredient_data = {
+            'ingredient_name': request.data.get("ingredient_name")}
+        if not ingredient_data['ingredient_name']:
+            return Response({"error": "ingredient_name is required"}, status=status.HTTP_400_BAD_REQUEST)
+        ingredient_serializer = IngredientSerializer(data=ingredient_data)
+        if not ingredient_serializer.is_valid():
+            logger.error(
+                f"Ingredient validation failed: {ingredient_serializer.errors}")
+            return Response(ingredient_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         ingredient = ingredient_serializer.save()
-    else:
-        return Response(ingredient_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    data = {
-        "ingredient": ingredient.id,
-        "quantity": request.data.get("quantity"),
-        "unit": request.data.get("unit"),
-        "storage_location": request.data.get("storage_location", "pantry"),
-        "expires_at": request.data.get("expires_at", None),
-    }
-    if not all([data["quantity"], data["unit"]]):  # Added explicit validation
-        return Response({"error": "quantity and unit are required"}, status=status.HTTP_400_BAD_REQUEST)
-
-    serializer = UserInventorySerializer(
-        data=data, context={'request': request})
-    if serializer.is_valid():
-        serializer.save(user=request.user)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        data = {
+            "ingredient": ingredient.id,
+            "quantity": request.data.get("quantity"),
+            "unit": request.data.get("unit"),
+            "storage_location": request.data.get("storage_location", "pantry"),
+            "expires_at": request.data.get("expires_at"),
+        }
+        if data["quantity"] is None or not data["unit"]:
+            logger.error(
+                f"Invalid data: quantity={data['quantity']}, unit={data['unit']}")
+            return Response({"error": "quantity and unit are required"}, status=status.HTTP_400_BAD_REQUEST)
+        serializer = UserInventorySerializer(
+            data=data, context={'request': request})
+        if serializer.is_valid():
+            serializer.save(user=request.user)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        logger.error(f"UserInventory validation failed: {serializer.errors}")
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    except Exception as e:
+        logger.error(f"Error in add_to_inventory: {str(e)}", exc_info=True)
+        return Response({"error": "Internal server error"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @api_view(["PUT"])

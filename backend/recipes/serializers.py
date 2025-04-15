@@ -86,26 +86,21 @@ class UserInventorySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = UserInventory
-        fields = [
-            'id', 'user', 'ingredient', 'ingredient_name', 'food_group',
-            'quantity', 'unit', 'storage_location', 'added_at', 'expires_at',
-            'is_available'
-        ]
-        # User is set automatically, added_at is auto-generated
+        fields = ['id', 'user', 'ingredient', 'ingredient_name', 'food_group', 'quantity',
+                  'unit', 'storage_location', 'added_at', 'expires_at', 'is_available']
         read_only_fields = ['user', 'added_at']
 
     def create(self, validated_data):
-        # Automatically set the user to the authenticated user
         validated_data['user'] = self.context['request'].user
         return super().create(validated_data)
-    
 
-# For specific ingredients that users have
+
 class IngredientSerializer(serializers.ModelSerializer):
     class Meta:
         model = Ingredient
-        fields = ['id', 'ingredient_name',
-                  'food_group', 'specific_species', 'image']
+        # Changed 'image' to 'image_url'
+        fields = ['id', 'ingredient_name', 'food_group',
+                  'specific_species', 'image_url']
         read_only_fields = ['id']
 
     def create(self, validated_data):
