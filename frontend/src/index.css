@@ -106,6 +106,9 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+.Instructions {
+  font-weight: bold;
+}
 
 h1,
 h2 {

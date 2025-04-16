@@ -114,7 +114,7 @@ function RecipeApp() {
               </ul>
             ) : "No ingredients listed"}
             <br />
-            <em>Instructions:</em> {recipe.instructions}
+            <em class="Instructions">Instructions:</em> {recipe.instructions}
             <br />
             {recipe.image && (
               <img
