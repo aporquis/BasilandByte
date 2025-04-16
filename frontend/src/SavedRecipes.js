@@ -94,9 +94,10 @@ function SavedRecipes() {
               if (!recipe) return null; // Skip if no match
               return (
                 <li key={saved.id}>
-                  <strong>{recipe.recipe_name} | <em>Created by:</em> {recipe.username}</strong> - {recipe.description}
+                  <strong>{recipe.recipe_name}</strong>
                   <br />
                   <em>Created by:</em> {recipe.username}
+                    - {recipe.description}
                   <br />
                   <em>Ingredients:</em> {recipe.recipe_ingredients && recipe.recipe_ingredients.length > 0 ? (
                     <ul>
