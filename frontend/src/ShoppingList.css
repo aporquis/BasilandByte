@@ -1,0 +1,104 @@
+/* frontend/src/ShoppingList.css */
+.shopping-list {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    font-family: 'Fira Code', monospace;
+    color: #272727;
+    background-color: #ece6db;
+}
+
+h1,
+h2 {
+    font-family: 'Merriweather', serif;
+    color: #555;
+}
+
+h1 {
+    font-size: 2.5rem;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+h2 {
+    font-size: 1.8rem;
+    margin: 20px 0 10px;
+}
+
+.error {
+    color: red;
+    font-size: 1rem;
+}
+
+.shopping-list-items {
+    list-style: none;
+    padding: 0;
+}
+
+.shopping-list-items li {
+    background: #ffffff;
+    padding: 10px;
+    margin: 5px 0;
+    border-radius: 5px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.add-item-form,
+.create-list-form {
+    display: flex;
+    gap: 10px;
+    margin: 20px 0;
+}
+
+.add-item-form input,
+.create-list-form input,
+.list-selector {
+    padding: 5px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-family: 'Fira Code', monospace;
+    font-size: 1rem;
+}
+
+.add-item-form button,
+.create-list-form button,
+.shopping-list-items button,
+.clear-list-button {
+    padding: 5px 10px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: 'Fira Code', monospace;
+    font-size: 1rem;
+}
+
+.add-item-form button:disabled,
+.create-list-form button:disabled,
+.shopping-list-items button:disabled,
+.clear-list-button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
+.clear-list-button {
+    background-color: #dc3545;
+    margin-bottom: 10px;
+}
+
+.clear-list-button:hover {
+    background-color: #c82333;
+}
+
+.shopping-list-items li input[type="checkbox"] {
+    margin-right: 10px;
+}
+
+.shopping-list-items li.s-purchased {
+    color: #888;
+    text-decoration: line-through;
+}

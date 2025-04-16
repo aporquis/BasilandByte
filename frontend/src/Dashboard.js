@@ -7,10 +7,12 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getUserInfo, exportUserData } from "./api"; // Import API functions
 import axios from "axios";
+import './Dashboard.css';
 
 function Dashboard() {
   const [user, setUser] = useState(null); // State for user data
   const [error, setError] = useState(""); // State for error messages
+  const [currentTime, setCurrentTime] = useState(new Date()); // State for clock
   const navigate = useNavigate(); // Hook for navigation
 
   // Fetch user info on mount
@@ -40,6 +42,12 @@ function Dashboard() {
     };
 
     fetchUserInfo();
+
+    // Update clock every second
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+    return () => clearInterval(timer); // Cleanup on unmount
   }, [navigate]);
 
   // Download user data as JSON file
@@ -83,27 +91,53 @@ function Dashboard() {
     }
   };
 
+  // Determine meal time based on hours
+  const getMealTime = () => {
+    const hours = currentTime.getHours();
+    if (hours >= 6 && hours < 12) return "Breakfast Time";
+    if (hours >= 12 && hours < 17) return "Lunch Time";
+    if (hours >= 17 && hours < 24) return "Dinner Time";
+    return "Late Night Snacking";
+  };
+
+  // Format time as HH:MM:SS AM/PM
+  const formatTime = () => {
+    return currentTime.toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+    });
+  };
+
   return (
-    <div>
+    <div className="dashboard">
       <h2>Dashboard Loaded</h2>
-      {error && <p style={{ color: "red" }}>{error}</p>} {/* Display error if present */}
+      {error && <p className="error">{error}</p>} {/* Display error if present */}
       {user ? (
         <>
           <h3>Welcome, {user.username}!</h3>
-          <button onClick={() => navigate("/add-recipe")}>Add a Recipe</button>
-          <br />
-          <button onClick={() => navigate("/saved-recipes")}>View Saved Recipes</button>
-          <br />
-          <button onClick={() => navigate("/weekly-planner")}>Weekly Planner</button>
-          <br />
-          <button onClick={() => navigate("/pantry")} >Personal Pantry</button>
-          <br />
-          <button onClick={downloadUserData}>Download My Data</button>
-          <br />
-          <button onClick={() => navigate("/policies")} >Basil Byte Polices</button>
-          <br />
-          <button onClick={deleteUserAccount}
-          style={{ backgroundColor: "red", color: "white", padding: "10px", marginTop: "20px", borderRadius: "5px"}}> Delete my Account</button>
+          <div className="dashboard-content">
+            <div className="dashboard-actions">
+              <button onClick={() => navigate("/recipes")}>Explore Recipes</button>
+              <button onClick={() => navigate("/add-recipe")}>Add a Recipe</button>
+              <button onClick={() => navigate("/saved-recipes")}>View Saved Recipes</button>
+              <button onClick={() => navigate("/weekly-planner")}>Weekly Planner</button>
+              <button onClick={() => navigate("/pantry")}>Personal Pantry</button>
+              <button onClick={() => navigate("/shopping-list")}>Shopping List</button>
+              <button onClick={downloadUserData}>Download My Data</button>
+              <button onClick={() => navigate("/policies")}>Basil Byte Policies</button>
+              <button
+                onClick={deleteUserAccount}
+                className="delete-account-button"
+              >
+                Delete My Account
+              </button>
+            </div>
+            <div className="meal-clock">
+              <span className="clock-time">{formatTime()}</span>
+              <span className="meal-label">{getMealTime()}</span>
+            </div>
+          </div>
         </>
       ) : (
         <p>Loading user data...</p> // Loading state

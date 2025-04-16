@@ -16,6 +16,7 @@ import SavedRecipes from "./SavedRecipes";
 import WeeklyPlanner from "./WeeklyPlanner";
 import BasilBytePolices from "./BasilBytePolicies";
 import PersonalPantry from "./PersonalPantry";
+import ShoppingList from "./ShoppingList";
 import { API_BASE_URL } from "./api";
 
 function RecipeApp() {
@@ -159,6 +160,7 @@ function MainApp() {
         <Route path="/weekly-planner" element={isLoggedIn ? <WeeklyPlanner /> : <Login />} />
         <Route path="/policies" element={isLoggedIn ? <BasilBytePolices /> : <Login />} />//new as of 4/2/2025 for our new policies page
         <Route path="/pantry" element={isLoggedIn ? <PersonalPantry /> : <Login />} />//new as of 4/2/2025 for our pantry page
+        <Route path="/shopping-list" element={isLoggedIn ? <ShoppingList /> : <Login />} /> //new as of 4/14/25
       </Routes>
     </Router>
   );
