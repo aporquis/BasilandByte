@@ -306,4 +306,59 @@ export const logLoginEvent = async (username, outcome, source) => {
   }
 };
 
+export const addMissingIngredientsToShoppingList = async (recipeId) => {
+  try {
+    const response = await api.post(`/shopping-list/add-missing/${recipeId}/`);
+    console.log('addMissingIngredientsToShoppingList - Response:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('Error adding missing ingredients:', error.message);
+    throw error;
+  }
+};
+
+export const addToShoppingList = async (itemData) => {
+  try {
+    const response = await api.post('/shopping-list/add/', itemData);
+    console.log('addToShoppingList - Response:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('Error adding to shopping list:', error.message);
+    throw error;
+  }
+};
+
+export const getShoppingList = async () => {
+  try {
+    const response = await api.get('/shopping-list/');
+    console.log('getShoppingList - Response:', response.data);
+    return response.data || [];
+  } catch (error) {
+    console.error('Error fetching shopping list:', error.message);
+    return [];
+  }
+};
+
+export const updateShoppingListItem = async (itemId, data) => {
+  try {
+    const response = await api.put(`/shopping-list/update/${itemId}/`, data);
+    console.log('updateShoppingListItem - Response:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('Error updating shopping list item:', error.message);
+    throw error;
+  }
+};
+
+export const deleteShoppingListItem = async (itemId) => {
+  try {
+    await api.delete(`/shopping-list/delete/${itemId}/`);
+    console.log('deleteShoppingListItem - Success');
+    return true;
+  } catch (error) {
+    console.error('Error deleting shopping list item:', error.message);
+    throw error;
+  }
+};
+
 export default api;

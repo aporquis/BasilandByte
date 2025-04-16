@@ -8,11 +8,12 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
-from .models import Recipe, Ingredient, RecipeIngredient, FoodGroup, SavedItem, WeeklyPlan, LoginEvent, UserDeletion
-from .serializers import RecipeSerializer, UserRegisterSerializer, UserLoginSerializer, SavedItemSerializer, WeeklyPlanSerializer
+from .models import Recipe, Ingredient, RecipeIngredient, FoodGroup, SavedItem, WeeklyPlan, LoginEvent, UserDeletion, UserInventory, ShoppingListItem
+from .serializers import RecipeSerializer, UserRegisterSerializer, UserLoginSerializer, SavedItemSerializer, WeeklyPlanSerializer, UserInventorySerializer, IngredientSerializer, ShoppingListItemSerializer
 from django.http import JsonResponse, HttpResponse
 import json
 import logging
+import re
 
 logger = logging.getLogger(__name__)
 
@@ -318,3 +319,317 @@ def request_account_deletion(request):
     Recipe.objects.filter(user=user).update(user=basil_byte_user)
 
     return Response({"message": "Account deletion requested successfully. Your account will be permanently deleted after 6 months."}, status=status.HTTP_200_OK)
+
+# Added as of 4/4/2025 these are the views that are needed for the pantry models, named (userInventory)
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def get_user_inventory(request):
+    """Fetch all inventory items for the authenticated user."""
+    user = request.user
+    inventory_items = UserInventory.objects.filter(
+        user=user).select_related('ingredient')
+    serializer = UserInventorySerializer(
+        inventory_items, many=True, context={'request': request})
+    return Response(serializer.data)
+
+
+# In backend/recipes/views.py (only add_to_inventory)
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def add_to_inventory(request):
+    try:
+        ingredient_data = {
+            'ingredient_name': request.data.get("ingredient_name")}
+        if not ingredient_data['ingredient_name']:
+            return Response({"error": "ingredient_name is required"}, status=status.HTTP_400_BAD_REQUEST)
+        ingredient_serializer = IngredientSerializer(data=ingredient_data)
+        if not ingredient_serializer.is_valid():
+            logger.error(
+                f"Ingredient validation failed: {ingredient_serializer.errors}")
+            return Response(ingredient_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        ingredient = ingredient_serializer.save()
+        data = {
+            "ingredient": ingredient.id,
+            "quantity": request.data.get("quantity"),
+            "unit": request.data.get("unit"),
+            "storage_location": request.data.get("storage_location", "pantry"),
+            "expires_at": request.data.get("expires_at"),
+        }
+        if data["quantity"] is None or not data["unit"]:
+            logger.error(
+                f"Invalid data: quantity={data['quantity']}, unit={data['unit']}")
+            return Response({"error": "quantity and unit are required"}, status=status.HTTP_400_BAD_REQUEST)
+        serializer = UserInventorySerializer(
+            data=data, context={'request': request})
+        if serializer.is_valid():
+            serializer.save(user=request.user)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        logger.error(f"UserInventory validation failed: {serializer.errors}")
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    except Exception as e:
+        logger.error(f"Error in add_to_inventory: {str(e)}", exc_info=True)
+        return Response({"error": "Internal server error"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(["PUT"])
+@permission_classes([IsAuthenticated])
+def update_inventory_item(request, inventory_id):
+    """Update an existing inventory item."""
+    inventory_item = get_object_or_404(
+        UserInventory, id=inventory_id, user=request.user)
+    serializer = UserInventorySerializer(
+        inventory_item, data=request.data, partial=True, context={'request': request})
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(["DELETE"])
+@permission_classes([IsAuthenticated])
+def delete_inventory_item(request, inventory_id):
+    """Delete an inventory item."""
+    inventory_item = get_object_or_404(
+        UserInventory, id=inventory_id, user=request.user)
+    inventory_item.delete()
+    return Response({"message": "Inventory item deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
+
+
+def convert_units(quantity, from_unit, to_unit):
+    # Simple conversion table (expand as needed)
+    conversions = {
+        # Approximate, depends on ingredient
+        ('grams', 'cups'): lambda q: q / 240,
+        ('cups', 'grams'): lambda q: q * 240,
+    }
+    if from_unit == to_unit:
+        return quantity
+    key = (from_unit, to_unit)
+    if key in conversions:
+        return conversions[key](quantity)
+    return None  # No conversion available
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def suggest_recipes(request):
+    """Suggest recipes based on user's inventory with fuzzy name matching."""
+    user = request.user
+    inventory = UserInventory.objects.filter(user=user, is_available=True)
+    if not inventory.exists():
+        return Response({"message": "No items in inventory to suggest recipes", "suggested_recipes": []}, status=status.HTTP_200_OK)
+
+    # Normalize inventory ingredient names
+    inventory_dict = {}
+    for item in inventory:
+        name = item.ingredient.ingredient_name.lower()
+        # Remove common modifiers
+        name = re.sub(r'\b(finely|shredded|cooked|boneless|skinless)\b',
+                      '', name, flags=re.IGNORECASE).strip()
+        inventory_dict[item.ingredient.id] = {
+            "name": name,
+            "quantity": float(item.quantity),
+            "unit": item.unit,
+            "original_name": item.ingredient.ingredient_name
+        }
+
+    recipes = Recipe.objects.all().prefetch_related('recipe_ingredients__ingredient')
+    suggested_recipes = []
+    for recipe in recipes:
+        recipe_ingredients = recipe.recipe_ingredients.all()
+        can_make = True
+        missing_ingredients = []
+        matched_ingredient_ids = set()
+
+        for ri in recipe_ingredients:
+            ingredient_id = ri.ingredient.id
+            required_quantity = float(ri.quantity)
+            required_unit = ri.unit
+            recipe_name = ri.ingredient.ingredient_name.lower()
+            # Normalize recipe ingredient name
+            normalized_recipe_name = re.sub(
+                r'\b(finely|shredded|cooked|boneless|skinless)\b', '', recipe_name, flags=re.IGNORECASE).strip()
+
+            # Check for match by ID or name
+            found_match = False
+            for inv_id, inv_data in inventory_dict.items():
+                if inv_id == ingredient_id or normalized_recipe_name in inv_data["name"] or inv_data["name"] in normalized_recipe_name:
+                    if inv_id in matched_ingredient_ids:
+                        continue  # Skip if already used
+                    # Simplified unit check (relaxed for now)
+                    available_quantity = inv_data["quantity"]
+                    if available_quantity < required_quantity:
+                        can_make = False
+                        missing_ingredients.append({
+                            "ingredient_name": ri.ingredient.ingredient_name,
+                            "required_quantity": required_quantity,
+                            "unit": required_unit,
+                            "available_quantity": available_quantity,
+                            "available_unit": inv_data["unit"]
+                        })
+                    else:
+                        matched_ingredient_ids.add(inv_id)
+                    found_match = True
+                    break
+
+            if not found_match:
+                can_make = False
+                missing_ingredients.append({
+                    "ingredient_name": ri.ingredient.ingredient_name,
+                    "required_quantity": required_quantity,
+                    "unit": required_unit
+                })
+
+        if can_make or (len(missing_ingredients) <= 2):
+            suggested_recipes.append({
+                "recipe": RecipeSerializer(recipe, context={'request': request}).data,
+                "can_make": can_make,
+                "missing_ingredients": missing_ingredients
+            })
+
+    suggested_recipes.sort(key=lambda x: x["can_make"], reverse=True)
+    return Response({
+        "suggested_recipes": suggested_recipes,
+        "inventory_count": inventory.count()
+    }, status=status.HTTP_200_OK)
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def get_ingredients(request):
+    ingredients = Ingredient.objects.all()
+    serializer = IngredientSerializer(ingredients, many=True)
+    return Response(serializer.data)
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def add_to_shopping_list(request):
+    """Add an item to the user's shopping list."""
+    try:
+        ingredient_data = {
+            'ingredient_name': request.data.get("ingredient_name")}
+        if not ingredient_data['ingredient_name']:
+            return Response({"error": "ingredient_name is required"}, status=status.HTTP_400_BAD_REQUEST)
+        ingredient_serializer = IngredientSerializer(data=ingredient_data)
+        if not ingredient_serializer.is_valid():
+            logger.error(
+                f"Ingredient validation failed: {ingredient_serializer.errors}")
+            return Response(ingredient_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        ingredient = ingredient_serializer.save()
+        data = {
+            "ingredient": ingredient.id,
+            "quantity": request.data.get("quantity"),
+            "unit": request.data.get("unit"),
+            "is_purchased": request.data.get("is_purchased", False),
+        }
+        if data["quantity"] is None or not data["unit"]:
+            logger.error(
+                f"Invalid data: quantity={data['quantity']}, unit={data['unit']}")
+            return Response({"error": "quantity and unit are required"}, status=status.HTTP_400_BAD_REQUEST)
+        serializer = ShoppingListItemSerializer(
+            data=data, context={'request': request})
+        if serializer.is_valid():
+            serializer.save(user=request.user)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        logger.error(
+            f"ShoppingListItem validation failed: {serializer.errors}")
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    except Exception as e:
+        logger.error(f"Error in add_to_shopping_list: {str(e)}", exc_info=True)
+        return Response({"error": "Internal server error"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def get_shopping_list(request):
+    """Fetch all shopping list items for the authenticated user."""
+    user = request.user
+    items = ShoppingListItem.objects.filter(
+        user=user).select_related('ingredient')
+    serializer = ShoppingListItemSerializer(
+        items, many=True, context={'request': request})
+    return Response(serializer.data)
+
+
+@api_view(["PUT"])
+@permission_classes([IsAuthenticated])
+def update_shopping_list_item(request, item_id):
+    """Update a shopping list item (e.g., toggle purchased status)."""
+    item = get_object_or_404(ShoppingListItem, id=item_id, user=request.user)
+    serializer = ShoppingListItemSerializer(
+        item, data=request.data, partial=True, context={'request': request})
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(["DELETE"])
+@permission_classes([IsAuthenticated])
+def delete_shopping_list_item(request, item_id):
+    """Delete a shopping list item."""
+    item = get_object_or_404(ShoppingListItem, id=item_id, user=request.user)
+    item.delete()
+    return Response({"message": "Shopping list item deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def add_missing_ingredients_to_shopping_list(request, recipe_id):
+    """Add missing ingredients from a saved recipe to the shopping list."""
+    user = request.user
+    saved_item = get_object_or_404(SavedItem, recipe_id=recipe_id, user=user)
+    recipe = saved_item.recipe
+    inventory = UserInventory.objects.filter(user=user, is_available=True)
+    inventory_dict = {}
+    for item in inventory:
+        name = item.ingredient.ingredient_name.lower()
+        name = re.sub(r'\b(finely|shredded|cooked|boneless|skinless)\b',
+                      '', name, flags=re.IGNORECASE).strip()
+        inventory_dict[item.ingredient.id] = {
+            "name": name,
+            "quantity": float(item.quantity),
+            "unit": item.unit
+        }
+    recipe_ingredients = recipe.recipe_ingredients.all()
+    added_items = []
+    for ri in recipe_ingredients:
+        ingredient_id = ri.ingredient.id
+        required_quantity = float(ri.quantity)
+        required_unit = ri.unit
+        recipe_name = ri.ingredient.ingredient_name.lower()
+        normalized_recipe_name = re.sub(
+            r'\b(finely|shredded|cooked|boneless|skinless)\b', '', recipe_name, flags=re.IGNORECASE).strip()
+        found_match = False
+        for inv_id, inv_data in inventory_dict.items():
+            if inv_id == ingredient_id or normalized_recipe_name in inv_data["name"] or inv_data["name"] in normalized_recipe_name:
+                available_quantity = inv_data["quantity"]
+                if available_quantity >= required_quantity:
+                    found_match = True
+                break
+        if not found_match:
+            # Check if already in shopping list
+            existing_item = ShoppingListItem.objects.filter(
+                user=user, ingredient=ri.ingredient, is_purchased=False
+            ).first()
+            if existing_item:
+                continue  # Skip duplicates
+            data = {
+                "ingredient": ingredient_id,
+                "quantity": required_quantity,
+                "unit": required_unit,
+                "is_purchased": False,
+            }
+            serializer = ShoppingListItemSerializer(
+                data=data, context={'request': request})
+            if serializer.is_valid():
+                item = serializer.save(user=user)
+                added_items.append(serializer.data)
+            else:
+                logger.error(
+                    f"ShoppingListItem validation failed: {serializer.errors}")
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    return Response({"message": "Added missing ingredients", "items": added_items}, status=status.HTTP_201_CREATED)

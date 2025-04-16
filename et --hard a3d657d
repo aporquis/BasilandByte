@@ -1,0 +1,324 @@
+[33m815769c[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mPantryModelDebug[m[33m, [m[1;31mgithub/PantryModelDebug[m[33m)[m Updated shopping list model and did some code cleaning in the backend
+[33ma3d657d[m Updated admin.py to reflect shopping list model
+[33m5efe2d1[m Created all urls, models, serializers needed for shopping list
+[33mabb546d[m added fuzzy name matching to match finely shredded parmesan to parmesan
+[33mbfd0178[m Fixing bug with the API not parsing information on the frontend properly
+[33mc180d02[m I forgot to update the urls so this is for the urls HAHAH for the userinventory
+[33m799603b[m Register Pantry (userinventory) model in the admin page.
+[33m47cdc49[m Merge branch 'PantryModelDebug' of https://dev.azure.com/CS480Spring25/BasilAndByte/_git/BasilAndByte into PantryModelDebug
+[33m4efd1dd[m added the needed debugged models, pushing to test
+[33m25c093f[m[33m ([m[1;32mmain[m[33m, [m[1;32mTermAndService[m[33m)[m Merged PR 50: Image Storage Issues and Dashboard Redirect Resolved
+[33m925b7e8[m Troubleshooting dashboard redirect
+[33m9ae3684[m Updated migrations with image_url field
+[33mc0de9e0[m Attempting to fix logo bug with url
+[33me46a7b9[m Attempting to fix logo bug 2
+[33m4b43a7f[m Attempting to fix logo bug
+[33mda22be9[m Removed cloudinary since not using; caused Vercel build error.
+[33mafc67c1[m Created project to store images with Cloudinary; environment variables in Render and Vercel
+[33mf3a3d3d[m[33m ([m[1;31mazure/112_ImageBug[m[33m)[m Merged PR 49: 116_DocumentationGDPR
+[33mdeb8e9d[m[33m ([m[1;31mazure/TermAndService[m[33m)[m Merge branch 'TermAndService' of https://dev.azure.com/CS480Spring25/BasilAndByte/_git/BasilAndByte into TermAndService
+[33mbb4b497[m Merged PR 48: User Deletion Model & User Testing
+[33mc970f12[m Added user testing for user deletion.
+[33m8315618[m Fixing a bug with POST api 4
+[33mdd90406[m Fixing a bug with POST api 3
+[33ma81075d[m Fixing a bug with POST api 2
+[33me976202[m Fixing a bug with POST api
+[33mf15ef79[m Added user delete model to admin page.
+[33m17851f6[m Added user delete model, view, url and a button to the dashboard.
+[33mfa63f2f[m[33m ([m[1;31mgithub/TermAndService[m[33m)[m Display all policies for users as well as css as close as I can to camerons css
+[33m40dedfc[m Merged PR 46: Cypress E2E Testing Implementation
+[33md6e4e90[m Merged PR 47: CSS Additions To Navbar.js
+[33m2966e51[m Merge remote-tracking branch 'azure-devops/NavbarCSS' into NavbarCSS
+[33m7fa0ec9[m[33m ([m[1;31mgithub/NavbarCSS[m[33m)[m Altering the width of the Navbar elements decorative green bar
+[33m6c81bd7[m test
+[33m2464a1b[m Test
+[33m9e98b3e[m test
+[33m0fb41bc[m test
+[33m2a1fa83[m Altering the thickness of the decorative line in Navbar.css
+[33mc5af8cf[m ...
+[33mc9f020f[m Altering toe decorative bar above the nav bar
+[33m075fb0a[m Addition of Navbar, decorativebar
+[33mf6ec610[m css color change
+[33mc156af0[m Altering the borders and dropshadows of th .navbar element in Navbar.css
+[33m2b91570[m Added a embedded effect to Navbar.css -.navbar
+[33m9a68017[m Navbar.css - .navbar color and border radios changes
+[33mfca6466[m Navbar.css - .navbar - color changes
+[33m9c31945[m Test
+[33m1539915[m Navbar.css color test
+[33mba88f1d[m Navbar.css test
+[33m6772437[m Altering the css classes of Navbar,js
+[33m87377a9[m Imported the Navbar.css
+[33m9f95c5b[m css addition test
+[33m2312063[m CSS Rollback
+[33mec24a80[m css changes
+[33mfcc56ff[m Adding definitions to setIsMenuOpen.
+[33m8391c76[m css test
+[33m0549b93[m css test
+[33mc820b10[m CSS TEST
+[33m393aa75[m TEST
+[33mf2fc8d0[m Test
+[33md2a6fd0[m Test
+[33m20ffa75[m Test
+[33me3f3ed7[m Added classes to Navbar.js to remove the need for inline styling and imported the associated style sheet "Navbar.css"
+[33m6c1ad7d[m Adding CSS to Navbar.js
+[33m1bf6cd6[m[33m ([m[1;31mgithub/112_CypressImplement[m[33m, [m[1;31mazure/112_CypressImplement[m[33m)[m Add Recipe User Test complete
+[33m6ca2757[m Added Create new User and Explore Recipes user tests
+[33mb11a64d[m[33m ([m[1;31mazure/NavbarCSS[m[33m)[m Merged PR 45: Created two new buttons and Pages
+[33m7d176d2[m Implemented Cypress Testing Dependencies
+[33m639fb41[m[33m ([m[1;31mazure/PolicyAndPantryEdition[m[33m, [m[1;32mPolicyAndPantryEdition[m[33m)[m Merge branch 'PolicyAndPantryEdition' of https://dev.azure.com/CS480Spring25/BasilAndByte/_git/BasilAndByte into PolicyAndPantryEdition This is a test commit message:wq :wq.
+[33md02974a[m Merged PR 43: Debugged the LoginEvent Model and Login capabilities for Vercel Preview
+[33mdc9c635[m[33m ([m[1;31mgithub/PolicyAndPantryEdition[m[33m)[m Removed emojis from buttons for implementation of teams overall styles
+[33m4c4328a[m Debugging login features. Updating allowed origins to include previews. Fixed duplicate
+[33m603916d[m Debugging login features. Updating allowed origins to include previews.
+[33m1b4c8a1[m Debugging login feature again. Changed CORS settings.
+[33m99afae8[m Debugging login feature.
+[33mfb7fe57[m Added model to admin
+[33m1f0d892[m Cleaned duplicate models and migrated changes
+[33m8864774[m Moved the policy and download user data button to the bottom to make the menu sorted
+[33m081c826[m Fixed bug and function called due to mispelling, policies rather than polices, as well as function BasilByte to BasilBytePolicies
+[33me10dbaa[m Added new buttons for navigating to the Policy pages and Pantry page from the dashboard page
+[33m0e6bb61[m added new routes for the two new pages, adjusted all the routes to ensure that the isloggedin feature was enforced
+[33m4470a90[m added basic screen for users to have their personal pantry uploaded.
+[33m6a92a3e[m Created a very basic page for us to host our policy information
+[33m55519f3[m Created 2 new pages for the web app for our pantry planner, as well as a place where we can store our Policy documents
+[33m9481c61[m[33m ([m[1;31mgithub/main[m[33m, [m[1;32m105_ModelBugs[m[33m)[m Merged PR 41: Confirmed logging in works for hosting sites & added recipes
+[33mfcbdb8a[m Resolved merge conflicts in .gitignore and removed tsconfig.json
+[33m1ee754a[m github action works
+[33ma96d711[m Testing github action
+[33m3efe16a[m Login event and homepage wording
+[33m6af4ca2[m Restarting debugging
+[33mcb11a5d[m Fixing deployment bug.
+[33mf914171[m Adding mobile.zip to gitignore
+[33m303e111[m Removed merge comments
+[33m33bb523[m[33m ([m[1;31mgithub/restartDebug[m[33m)[m Remove tsconfig due to merge conflict
+[33mb86f25a[m Squashing merge
+[33m20bc8d5[m Merged PR 39: Hard coded hosting url and added logging as well as logging models
+[33me36a140[m Merge branch 'main' of https://dev.azure.com/CS480Spring25/BasilAndByte/_git/BasilAndByte
+[33m3f9beb4[m Merge branch 'main' into URL-HOST-CONFIG
+[33m6bfd73a[m Update logo.png on main
+[33mdaa1216[m[33m ([m[1;32mURL-HOST-CONFIG2[m[33m)[m Merge branch 'URL-HOST-CONFIG' of https://dev.azure.com/CS480Spring25/BasilAndByte/_git/BasilAndByte into URL-HOST-CONFIG
+[33md11a142[m[33m ([m[1;32mMain-Fix[m[33m)[m Merged PR 38: Added Github Mirroring
+[33m8564af4[m[33m ([m[1;31mgithub/URL-HOST-CONFIG[m[33m)[m edited the login and api of the mobile app to ensure it will help log failed attempts
+[33m74edddd[m edited the login and api of the frontend website to ensure it will help log failed attempts
+[33m07dcb23[m added new views and url to log loggin data required by sprint 4
+[33mc5f3e08[m Added new model for logging, not sure about how to run migrations on the hosting service though
+[33mdfc9a2d[m Fixed and Updated: Fixed and updated the frontend code to not rely on .env and follow our hosted environment URL.
+[33m049047a[m Fixed and Updated: All urls to not run off of the .env and now run on the hosted server at the url that can be found in backend/backend/settings.py
+[33mcecfa78[m Hardcode CORS and ALLOWED_HOSTS, remove .env dependency, make team-friendly
+[33m9428684[m Update CORS, ALLOWED_HOST, and logging for hosted backend
+[33m944f26a[m[33m ([m[1;32mAzureMirror[m[33m)[m Resolved Merge conflicts with main.
+[33mef5392c[m[33m ([m[1;31mgithub/AzureMirror[m[33m)[m Removing testing document
+[33m5fd9958[m Debugging Azure triggers
+[33m28a9924[m Confirming work in Azure
+[33m438b8ab[m Confirming work in Github
+[33m285559c[m Troubleshooting Github Actions 4
+[33m2fe2678[m Troubleshooting Github Actions 3
+[33me8f6e1a[m Troubleshooting Github Actions 3
+[33m853dc92[m Troubleshooting Github Actions 2
+[33m2053777[m Troubleshooting Github Actions
+[33m73e22c5[m Updating yml file
+[33m47b54d5[m Azure Pipelines are now running
+[33mf682616[m Debugging Azure Pipeline finding branches from remote
+[33m6d2a412[m Debugging Azure Pipeline finding branches from remote
+[33m179ad04[m Debugging Azure Pipeline connection to github
+[33m0f9faf4[m Debugging Azure Pipeline 5
+[33mabf452e[m Debugging Azure Pipeline 4
+[33m32b9715[m Debugging Azure Pipeline 3
+[33mc3d373d[m Debugging pipeline file. Part 2
+[33mcee5eef[m Debugging pipeline file.
+[33m3a7398d[m Testing github action pipeline.
+[33m1976eda[m Adding txt file to test mirror capability.
+[33m46f7379[m Add Github action to sync with Azure Devops
+[33m6bf2dd0[m Merged PR 37: Merging working app and website into main branch
+[33m528ac19[m Mirror to Github
+[33m8bb81a8[m[33m ([m[1;32mrecipe-add-fix[m[33m)[m fixed merge conflicts and spacing issues. Conflicts were over a new line added for home navigation.
+[33me4c4167[m Merged PR 35: Merge hosting branch into main
+[33m0207f06[m fixed spacing merge conflicts
+[33m22290cf[m chore: Remove tracked .pyc files from repository
+[33m9c6f177[m chore: Update .gitignore to ignore __pycache__ and .pyc files to prevent merge conflicts
+[33md0ad4aa[m feat(frontend): Add new components AddRecipe.js and WeeklyPlanner.js for enhanced functionality
+[33m43df80f[m chore: Update package.json and package-lock.json with new dependencies and versions
+[33m0d01e34[m refactor(frontend): Refactor web components, remove WeeklyPlanning.js, and update API and styling
+[33m9c5fc86[m feat(backend): Update models, serializers, views, and URLs to support WeeklyPlan and fix related issues
+[33m4011b6a[m refactor(mobile): Enhance DashboardScreen by removing View Saved Recipes button and improving user data fetching
+[33mb2bf0f6[m enhance(mobile): Update api.js with improved logging and error handling for better API interaction
+[33m1aa7d5c[m fix(mobile): Update import paths to ../services/api in SavedRecipesScreen, WeeklyPlannerScreen, and AppNavigator
+[33m9ebac87[m fix: Update import paths to use ../services/api in SavedRecipesScreen and WeeklyPlannerScreen
+[33m01f60dc[m[33m ([m[1;32mmerge-hosting[m[33m)[m Resolved conflicts and completed squash merge
+[33m0eb7828[m Merge pull request #14 from aporquis/hosting
+[33m0792f32[m[33m ([m[1;32mhosting[m[33m)[m Took care of Vercel Build bugs
+[33ma2f2c2e[m Removed vercel.json for react app; configured in Vercel.
+[33m947088c[m Merge pull request #13 from aporquis/hosting
+[33me767967[m Changing routing
+[33m961087f[m Adding text. But where is the homepage?
+[33m7a79af6[m Merge pull request #12 from aporquis/hosting
+[33m6d3e065[m remove azure workflow
+[33m2b6f791[m Merge pull request #11 from aporquis/hosting
+[33mfbdb3e0[m Trying to direct homepage
+[33m9f56846[m Merge pull request #10 from aporquis/hosting
+[33meb9e5e2[m Frontend directory change
+[33m4189cd2[m Frontend fixes
+[33md9fcb7a[m Merge pull request #9 from aporquis/hosting
+[33m428b611[m Troubleshooting vercel. Restarting project.
+[33mbc12372[m Troubleshooting front end deployment.
+[33m1ba48de[m Merge pull request #8 from aporquis/hosting
+[33ma9a1600[m Testing frontend settings for deployment.
+[33m684d98f[m Merge pull request #7 from aporquis/hosting
+[33m1332bc2[m Added root URL
+[33m6dc4c2e[m Merge pull request #6 from aporquis/hosting
+[33m2a008d3[m Configured wsgi
+[33mbdf3f75[m Merge pull request #5 from aporquis/hosting
+[33me7f5033[m Add gunicorn to requirements
+[33m4c3ac40[m Merge pull request #4 from aporquis/hosting
+[33m1da1414[m Add whitenoise to requirements
+[33ma3f19c2[m Merge pull request #3 from aporquis/hosting
+[33m2f9b3e8[m Add dj-database-url to requirements
+[33m362995d[m Merge pull request #2 from aporquis/hosting
+[33me887503[m Adding build file in root
+[33mbc4fe21[m Merge pull request #1 from aporquis/hosting
+[33m2a1caf9[m Clean up env and settings for Render build and deploy
+[33m4734481[m prepared structure for additional web pages
+[33m555a16d[m flushed my database for a full team login test
+[33me7f9bb0[m automated files for new runs and changes in code
+[33m75a1bfe[m added ability to have a weekly planner with all 7 days of the week, 3 meal times, as well as squares that show if a day is fully, patially, or not planned based on the color. This pull contents from the saved page. In order to add a recipe to your weekly planner it has to be saved to your saved page first
+[33m5438d86[m Allows a user to save a recipe if they end up liking it to its own screen, connected to the saved item database for flexibility.
+[33m75d130f[m fixed api url issues as well as added a button that allows you to save a particular recipe if you like it to your saved recipe screen
+[33m004fd75[m Created screen to allow for a users profile screen
+[33mb260a8d[m Created screen to show individual recipes that a logged in user added on their own specific instance
+[33mb79286e[m fixed api and url issues not communicating with backend properly when trying to login, was giving an error
+[33md08470d[m fixed api and url issues not communicating with backend properly
+[33m8f9524f[m added clock for making app more interactive, tells time and what the meal to eat should be based on that time
+[33m47ca67d[m fixed issue with api urls not linking up correctly
+[33m4ae879d[m added new links to new screens for saving recipes, planning and personally added recipes
+[33m71b2737[m added new modules ported to json
+[33me186956[m added new modules ported to json
+[33m26e59a7[m added new code to ensure ability to add to saved recipes, and unsaved, added debugging to hunt down delete issue
+[33mffa13fc[m added new code to ensure functions of saving, and unsaving recipes for particular users
+[33m8d15f0a[m added new api connection points so we can save recipes as idicated by project goals
+[33m518ad0a[m fixed issue with duplicated instructions statement in the table for recipes
+[33m5679578[m added socket timers to help with problems when deleting recipes on the mobile app
+[33m8d54a04[m turned off cors function due to the fact I was getting double delete errors causing a network error
+[33m2597ef3[m Added new screens for savedrecipes, weeklyplanning and mypostedrecipes
+[33m089fb15[m Add or update the Azure App Service build and deployment workflow config
+[33m3831740[m Adding mobile files 6
+[33m4d4a5e1[m Adding mobile files 5
+[33ma9332f0[m Adding mobile files 4
+[33mb808b69[m Adding mobile files 3
+[33m55081f6[m Adding mobile files 2
+[33md046de0[m Adding mobile files
+[33mb399039[m Adding logo 3
+[33m2fd7d43[m Adding logo 2
+[33me845057[m Adding logo
+[33m444a113[m Adding rest framework 4
+[33mee6d6cb[m Adding rest framework 3
+[33mb98e973[m Adding rest framework 2
+[33m61f218a[m Adding rest framework
+[33mee5b8c6[m Adding recipes image 4
+[33mce5eccf[m Adding recipes image 3
+[33m94f1983[m Adding recipes image 2
+[33m9f9f2c1[m Adding recipes image
+[33ma1049ac[m Set up Git LFS for large files
+[33m80e3ed3[m Fixed issue with adding recipes!
+[33mab54a20[m Merged PR 32: Confirmed working branch
+[33m91c2a83[m[33m ([m[1;32mIntegrationPipeline[m[33m)[m Confirming changes run valid tests and remove duplicate lines
+[33m1fe9cde[m Troubleshooting attempt. Removed Azure pipeline file
+[33m56d2697[m Debugging attempt 2
+[33m16a507c[m debugging attempt with unexpected values
+[33m0f10ab6[m added DependsOn commands to make sequential pipelines
+[33m2032da6[m Add all current code before applying recipe add fix
+[33mb4296a4[m removed pycache and migration files. testing pipeline on integrationpipeline branch
+[33m0b38308[m Merged PR 28: Removed two duplicate lines from models. Cleared migration cache and reran th...
+[33md752b4a[m[33m ([m[1;32mUnitTestsBugs[m[33m)[m Removed two duplicate lines from models. Cleared migration cache and reran the migrations. Added .env to gitignore.
+[33mfdc4982[m Merge branch 'main' of https://dev.azure.com/CS480Spring25/BasilAndByte/_git/BasilAndByte
+[33m156b10b[m Merged PR 27: added navbar element for dashboard button only shows when logged in
+[33m37aae4e[m fixed spacing
+[33mb997f1d[m Merge branch 'main' of https://dev.azure.com/CS480Spring25/BasilAndByte/_git/BasilAndByte
+[33m3251474[m Merged PR 25: Unit Testing
+[33ma3a38a0[m Merged PR 24: API Creation and Navigation into Main
+[33m400ef01[m Merge Conflict 4 caused by white space
+[33maa48cc3[m merge conflict 3
+[33mccb26f0[m fixing merge conflict 2
+[33m124a375[m Fixing merge conflicts
+[33m12b4250[m Added additional User Model tests and Serializer tests
+[33m48f31fe[m added navbar element for dashboard button only shows when logged in
+[33m7a90d8e[m Merged PR 22: Implementing fix into the database that removes the ID, these are auto generated by django.
+[33m2aff2c3[m Merged PR 15: Fixed API environment variable setup.
+[33m450fb64[m pushing updated cache to ensure git is happy
+[33md2d98a2[m edited the registration page to ensure that we a can add email and name
+[33m15fbce5[m added button for user-download data and data flush, added some comments for the team!
+[33mfbe0042[m added views for the user data flush, also went through and added the comments to existing code!
+[33m76ef7af[m added url for user data flush
+[33m6df6852[m added correct routing to see the view and fixed wrong token type for user_info!
+[33m4b60f86[m added operations for user login and registration and dashboard page.
+[33mc32bcfe[m Merged PR 23: Adjusted ReadMe Formatting
+[33m4dccdd6[m[33m ([m[1;32mUnitTesting[m[33m)[m Created backend model unit tests
+[33m320a43a[m Adjusted ReadMe format and added instructions for local instance changes to the env files
+[33m1e6b4aa[m removed my ip from code that was being used for debugging
+[33m29f5c9c[m Adjusted settings and added api urls for the use of multi user
+[33m4446e38[m editted the login page to work with the new apis that were written on the backend
+[33m773f899[m Added views to help with user tokens, registration, as well as user login.
+[33m17be74c[m Merge branch 'main' of https://dev.azure.com/CS480Spring25/BasilAndByte/_git/BasilAndByte
+[33mdafe2a2[m[33m ([m[1;32mdata-base-fix[m[33m)[m Resolved merge conflicts and spacing errors in the data-base-fix branch
+[33m03d996b[m[33m ([m[1;32mReadMeFormat[m[33m)[m Merged PR 21: Added README
+[33mbad4278[m AddedReadMe
+[33m703b921[m Pushing full branch to discover elighs problem on his end
+[33m276bf16[m Merged PR 18: Django Web tokens into main
+[33mdffcadb[m Cleaned up and reorganized, added featured that are needed for the JWT (Json Web Token) system to work
+[33m6f1f69a[m fixed database id problems
+[33m03d247e[m Merge branch 'main' of https://dev.azure.com/CS480Spring25/BasilAndByte/_git/BasilAndByte into data-base-fix
+[33m9913309[m fixed id conflicts with database and django
+[33m5ea3ad6[m[33m ([m[1;32mDjango-JsonToken[m[33m)[m Editted Django framework to ensure user authentication
+[33mdb0ba58[m untracked gitignore to resolve conflict
+[33m3ed31c9[m Resolving merge conflict.
+[33m4fc921b[m AddedTableModelsToBackend
+[33m74810a6[m Resolved merge conflicts in models.py and views.py
+[33mbd3aad9[m Merged PR 16: Added Tables to Backend
+[33mf441612[m[33m ([m[1;32mTableModels[m[33m)[m untracked gitignore to resolve conflict
+[33mfa7d931[m Resolving merge conflict.
+[33m4a58669[m AddedTableModelsToBackend
+[33mbb2802d[m Merged PR 14: Stopped tracking .gitignore
+[33m138d466[m all files that have been changed for the routing of website pages.
+[33m3f20b42[m Reconfigured navigation, and made it so users can't add or delete recipes unless they are logged in, as well as adding filters for recipes
+[33m863b082[m Created a navigation bar that way users don't get stuck on a page
+[33m399aa27[m Created page for users to create an account if they do not happen to have an account
+[33m3defd56[m Created basic login page for users to login to their own account
+[33m6675dfc[m Created new homepage for a cleaner landing when accessing the website
+[33mb0e0d09[m Editted Django framework to ensure user authentication
+[33m112bddb[m Removed .env and .gitignore from tracking
+[33m7db1989[m[33m ([m[1;32mAddingGitIgnore[m[33m)[m Stopped tracking .gitignore
+[33m46f7b53[m[33m ([m[1;32mSQLSetup[m[33m, [m[1;32mReadMeBranch[m[33m)[m Merged PR 11: FULL APP SETUP
+[33m123a6d4[m[33m ([m[1;32mBackend-development[m[33m)[m Change to the CSS to improve visual representation of the recipe web app.
+[33m2b3ecb7[m Merge branch 'Backend-development' of https://dev.azure.com/CS480Spring25/BasilAndByte/_git/BasilAndByte into Backend-development
+[33m340ea10[m Commit containing the CSS code required to style the recipe web app
+[33m4dde4de[m[33m ([m[1;32mfeature/image-upload-web-mobile[m[33m)[m Merged PR 9: Pulling uploaded working feature/image-upload-web-mobile, into the main branch.
+[33mcbd77cb[m Added image support to the full stack, and added the image navigator modules.
+[33m4604eaf[m Merged PR 8: UPDATED BACKEND, WORKING FRONTEND AND MOBILE
+[33mb7b4cbc[m Merged PR 7: Combine two working branches for easy clone of whole project.
+[33m8dbb84c[m[33m ([m[1;32mFrontend-Recipe-Display[m[33m)[m Updated project: fixed backend/frontend/mobile, added .env support all work and talk with one another and provide real time updates.
+[33mcf37bb9[m Merged PR 4: Set up CI with Azure Pipelines
+[33m6289dcf[m Merged PR 5: Merging the two pieces of the backend together for a cleaner repository.
+[33m7c634aa[m[33m ([m[1;32mMobile-UI[m[33m)[m fixed merge conflicts
+[33md7493eb[m Added frontend functionality for recipe app, as well as changed dependencies in the backend to ensure proper API communication with the front end
+[33m6cb680f[m[33m ([m[1;32mTestingFramework[m[33m)[m Merged PR 3: AddedPyTest
+[33mf94ae5c[m Fixed NPM problems and updated the dependencies for the frontend
+[33m1d19a31[m removed the .env file due to it not working, changed node js to more stable version due to some bugs at run time when starting react
+[33md139abb[m Updated frontend dependencies in the package.json
+[33m4b8be41[m Updated the backend requirement.txt with the latest dependencies, and also MOVED it into the CORRECT directory that way it is in scope
+[33m26e8544[m Fixed NPM problems and updated the dependencies for the frontend
+[33m28b6a32[m removed the .env file due to it not working, changed node js to more stable version due to some bugs at run time when starting react
+[33m1e750ac[m[33m ([m[1;32mFrontend-developement[m[33m)[m Updated frontend dependencies in the package.json
+[33m9ff5f5f[m[33m ([m[1;32mData-base-mitigation[m[33m)[m added views for our update, and delete recipes, and then made sure that those URL's are mapped to our app URL file.
+[33m1c553c9[m stop tracking gitignore
+[33mec818a2[m AddedPytestToRequireTxt
+[33m8499e97[m[33m ([m[1;32mAzure-Pipeline-Python[m[33m)[m Set up CI with Azure Pipelines
+[33m9d7b377[m Created the views and worked on wiring the urls to the the database, so far the correct messages are coming up, will test with curl soon.
+[33meefa70c[m Created the models needed for the recipe, and linked them. I logged into the Django Administration page, and can confirm that I am able to see the Recipes model.
+[33mf51d342[m Created our first app in Django called 'recipes'
+[33m077fd60[m Created the schema and mitigation, enabling everyone to run python manage.py mitigate to align their databases
+[33m34aba3d[m AddedPyTest
+[33mdea2637[m Merged PR 2: Creating the Main Branch
+[33m660a801[m[33m ([m[1;32mrepotransferbranch[m[33m)[m Removed db.sqlite3 from the repository
+[33m2e6b2db[m Clean repository and apply proper .gitignore
+[33m2662e2c[m Merge branch 'main' of https://dev.azure.com/CS480Spring25/Capstone%20Project/_git/Capstone%20Project
+[33mc021d14[m Initial commit with backend and frontend folders
+[33m9b60f4c[m Added README.md
