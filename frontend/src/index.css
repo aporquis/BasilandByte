@@ -36,11 +36,7 @@ ul li strong {
   margin-bottom: 5px;
   display: block; /*Makes the recipe title a block element*/
 }
-ul li em {
-  font-style: italic;
-  color:#777;
-  margin-right: 5px;
-}
+
 ul li button {
   margin-top: 10px;
   padding: 8px 16px;
