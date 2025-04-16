@@ -106,7 +106,7 @@ function RecipeApp() {
             <strong>{recipe.recipe_name} | <em>Created by:</em> {recipe.username}</strong> - {recipe.description}
             <br />
             <br />
-            <em>Ingredients:</em> {recipe.recipe_ingredients && recipe.recipe_ingredients.length > 0 ? (
+            <em class="Ingredients">Ingredients:</em> {recipe.recipe_ingredients && recipe.recipe_ingredients.length > 0 ? (
               <ul>
                 {recipe.recipe_ingredients.map(ing => (
                   <li key={ing.id}>{ing.quantity} {ing.unit} {ing.ingredient_name}</li>
