@@ -167,7 +167,7 @@ button {
   border: none;
   border-radius: 4px;
   cursor: pointer;
-  background-color: #2e5436;
+  background-color: #ff500b;
   /* Dark green for all buttons */
   color: white;
   transition: background-color 0.2s ease;
