@@ -116,9 +116,9 @@ function RecipeApp() {
             <br />
             <em class="Instructions">Instructions:</em> {recipe.instructions}
             <br />
-            {recipe.image && (
+            {recipe.image_url && (
               <img
-                src={`${API_BASE_URL}/${recipe.image}`} // Use hardcoded URL
+                src={recipe.image_url} // Use hardcoded URL
                 alt={recipe.recipe_name}
                 style={{ width: "200px", height: "150px", objectFit: "cover", marginTop: "10px" }}
               />

@@ -3,9 +3,11 @@
 // Uses addRecipe and addRecipeIngredient from api.js for backend interaction.
 // Navigates to /recipes on successful submission.
 
+import axios from "axios";
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { addRecipe, addRecipeIngredient } from "./api"; // Import API functions
+import UploadImage from "./components/UploadImage"; // needed to store the url to images
 
 function AddRecipe() {
   // State for recipe form fields
@@ -13,7 +15,7 @@ function AddRecipe() {
   const [description, setDescription] = useState("");
   const [ingredients, setIngredients] = useState([{ name: "", quantity: "", unit: "" }]);
   const [instructions, setInstructions] = useState("");
-  const [image, setImage] = useState(null);
+  const [uploadedImageUrl, setUploadedImageUrl] = useState("");
   const navigate = useNavigate();
 
   // Add a new empty ingredient field
@@ -27,18 +29,30 @@ function AddRecipe() {
     newIngredients[index][field] = value;
     setIngredients(newIngredients);
   };
+  // To handle uploaded image result
+  const handleImageUpload = (url) => {
+    setUploadedImageUrl(url);
+  };
 
   // Handle form submission to add recipe and ingredients
   const handleSubmit = async (e) => {
     e.preventDefault(); // Prevent default form submission
+    /*
     const formData = new FormData();
     formData.append("recipe_name", recipeName);
     formData.append("description", description);
     formData.append("instructions", instructions);
     if (image) formData.append("image", image); // Add image if selected
+    */
+    const recipeData = {
+      recipe_name: recipeName,
+      description: description,
+      instructions: instructions,
+      image_url: uploadedImageUrl,
+    };
 
     try {
-      const addedRecipe = await addRecipe(formData); // Add recipe via API
+      const addedRecipe = await addRecipe(recipeData); // Add recipe via API
       if (addedRecipe) {
         // Add each ingredient if all fields are filled
         for (const ingr of ingredients) {
@@ -55,7 +69,7 @@ function AddRecipe() {
         setDescription("");
         setIngredients([{ name: "", quantity: "", unit: "" }]);
         setInstructions("");
-        setImage(null);
+        setUploadedImageUrl("");
         navigate("/recipes"); // Redirect to recipes page
       }
     } catch (error) {
@@ -129,12 +143,8 @@ function AddRecipe() {
           onChange={(e) => setInstructions(e.target.value)}
           required
         />
-        <input
-          type="file"
-          accept="image/*"
-          onChange={(e) => setImage(e.target.files[0])}
-        />
-        <button type="submit">Add Recipe</button>
+        <UploadImage onUploadSuccess={handleImageUpload} />
+        <button type="submit" disabled={!uploadedImageUrl || !recipeName}>Add Recipe</button>
       </form>
     </div>
   );
