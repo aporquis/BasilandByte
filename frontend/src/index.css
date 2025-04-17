@@ -36,11 +36,7 @@ ul li strong {
   margin-bottom: 5px;
   display: block; /*Makes the recipe title a block element*/
 }
-ul li em {
-  font-style: italic;
-  color:#777;
-  margin-right: 5px;
-}
+
 ul li button {
   margin-top: 10px;
   padding: 8px 16px;
@@ -110,6 +106,12 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+.Instructions {
+  font-weight: bold;
+}
+.Ingredients {
+  font-weight: bold;
+}
 
 h1,
 h2 {
@@ -121,6 +123,7 @@ h2 {
 ul {
   list-style: none;
   padding: 0;
+  margin: 20px;
 }
 
 /* Recipe list styling */
@@ -156,7 +159,7 @@ ul li strong {
 
 ul li em {
   font-style: italic;
-  color: #777;
+  color: #272727;
   margin-right: 5px;
 }
 

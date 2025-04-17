@@ -104,11 +104,10 @@ function RecipeApp() {
       <ul>
         {filteredRecipes.map((recipe) => (
           <li key={recipe.id}>
-            <strong>{recipe.recipe_name}</strong> - {recipe.description}
+            <strong>{recipe.recipe_name} | <em>Created by:</em> {recipe.username}</strong> - {recipe.description}
             <br />
-            <em>Created by:</em> {recipe.username}
             <br />
-            <em>Ingredients:</em> {recipe.recipe_ingredients && recipe.recipe_ingredients.length > 0 ? (
+            <em class="Ingredients">Ingredients:</em><br></br> {recipe.recipe_ingredients && recipe.recipe_ingredients.length > 0 ? (
               <ul>
                 {recipe.recipe_ingredients.map(ing => (
                   <li key={ing.id}>{ing.quantity} {ing.unit} {ing.ingredient_name}</li>
@@ -116,7 +115,7 @@ function RecipeApp() {
               </ul>
             ) : "No ingredients listed"}
             <br />
-            <em>Instructions:</em> {recipe.instructions}
+            <em class="Instructions">Instructions:</em> {recipe.instructions}
             <br />
             {recipe.image_url && (
               <img
