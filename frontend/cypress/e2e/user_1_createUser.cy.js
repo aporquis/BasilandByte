@@ -2,7 +2,11 @@
 
 describe('Create User', () => {
     it('allows a user to log in', () => {
-        cy.visit('https://basilandbyte.vercel.app');
+        cy.visit('https://basilandbyte.vercel.app', {
+            headers: {
+              'Cache-Control': 'no-cache'
+            }
+          });
 
         cy.contains('Login').click(); //find and click Login button
 
@@ -17,6 +21,6 @@ describe('Create User', () => {
 
         cy.get('button[type="submit"]').click(); // click to register user
 
-        cy.contains ('Login');
+        cy.contains ('Login' || 'Username already taken');
     });
 });

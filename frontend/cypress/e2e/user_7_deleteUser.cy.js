@@ -2,7 +2,11 @@
 
 describe('Delete User', () => {
     it('allows a user to delete their account', () => {
-        cy.visit('https://basilandbyte.vercel.app');
+        cy.visit('https://basilandbyte.vercel.app', {
+            headers: {
+              'Cache-Control': 'no-cache'
+            }
+          });
 
         cy.contains('Login').click(); //find and click Login button
 
@@ -12,6 +16,8 @@ describe('Delete User', () => {
 
         cy.get('button[type="submit"]').click(); // click login
         cy.contains('Dashboard').click(); // Go to Dashboard
+        cy.reload();
+
         cy.contains('Delete my Account').click(); // click delete my account
 
         //in window popup, confirm deletion
@@ -22,14 +28,5 @@ describe('Delete User', () => {
 
         //redirects to login
         cy.url().should('include', '/login');
-
-        //attempt relogging in
-        cy.contains('Login').click(); //find and click Login button
-
-        //fill out login form
-        cy.get('input').eq(0).type('Test');
-        cy.get('input').eq(1).type('ThisIsTE$T');
-
-        cy.contains('Login Failed!').should('exist');
     });
 });

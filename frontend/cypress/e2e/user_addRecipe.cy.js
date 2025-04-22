@@ -2,7 +2,14 @@
 
 describe('Create a New Recipe', () => {
     it('allows a user to create a new recipe from the dashboard menu', () => {
-        cy.visit('https://basilandbyte.vercel.app/');
+        cy.clearCookies();
+        cy.clearLocalStorage();
+
+        cy.visit('https://basilandbyte.vercel.app/', {
+            headers: {
+            'Cache-Control': 'no-cache'
+            }
+        });
 
         cy.contains('Login').click(); //find and click Login button
 
@@ -12,6 +19,8 @@ describe('Create a New Recipe', () => {
 
         cy.get('button[type="submit"]').click(); // click login
         cy.contains('Dashboard').click(); // Go to Dashboard
+
+        cy.reload();
         cy.contains('Add a Recipe').click(); // Go to Dashboard
 
         //enter recipe details

@@ -2,7 +2,11 @@
 
 describe('View All & Explore Recipes', () => {
     it('allows a logged in user to see all recipes', () => {
-        cy.visit('https://basilandbyte.vercel.app');
+        cy.visit('https://basilandbyte.vercel.app', {
+            headers: {
+              'Cache-Control': 'no-cache'
+            }
+          });
 
         //From the home screen, go to explore recipes page
         cy.contains('Home').click();
