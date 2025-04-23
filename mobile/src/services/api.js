@@ -1,6 +1,6 @@
 // src/services/api.js
 // Utility file to configure an Axios instance for API requests with JWT token handling.
-// All requests use a hardcoded base URL and include interceptors for authentication and error handling.
+// All requests use the production base URL with interceptors for authentication and error handling.
 
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -19,7 +19,7 @@ console.log('Initializing api.js - API_BASE_URL:', API_BASE_URL);
 // Create an Axios instance with predefined configuration
 const api = axios.create({
     baseURL: API_BASE_URL, // Base URL for all requests
-    timeout: 10000, // 10-second timeout for requests
+    timeout: 15000, // Increased to 15-second timeout for production
 });
 
 // Log the configured baseURL to confirm instantiation
@@ -27,44 +27,51 @@ console.log('Axios instance created with baseURL:', api.defaults.baseURL);
 
 // Request interceptor to attach JWT token to every request
 api.interceptors.request.use(async (config) => {
-    const token = await AsyncStorage.getItem('userToken'); // Retrieve token from storage
+    const token = await AsyncStorage.getItem('userToken');
     console.log('Request Interceptor - Token:', token ? 'Present' : 'Absent');
     if (token) {
-        config.headers.Authorization = `Bearer ${token}`; // Add token to Authorization header
+        config.headers.Authorization = `Bearer ${token}`;
     } else {
-        console.warn('No token available for request'); // Warn if no token is found
+        console.warn('No token available for request');
     }
-    console.log('Request Interceptor - Full URL:', config.baseURL + config.url); // Log the full request URL
-    return config; // Return modified config
+    console.log('Request Interceptor - Full URL:', config.baseURL + config.url);
+    return config;
 }, (error) => {
-    console.error('Request Interceptor - Error:', error.message); // Log any interceptor errors
-    return Promise.reject(error); // Reject the promise with the error
+    console.error('Request Interceptor - Error:', error.message);
+    return Promise.reject(error);
 });
 
 // Response interceptor to handle successful responses and errors
 api.interceptors.response.use(
     (response) => {
-        console.log('Response Interceptor - Success:', response.status, response.config.url); // Log successful response
-        return response; // Return the response unchanged
+        console.log('Response Interceptor - Success:', response.status, response.config.url);
+        return response;
     },
     async (error) => {
-        if (error.response) {
-            console.error('Response Interceptor - Error:', { // Log detailed error info
-                status: error.response.status,
-                data: error.response.data,
-                url: error.response.config.url,
+        const status = error.response?.status || 500;
+        const data = error.response?.data || { error: error.message };
+        console.error('Response Interceptor - Error:', {
+            status,
+            data,
+            url: error.response?.config.url || error.config?.url,
+        });
+
+        if (status === 401) {
+            console.log('401 Detected - Clearing token');
+            await AsyncStorage.removeItem('userToken');
+            return Promise.reject(new Error(data.error || data.detail || 'Unauthorized: Invalid credentials'));
+        } else if (status === 500) {
+            console.error('Server Error 500 - Check backend logs');
+            return Promise.reject(new Error(data.error || data.detail || 'Server error: Please try again later'));
+        } else if (!error.response) {
+            console.error('Response Interceptor - Network Error:', error.message, {
+                code: error.code,
+                config: error.config?.url,
             });
-            if (error.response.status === 401) { // Handle unauthorized errors
-                console.log('401 Detected - Clearing token');
-                await AsyncStorage.removeItem('userToken'); // Clear invalid token
-                console.log('Token expired, redirecting to login...');
-            } else if (error.response.status === 500) { // Log server errors
-                console.error('Server Error 500 - Check backend logs');
-            }
-        } else {
-            console.error('Response Interceptor - Network Error:', error.message); // Log network errors
+            return Promise.reject(new Error('Network error: Unable to connect to server. Check your internet or server status.'));
         }
-        return Promise.reject(error); // Reject the promise with the error
+
+        return Promise.reject(new Error(data.error || data.detail || 'Server error'));
     }
 );
 
@@ -74,10 +81,10 @@ export const getUserInfo = async () => {
     try {
         const response = await api.get('/user-info/');
         console.log('getUserInfo - Response:', response.status, response.data);
-        return response.data; // Return user data
+        return response.data;
     } catch (error) {
         console.error('getUserInfo - Error:', error.message);
-        throw error; // Rethrow error for caller to handle
+        throw error;
     }
 };
 
@@ -87,7 +94,7 @@ export const fetchRecipes = async () => {
     try {
         const response = await api.get('/');
         console.log('fetchRecipes - Response:', response.status, response.data);
-        return response.data || []; // Return recipes or empty array if no data
+        return response.data || [];
     } catch (error) {
         console.error('fetchRecipes - Error:', error.message);
         throw error;
@@ -99,12 +106,28 @@ export const addRecipe = async (formData) => {
     console.log('Executing addRecipe');
     try {
         const response = await api.post('/add/', formData, {
-            headers: { 'Content-Type': 'multipart/form-data' }, // Required for file uploads
+            headers: { 'Content-Type': 'multipart/form-data' },
         });
         console.log('addRecipe - Response:', response.status, response.data);
         return response.data;
     } catch (error) {
         console.error('addRecipe - Error:', error.message);
+        throw error;
+    }
+};
+
+// Add a recipe ingredient at /add-ingredient/
+export const addRecipeIngredient = async (recipeId, ingredientData) => {
+    console.log('Executing addRecipeIngredient for Recipe ID:', recipeId, 'Data:', ingredientData);
+    try {
+        const response = await api.post('/add-ingredient/', {
+            recipe_id: recipeId,
+            ...ingredientData,
+        });
+        console.log('addRecipeIngredient - Response:', response.status, response.data);
+        return response.data;
+    } catch (error) {
+        console.error('addRecipeIngredient - Error:', error.message);
         throw error;
     }
 };
@@ -129,8 +152,8 @@ export const deleteRecipe = async (recipeId) => {
     console.log('Executing deleteRecipe for ID:', recipeId);
     try {
         const response = await api.delete(`/delete/${recipeId}/`);
-        console.log('deleteRecipe - Response:', response.status);
-        return response.status === 204; // Return true for successful deletion
+        console.log('deleteRecipe - Response:', response.status, response.data);
+        return response;
     } catch (error) {
         console.error('deleteRecipe - Error:', error.message);
         throw error;
@@ -242,8 +265,8 @@ export const registerUser = async (username, password, firstName, lastName, emai
         console.log('registerUser - Response:', response.status, response.data);
         const { access, refresh } = response.data.token || {};
         if (access) {
-            await AsyncStorage.setItem('userToken', access); // Store access token
-            await AsyncStorage.setItem('refreshToken', refresh || ''); // Store refresh token if present
+            await AsyncStorage.setItem('userToken', access);
+            await AsyncStorage.setItem('refreshToken', refresh || '');
         }
         return response.data;
     } catch (error) {
@@ -252,7 +275,7 @@ export const registerUser = async (username, password, firstName, lastName, emai
             response: error.response?.data,
             status: error.response?.status,
         });
-        throw error;
+        throw new Error(error.response?.data?.error || 'Registration failed');
     }
 };
 
@@ -262,13 +285,20 @@ export const loginUser = async (username, password) => {
     try {
         const response = await api.post('/login/', { username, password });
         console.log('loginUser - Response:', response.status, response.data);
-        const { access, refresh } = response.data.token;
-        await AsyncStorage.setItem('userToken', access); // Store access token
-        await AsyncStorage.setItem('refreshToken', refresh); // Store refresh token
+        const { access, refresh } = response.data.token || {};
+        if (!access) {
+            throw new Error('No access token received');
+        }
+        await AsyncStorage.setItem('userToken', access);
+        await AsyncStorage.setItem('refreshToken', refresh || '');
         return response.data;
     } catch (error) {
-        console.error('loginUser - Error:', error.message);
-        throw error;
+        console.error('loginUser - Error:', {
+            message: error.message,
+            response: error.response?.data,
+            status: error.response?.status,
+        });
+        throw new Error(error.response?.data?.error || 'Network error: Unable to connect to login endpoint');
     }
 };
 
@@ -285,8 +315,141 @@ export const logLoginEvent = async (username, outcome, source) => {
             response: error.response?.data,
             status: error.response?.status,
         });
-        // Don’t throw error to avoid blocking login; log and proceed
-        return null; // Return null to indicate failure but allow login to continue
+        return null;
+    }
+};
+
+// Personal Pantry Functions
+
+// Fetch user inventory from /inventory/
+export const getUserInventory = async () => {
+    console.log('Executing getUserInventory');
+    try {
+        const response = await api.get('/inventory/');
+        console.log('getUserInventory - Response:', response.status, response.data);
+        return response.data || [];
+    } catch (error) {
+        console.error('getUserInventory - Error:', error.message);
+        throw error;
+    }
+};
+
+// Add an item to inventory at /inventory/add/
+export const addToInventory = async (itemData) => {
+    console.log('Executing addToInventory', itemData);
+    try {
+        const response = await api.post('/inventory/add/', itemData);
+        console.log('addToInventory - Response:', response.status, response.data);
+        return response.data;
+    } catch (error) {
+        console.error('addToInventory - Error:', error.message);
+        throw error;
+    }
+};
+
+// Update an inventory item at /inventory/update/<inventoryId>/
+export const updateInventoryItem = async (inventoryId, data) => {
+    console.log('Executing updateInventoryItem for ID:', inventoryId);
+    try {
+        const response = await api.put(`/inventory/update/${inventoryId}/`, data);
+        console.log('updateInventoryItem - Response:', response.status, response.data);
+        return response.data;
+    } catch (error) {
+        console.error('updateInventoryItem - Error:', error.message);
+        throw error;
+    }
+};
+
+// Delete an inventory item at /inventory/delete/<inventoryId>/
+export const deleteInventoryItem = async (inventoryId) => {
+    console.log('Executing deleteInventoryItem for ID:', inventoryId);
+    try {
+        const response = await api.delete(`/inventory/delete/${inventoryId}/`);
+        console.log('deleteInventoryItem - Response:', response.status);
+        return response.status === 204;
+    } catch (error) {
+        console.error('deleteInventoryItem - Error:', error.message);
+        throw error;
+    }
+};
+
+// Suggest recipes based on inventory at /recipes/suggest/
+export const suggestRecipes = async () => {
+    console.log('Executing suggestRecipes');
+    try {
+        const response = await api.get('/recipes/suggest/');
+        console.log('suggestRecipes - Response:', response.status, response.data);
+        return response.data || { suggested_recipes: [] };
+    } catch (error) {
+        console.error('suggestRecipes - Error:', error.message);
+        throw error;
+    }
+};
+
+// Shopping List Functions
+
+// Add an item to the shopping list at /shopping-list/add/
+export const addToShoppingList = async (itemData) => {
+    console.log('Executing addToShoppingList', itemData);
+    try {
+        const response = await api.post('/shopping-list/add/', itemData);
+        console.log('addToShoppingList - Response:', response.status, response.data);
+        return response.data;
+    } catch (error) {
+        console.error('addToShoppingList - Error:', error.message);
+        throw error;
+    }
+};
+
+// Fetch the shopping list from /shopping-list/
+export const getShoppingList = async () => {
+    console.log('Executing getShoppingList');
+    try {
+        const response = await api.get('/shopping-list/');
+        console.log('getShoppingList - Response:', response.status, response.data);
+        return response.data || [];
+    } catch (error) {
+        console.error('getShoppingList - Error:', error.message);
+        throw error;
+    }
+};
+
+// Update a shopping list item at /shopping-list/update/<itemId>/
+export const updateShoppingListItem = async (itemId, data) => {
+    console.log('Executing updateShoppingListItem for ID:', itemId);
+    try {
+        const response = await api.put(`/shopping-list/update/${itemId}/`, data);
+        console.log('updateShoppingListItem - Response:', response.status, response.data);
+        return response.data;
+    } catch (error) {
+        console.error('updateShoppingListItem - Error:', error.message);
+        throw error;
+    }
+};
+
+// Delete a shopping list item at /shopping-list/delete/<itemId>/
+export const deleteShoppingListItem = async (itemId) => {
+    console.log('Executing deleteShoppingListItem for ID:', itemId);
+    try {
+        const response = await api.delete(`/shopping-list/delete/${itemId}/`);
+        console.log('deleteShoppingListItem - Response:', response.status);
+        return response.status === 204;
+    } catch (error) {
+        console.error('deleteShoppingListItem - Error:', error.message);
+        throw error;
+    }
+};
+
+// Add missing ingredients from a recipe to the shopping list at /shopping-list/add-missing/<recipeId>/
+export const addMissingIngredientsToShoppingList = async (recipeId) => {
+    console.log('Executing addMissingIngredientsToShoppingList for recipe ID:', recipeId);
+    try {
+        const response = await api.post(`/shopping-list/add-missing/${recipeId}/`);
+        console.log('addMissingIngredientsToShoppingList - Response:', response.status, response.data);
+        return response.data;
+    } catch (error) {
+        console.error('addMissingIngredientsToShoppingList - Error:', error.message);
+        throw error;
     }
 };
 

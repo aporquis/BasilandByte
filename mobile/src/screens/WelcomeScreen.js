@@ -4,7 +4,7 @@
 // Uses a local logo asset (update path as needed).
 
 import React from 'react';
-import { View, Text, Button, Image, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, Image, StyleSheet, Dimensions } from 'react-native';
 
 const WelcomeScreen = ({ navigation }) => {
     // Log navigation prop for debugging
@@ -25,30 +25,50 @@ const WelcomeScreen = ({ navigation }) => {
 
     return (
         <View style={styles.container}>
-            <Image source={logoSource} style={styles.logo} resizeMode="contain" />
-            <Text style={styles.title}>Welcome to the Recipe App!</Text>
-            <Button
-                title="Current Users Login"
-                onPress={() => handleNavigate('Login')}
-                style={styles.button}
-            />
-            <Button
-                title="Register"
-                onPress={() => handleNavigate('Register')}
-                style={styles.button}
-                color="#4CAF50"
-            />
+            <View style={styles.card}>
+                <Image source={logoSource} style={styles.logo} resizeMode="contain" />
+                <Text style={styles.title}>Welcome to the Recipe App!</Text>
+                <TouchableOpacity
+                    style={styles.button}
+                    onPress={() => handleNavigate('Login')}
+                >
+                    <Text style={styles.buttonText}>Current Users Login</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                    style={[styles.button, styles.registerButton]}
+                    onPress={() => handleNavigate('Register')}
+                >
+                    <Text style={styles.buttonText}>Register</Text>
+                </TouchableOpacity>
+            </View>
         </View>
     );
 };
 
+const windowWidth = Dimensions.get('window').width;
+const containerWidth = Math.min(windowWidth, 800);
+
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        justifyContent: 'center',
+        backgroundColor: '#ece6db',
         alignItems: 'center',
+        justifyContent: 'center',
         padding: 20,
-        backgroundColor: '#F5F5F5',
+    },
+    card: {
+        backgroundColor: '#ffffff',
+        borderWidth: 1,
+        borderColor: '#2e5436',
+        borderRadius: 8,
+        padding: 20,
+        width: containerWidth - 40,
+        shadowColor: '#000',
+        shadowOffset: { width: 2, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 5,
+        elevation: 5,
+        alignItems: 'center',
     },
     logo: {
         width: 200,
@@ -56,15 +76,28 @@ const styles = StyleSheet.create({
         marginBottom: 20,
     },
     title: {
+        fontFamily: 'Merriweather-Bold',
         fontSize: 24,
-        fontWeight: 'bold',
+        color: '#555',
         textAlign: 'center',
         marginBottom: 30,
-        color: '#333',
     },
     button: {
-        marginVertical: 10,
+        backgroundColor: '#2e5436',
+        paddingVertical: 8,
+        paddingHorizontal: 16,
+        borderRadius: 4,
         width: 200,
+        alignItems: 'center',
+        marginVertical: 10,
+    },
+    registerButton: {
+        backgroundColor: '#4CAF50',
+    },
+    buttonText: {
+        fontFamily: 'FiraCode-Regular',
+        fontSize: 16,
+        color: '#ffffff',
     },
 });
 
