@@ -86,9 +86,19 @@ def login_user(request):
     username = request.data.get("username")
     password = request.data.get("password")
     user = authenticate(username=username, password=password)
-    if user is None:
-        return Response({"error": "Invalid username or password"}, status=status.HTTP_401_UNAUTHORIZED)
-    return Response({"message": "Login successful!", "token": get_tokens_for_user(user)}, status=status.HTTP_200_OK)
+
+    if user:
+        if not user.is_active:
+            return Response({"detail": "Your account is deactivated. Please reactivate it."}, status=status.HTTP_403_FORBIDDEN)
+        return Response({"message": "Login successful!", "token": get_tokens_for_user(user)}, status=status.HTTP_200_OK)
+
+    try:
+        user = user.objects.get(username=username)
+        if not user.is_active and user.check_password(password):
+            return Response({"detail":"Your account is deactivated. Please reactivate it."}, status=status.HTTP_403_FORBIDDEN)
+    except User.DoesNotExist:
+        pass
+    return Response({"error": "Invalid username or password"}, status=status.HTTP_401_UNAUTHORIZED)
 
 @api_view(["POST"])
 @permission_classes([AllowAny])
