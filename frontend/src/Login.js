@@ -46,14 +46,19 @@ function Login() {
 
   const handleReactivate = async () => {
     try {
-      const response = await axios.post("https://basilandbyte.onrender.com/reactivate/", {
+      const response = await axios.post("https://basilandbyte.onrender.com/api/recipes/reactivate/", {
         username,
         password,
       });
 
       if (response.status === 200) {
-        setMessage("✅ Account reactivated! You can now log in.");
+        setMessage("✅ Account reactivated! Logging in...");
         setShowReactivate(false);
+
+        // Auto-login
+        await loginUser(username, password, "web");
+        await logLoginEvent(username, 'success', 'web');
+        setTimeout(() => navigate("/recipes"), 1000);
       }
     } catch (error) {
       console.error("Reactivation Error:", error);
