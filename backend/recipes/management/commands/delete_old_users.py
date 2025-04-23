@@ -9,10 +9,10 @@ class Command(BaseCommand):
 
     def handle(self, *args, **kwargs):
         # Time for deletion in Production
-        # threshold_date = timezone.now() - timedelta(days=180)
+        threshold_date = timezone.now() - timedelta(days=180)
 
         #Time for deletion in Preview to test
-        threshold_date = timezone.now() - timedelta(minutes=5)
+        #threshold_date = timezone.now() - timedelta(minutes=5)
 
         deletions = UserDeletion.objects.filter(delete_request_time__lte=threshold_date)
 
