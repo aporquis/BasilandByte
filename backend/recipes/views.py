@@ -113,6 +113,10 @@ def reactivate_account(request):
                 return Response({"detail": "Account is already active."}, status=status.HTTP_400_BAD_REQUEST)
             user.is_active = True
             user.save()
+
+            #Remove already existing user deletion request
+            UserDeletion.objects.filter(user=user).delete()
+
             AccountReactivation.objects.create(user=user)
             return Response({"detail":"Account sucessfully reactivated."}, status=status.HTTP_200_OK)
         else:
