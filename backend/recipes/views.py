@@ -93,8 +93,8 @@ def login_user(request):
         return Response({"message": "Login successful!", "token": get_tokens_for_user(user)}, status=status.HTTP_200_OK)
 
     try:
-        user = user.objects.get(username=username)
-        if not user.is_active and user.check_password(password):
+        matched_user = User.objects.get(username=username)
+        if not matched_user.is_active and matched_user.check_password(password):
             return Response({"detail":"Your account is deactivated. Please reactivate it."}, status=status.HTTP_403_FORBIDDEN)
     except User.DoesNotExist:
         pass
