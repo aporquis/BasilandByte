@@ -111,7 +111,10 @@ class UserDeletion(models.Model):
 
     def __str__(self):
         return f"Deletion requested for {self.user.username} at {self.delete_request_time}"
-    
+
+class AccountReactivation(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    timestamp = models.DateTimeField(auto_now_add=True)
 
 class UserInventory(models.Model):
     """Stores items that users have in their fridge or pantry"""

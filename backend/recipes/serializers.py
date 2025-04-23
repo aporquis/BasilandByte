@@ -1,5 +1,7 @@
 from django.contrib.auth.models import User
+from django.contrib.auth import authenticate
 from rest_framework import serializers
+from rest_framework.exceptions import AuthenticationFailed
 from .models import Recipe, Ingredient, RecipeIngredient, FoodGroup, SavedItem, WeeklyPlan, UserInventory, ShoppingListItem
 
 
@@ -19,14 +21,44 @@ class UserRegisterSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         validated_data.pop("password2")
-        user = User.objects.create_user(**validated_data)
-        return user
+        username = validated_data["username"]
+        email = validated_data["email"]
 
+        try:
+            user = User.objects.get(username=username, email=email)
+            if not user.is_active:
+                user.set_password(validated_data["password"])
+                user.is_active = True
+                user.save()
+                return user
+            else:
+                raise serializers.ValidationError({"username": "This account already exists."})
+        except User.DoesNotExist:
+            user = User.objects.create_user(**validated_data)
+            return user
 
 class UserLoginSerializer(serializers.Serializer):
     username = serializers.CharField()
     password = serializers.CharField(write_only=True)
 
+    def validate (self,data):
+        username = data.get("username")
+        password = data.get("password")
+
+        user = authenticate(username=username, password=password)
+        if user:
+            if not user.is_active:
+                raise AuthenticationFailed("Your account is deactivated. Please reactivate to continue.")
+            return {"user":user}
+
+        try:
+            user = User.objects.get(username=username)
+            if not user.is_active:
+                raise AuthenticationFailed("Your account is deactivated. Please reactivate to continue.")
+        except User.DoesNotExist:
+            pass
+
+        raise AuthenticationFailed("Invalid Credentials.")
 
 class RecipeIngredientSerializer(serializers.ModelSerializer):
     ingredient_name = serializers.CharField(
