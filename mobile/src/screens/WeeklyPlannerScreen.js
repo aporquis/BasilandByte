@@ -4,10 +4,10 @@
 // Syncs with the backend and updates UI on changes.
 
 import React, { useState, useEffect } from 'react';
-import { View, Text, Button, FlatList, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, FlatList, StyleSheet, Alert, Dimensions } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
-import { getWeeklyPlan, clearWeeklyPlan, clearDayPlan, fetchRecipes } from '../services/api'; // Import from api.js
+import { getWeeklyPlan, clearWeeklyPlan, clearDayPlan, fetchRecipes } from '../services/api';
 
 const WeeklyPlannerScreen = () => {
     const [weeklyPlan, setWeeklyPlan] = useState({});
@@ -19,7 +19,6 @@ const WeeklyPlannerScreen = () => {
     const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
     const mealTypes = ['Breakfast', 'Lunch', 'Dinner'];
 
-    // Fetch weekly plan and recipes on mount
     useEffect(() => {
         const loadData = async () => {
             try {
@@ -45,20 +44,17 @@ const WeeklyPlannerScreen = () => {
         loadData();
     }, [navigation]);
 
-    // Calculate meal count for a day
     const getMealCount = (day) => {
         return (weeklyPlan[day] || []).length;
     };
 
-    // Determine day box color based on meal count
     const getDayBoxColor = (day) => {
         const mealCount = getMealCount(day);
-        if (mealCount === 0) return '#FF3B30'; // Red: No meals
-        if (mealCount < 3) return '#FFCC00'; // Yellow: 1-2 meals
-        return '#4CD964'; // Green: 3 meals
+        if (mealCount === 0) return '#FF3B30';
+        if (mealCount < 3) return '#FFCC00';
+        return '#4CD964';
     };
 
-    // Render meals for a specific day
     const renderMeals = (day) => (
         <FlatList
             data={weeklyPlan[day] || []}
@@ -86,7 +82,6 @@ const WeeklyPlannerScreen = () => {
         />
     );
 
-    // Render a single day's section
     const renderDay = ({ item: day }) => (
         <View style={styles.dayContainer}>
             <Text style={styles.dayTitle}>{day}</Text>
@@ -125,7 +120,6 @@ const WeeklyPlannerScreen = () => {
         </View>
     );
 
-    // Header with day boxes and refresh button
     const renderHeader = () => (
         <View>
             <Text style={styles.title}>Weekly Planner</Text>
@@ -139,8 +133,8 @@ const WeeklyPlannerScreen = () => {
                     </View>
                 ))}
             </View>
-            <Button
-                title="Refresh Week"
+            <TouchableOpacity
+                style={styles.refreshButton}
                 onPress={() => {
                     Alert.alert(
                         'Confirm Refresh',
@@ -163,8 +157,9 @@ const WeeklyPlannerScreen = () => {
                         ]
                     );
                 }}
-                color="#FF3B30"
-            />
+            >
+                <Text style={styles.buttonText}>Refresh Week</Text>
+            </TouchableOpacity>
         </View>
     );
 
@@ -178,28 +173,49 @@ const WeeklyPlannerScreen = () => {
 
     return (
         <View style={styles.container}>
-            <FlatList
-                data={daysOfWeek}
-                renderItem={renderDay}
-                keyExtractor={item => item}
-                ListHeaderComponent={renderHeader}
-                contentContainerStyle={styles.flatListContent}
-            />
+            <View style={styles.card}>
+                <FlatList
+                    data={daysOfWeek}
+                    renderItem={renderDay}
+                    keyExtractor={item => item}
+                    ListHeaderComponent={renderHeader}
+                    contentContainerStyle={styles.flatListContent}
+                />
+            </View>
         </View>
     );
 };
 
+const windowWidth = Dimensions.get('window').width;
+const containerWidth = Math.min(windowWidth, 800);
+
 const styles = StyleSheet.create({
     container: {
         flex: 1,
+        backgroundColor: '#ece6db',
+        alignItems: 'center',
+        padding: windowWidth < 768 ? 16 : 20,
+    },
+    card: {
+        backgroundColor: '#ffffff',
+        borderWidth: 1,
+        borderColor: '#2e5436',
+        borderRadius: 8,
         padding: 20,
+        width: containerWidth - 40,
+        shadowColor: '#000',
+        shadowOffset: { width: 2, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 5,
+        elevation: 5,
     },
     flatListContent: {
         paddingBottom: 20,
     },
     title: {
+        fontFamily: 'Merriweather-Bold',
         fontSize: 24,
-        fontWeight: 'bold',
+        color: '#555',
         marginBottom: 20,
         textAlign: 'center',
     },
@@ -216,16 +232,27 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     dayBoxText: {
-        color: 'white',
-        fontWeight: 'bold',
+        fontFamily: 'FiraCode-Regular',
+        color: '#ffffff',
         fontSize: 12,
     },
     dayContainer: {
-        marginBottom: 20,
+        backgroundColor: '#ffffff',
+        borderWidth: 1,
+        borderColor: '#2e5436',
+        borderRadius: 8,
+        padding: 15,
+        marginBottom: 10,
+        shadowColor: '#000',
+        shadowOffset: { width: 2, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 5,
+        elevation: 3,
     },
     dayTitle: {
+        fontFamily: 'Merriweather-Regular',
         fontSize: 20,
-        fontWeight: 'bold',
+        color: '#555',
         marginBottom: 10,
     },
     mealItem: {
@@ -238,19 +265,32 @@ const styles = StyleSheet.create({
         marginBottom: 5,
     },
     mealText: {
+        fontFamily: 'FiraCode-Regular',
         fontSize: 16,
-        color: '#333',
+        color: '#272727',
     },
     removeButton: {
         backgroundColor: '#FF3B30',
-        padding: 5,
-        borderRadius: 5,
+        paddingVertical: 8,
+        paddingHorizontal: 16,
+        borderRadius: 4,
+        alignItems: 'center',
     },
-    removeButtonText: {
-        color: 'white',
-        fontWeight: 'bold',
+    refreshButton: {
+        backgroundColor: '#FF3B30',
+        paddingVertical: 8,
+        paddingHorizontal: 16,
+        borderRadius: 4,
+        alignItems: 'center',
+        marginBottom: 20,
+    },
+    buttonText: {
+        fontFamily: 'FiraCode-Regular',
+        fontSize: 16,
+        color: '#ffffff',
     },
     emptyText: {
+        fontFamily: 'FiraCode-Regular',
         fontSize: 14,
         color: '#888',
         textAlign: 'center',
@@ -258,10 +298,12 @@ const styles = StyleSheet.create({
     },
     loadingContainer: {
         flex: 1,
+        backgroundColor: '#ece6db',
         justifyContent: 'center',
         alignItems: 'center',
     },
     loadingText: {
+        fontFamily: 'FiraCode-Regular',
         fontSize: 18,
         color: '#666',
     },

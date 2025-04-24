@@ -1,168 +1,215 @@
-// src/screens/RecipeListScreen.js
-// Displays a list of all recipes with a save option.
-// Uses fetchRecipes and saveRecipe from api.js.
-// Refreshes on focus and pull-to-refresh.
-
-import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, StyleSheet, Image, TouchableOpacity, Alert } from 'react-native';
+import React, { useState, useCallback } from 'react';
+import { View, Text, FlatList, StyleSheet, Image, TouchableOpacity, Alert, Dimensions, ActivityIndicator } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { fetchRecipes, saveRecipe } from '../services/api'; // Import from api.js
+import { fetchRecipes, saveRecipe } from '../services/api';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 
 const RecipeListScreen = () => {
     const [recipes, setRecipes] = useState([]);
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const [savingIds, setSavingIds] = useState(new Set());
     const navigation = useNavigation();
 
-    // Fetch all recipes
-    const fetchAllRecipes = async () => {
+    const fetchAllRecipes = useCallback(async () => {
         setIsLoading(true);
-        const token = await AsyncStorage.getItem('userToken');
-        if (!token) {
-            setError('Please log in to view recipes.');
-            navigation.navigate('Login');
-            setIsLoading(false);
-            return;
-        }
-
         try {
+            const token = await AsyncStorage.getItem('userToken');
+            if (!token) {
+                setError('Please log in to view recipes.');
+                navigation.navigate('Login');
+                return;
+            }
+
             const data = await fetchRecipes();
             setRecipes(data);
             setError('');
         } catch (error) {
+            console.error('RecipeListScreen - Fetch error:', error);
             setError('Failed to fetch recipes: ' + (error.response?.data?.error || error.message));
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [navigation]);
 
-    // Save a recipe
     const handleSaveRecipe = async (recipeId) => {
-        const token = await AsyncStorage.getItem('userToken');
-        if (!token) {
-            navigation.navigate('Login');
-            return;
-        }
-
+        setSavingIds(prev => new Set(prev).add(recipeId));
         try {
+            const token = await AsyncStorage.getItem('userToken');
+            if (!token) {
+                navigation.navigate('Login');
+                return;
+            }
+
             const data = await saveRecipe(recipeId);
             Alert.alert('Success', data.message || 'Recipe saved!');
         } catch (error) {
             Alert.alert('Error', 'Failed to save recipe: ' + (error.response?.data?.error || error.message));
+        } finally {
+            setSavingIds(prev => {
+                const newSet = new Set(prev);
+                newSet.delete(recipeId);
+                return newSet;
+            });
         }
     };
 
-    useFocusEffect(React.useCallback(() => {
-        fetchAllRecipes();
-    }, []));
-
-    useEffect(() => {
-        fetchAllRecipes();
-    }, [navigation]);
-
-    const renderRecipeItem = ({ item }) => (
-        <View style={styles.recipeItem}>
-            <Text style={styles.recipeName}>{item.recipe_name || 'No Name'}</Text>
-            <Text style={styles.username}>Posted by: {item.username || 'Unknown User'}</Text>
-            <Text style={styles.recipeDescription}>{item.description || 'No Description'}</Text>
-            <Text style={styles.recipeInstructions}>{item.instructions || 'No Instructions'}</Text>
-            {item.image && <Image source={{ uri: `https://basilandbyte.onrender.com${item.image}` }} style={styles.recipeImage} resizeMode="cover" />}
-            <TouchableOpacity style={styles.saveButton} onPress={() => handleSaveRecipe(item.id)}>
-                <Text style={styles.saveButtonText}>Save</Text>
-            </TouchableOpacity>
-        </View>
+    useFocusEffect(
+        useCallback(() => {
+            fetchAllRecipes();
+            return () => setError('');
+        }, [fetchAllRecipes])
     );
+
+    const renderRecipeItem = ({ item }) => {
+        const imageUrl = item.image_url || item.image || null;
+        return (
+            <TouchableOpacity
+                style={styles.recipeItem}
+                onPress={() => navigation.navigate('RecipeDetail', { recipe: item })}
+            >
+                <Text style={styles.recipeName}>{item.recipe_name || 'No Name'}</Text>
+                {imageUrl ? (
+                    <Image
+                        source={{ uri: imageUrl }}
+                        style={styles.recipeImage}
+                        resizeMode="cover"
+                        onError={(e) => console.log('RecipeListScreen - Image load error:', e.nativeEvent.error)}
+                    />
+                ) : (
+                    <Text style={styles.noData}>No image available.</Text>
+                )}
+                <TouchableOpacity
+                    style={[styles.saveButton, savingIds.has(item.id) && styles.saveButtonDisabled]}
+                    onPress={() => handleSaveRecipe(item.id)}
+                    disabled={savingIds.has(item.id)}
+                >
+                    {savingIds.has(item.id) ? (
+                        <ActivityIndicator size="small" color="#ffffff" />
+                    ) : (
+                        <Text style={styles.saveButtonText}>Save</Text>
+                    )}
+                </TouchableOpacity>
+            </TouchableOpacity>
+        );
+    };
 
     return (
         <View style={styles.container}>
-            <Text style={styles.header}>Recipes</Text>
-            {error ? <Text style={styles.error}>{error}</Text> : null}
-            {isLoading ? <Text style={styles.loadingText}>Loading...</Text> : null}
-            <FlatList
-                data={recipes}
-                renderItem={renderRecipeItem}
-                keyExtractor={(item) => item.id.toString()}
-                ListEmptyComponent={<Text style={styles.emptyText}>No recipes available.</Text>}
-                refreshing={isLoading}
-                onRefresh={fetchAllRecipes}
-            />
+            <View style={styles.card}>
+                <Text style={styles.header}>Recipes</Text>
+                {error ? <Text style={styles.error}>{error}</Text> : null}
+                {isLoading && !recipes.length ? (
+                    <ActivityIndicator size="large" color="#2e5436" style={styles.loading} />
+                ) : (
+                    <FlatList
+                        data={recipes}
+                        renderItem={renderRecipeItem}
+                        keyExtractor={(item) => item.id.toString()}
+                        ListEmptyComponent={<Text style={styles.emptyText}>No recipes available.</Text>}
+                        refreshing={isLoading}
+                        onRefresh={fetchAllRecipes}
+                    />
+                )}
+            </View>
         </View>
     );
 };
 
+const windowWidth = Dimensions.get('window').width;
+const containerWidth = Math.min(windowWidth, 800);
+
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        padding: 10,
+        backgroundColor: '#ece6db',
+        alignItems: 'center',
+        padding: windowWidth < 768 ? 16 : 20,
+    },
+    card: {
+        backgroundColor: '#ffffff',
+        borderWidth: 1,
+        borderColor: '#2e5436',
+        borderRadius: 8,
+        padding: 20,
+        width: containerWidth - 40,
+        shadowColor: '#000',
+        shadowOffset: { width: 2, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 5,
+        elevation: 5,
     },
     header: {
+        fontFamily: 'Merriweather-Bold',
         fontSize: 24,
-        fontWeight: 'bold',
+        color: '#555',
         textAlign: 'center',
         marginVertical: 10,
     },
     recipeItem: {
-        padding: 15,
+        backgroundColor: '#ffffff',
         borderWidth: 1,
-        borderColor: '#ccc',
-        borderRadius: 5,
+        borderColor: '#2e5436',
+        borderRadius: 8,
+        padding: 15,
         marginBottom: 10,
-        backgroundColor: '#f9f9f9',
+        shadowColor: '#000',
+        shadowOffset: { width: 2, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 5,
+        elevation: 3,
     },
     recipeName: {
+        fontFamily: 'Merriweather-Bold',
         fontSize: 18,
-        fontWeight: 'bold',
-        marginBottom: 5,
-        color: '#333',
-    },
-    username: {
-        fontSize: 14,
-        color: '#666',
-        marginBottom: 5,
-        fontStyle: 'italic',
-    },
-    recipeDescription: {
-        fontSize: 16,
-        marginBottom: 5,
-        color: '#555',
-    },
-    recipeInstructions: {
-        fontSize: 14,
-        color: '#777',
-        marginBottom: 5,
+        color: '#2e5436',
+        marginBottom: 10,
     },
     recipeImage: {
         width: '100%',
         height: 150,
-        marginTop: 5,
         borderRadius: 5,
+        marginBottom: 10,
     },
     saveButton: {
         backgroundColor: '#4CD964',
-        padding: 10,
-        borderRadius: 5,
+        paddingVertical: 8,
+        paddingHorizontal: 16,
+        borderRadius: 4,
         alignItems: 'center',
-        marginTop: 10,
+    },
+    saveButtonDisabled: {
+        backgroundColor: '#a0d0a8',
     },
     saveButtonText: {
-        color: 'white',
+        fontFamily: 'FiraCode-Regular',
+        fontSize: 16,
+        color: '#ffffff',
         fontWeight: 'bold',
     },
     error: {
+        fontFamily: 'FiraCode-Regular',
+        fontSize: 16,
         color: 'red',
         textAlign: 'center',
         marginBottom: 10,
     },
     emptyText: {
-        textAlign: 'center',
+        fontFamily: 'FiraCode-Regular',
+        fontSize: 16,
         color: '#888',
+        textAlign: 'center',
         marginTop: 20,
     },
-    loadingText: {
-        textAlign: 'center',
-        color: '#666',
+    loading: {
+        marginVertical: 20,
+    },
+    noData: {
+        fontFamily: 'FiraCode-Regular',
+        fontSize: 16,
+        color: '#888',
         marginVertical: 10,
+        textAlign: 'center',
     },
 });
 

@@ -1,112 +1,152 @@
 // src/screens/LoginScreen.js
-// Handles user login by calling loginUser from api.js.
-// Navigates to AuthenticatedTabs on success using replace instead of reset.
-// Includes input validation and error handling.
+   // Handles user login by calling loginUser from api.js.
+   // Navigates to Dashboard on success using replace instead of reset.
+   // Includes input validation and error handling.
 
-import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, Alert } from 'react-native';
-import { loginUser } from '../services/api'; // Import login function from api.js
+   import React, { useState } from 'react';
+   import { View, Text, TextInput, TouchableOpacity, StyleSheet, Dimensions, ScrollView } from 'react-native';
+   import { loginUser, logLoginEvent } from '../services/api';
 
-const LoginScreen = ({ navigation }) => {
-    // State for form inputs and UI control
-    const [username, setUsername] = useState('');
-    const [password, setPassword] = useState('');
-    const [error, setError] = useState('');
-    const [isLoggedIn, setIsLoggedIn] = useState(false);
+   const LoginScreen = ({ navigation }) => {
+       const [username, setUsername] = useState('');
+       const [password, setPassword] = useState('');
+       const [error, setError] = useState('');
+       const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-    // Handle login form submission with event logging
-    const handleLogin = async () => {
-        if (!username || !password) { // Validate inputs
-            setError('Username and password are required!');
-            await logLoginEvent(username || 'unknown', 'failure', 'mobile'); // Log failed attempt due to missing fields
-            return;
-        }
+       const handleLogin = async () => {
+           if (!username || !password) {
+               setError('Username and password are required!');
+               await logLoginEvent(username || 'unknown', 'failure', 'mobile');
+               return;
+           }
 
-        try {
-            await logLoginEvent(username, 'attempt', 'mobile'); // Log the login attempt
-            await loginUser(username, password); // Attempt login via API
-            await logLoginEvent(username, 'success', 'mobile'); // Log successful login
-            setIsLoggedIn(true); // Update UI state
-            setError(''); // Clear any previous errors
-            navigation.replace('AuthenticatedTabs'); // Navigate to authenticated tabs
-        } catch (error) {
-            const errorMessage = error.response?.data?.error || error.message; // Extract error message
-            await logLoginEvent(username, 'failure', 'mobile'); // Log failed login
-            setError(`Login failed: ${errorMessage}`); // Display error to user
-        }
-    };
+           try {
+               await logLoginEvent(username, 'attempt', 'mobile');
+               await loginUser(username, password);
+               await logLoginEvent(username, 'success', 'mobile');
+               setIsLoggedIn(true);
+               setError('');
+               navigation.replace('Dashboard');
+           } catch (error) {
+               const errorMessage = error.message || 'Unknown error';
+               await logLoginEvent(username, 'failure', 'mobile');
+               setError(`Login failed: ${errorMessage}`);
+               console.error('Login error:', error);
+           }
+       };
 
-    // Navigate to dashboard if token is present
-    const continueToDashboard = async () => {
-        const token = await AsyncStorage.getItem('userToken'); // Check for stored token
-        if (token) {
-            navigation.replace('AuthenticatedTabs', { screen: 'Tab_Dashboard' }); // Navigate to dashboard
-        } else {
-            setError('Token not found. Please log in again.'); // Show error if no token
-            setIsLoggedIn(false); // Reset login state
-        }
-    };
+       const handleRegisterRedirect = () => {
+           navigation.navigate('Register');
+       };
 
-    return (
-        <View style={styles.container}>
-            <Text style={styles.title}>Login</Text>
-            {error ? <Text style={styles.error}>{error}</Text> : null} {/* Display error if present */}
-            <TextInput
-                placeholder="Username"
-                value={username}
-                onChangeText={setUsername}
-                style={styles.input}
-            />
-            <TextInput
-                placeholder="Password"
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry
-                style={styles.input}
-            />
-            <Button title="Login" onPress={handleLogin} /> {/* Trigger login */}
-            {isLoggedIn && <Button title="Continue to Dashboard" onPress={continueToDashboard} />} {/* Optional dashboard button */}
-            <Text style={styles.registerLink} onPress={() => navigation.navigate('Register')}>
-                Don't have an account? Register
-            </Text>
-        </View>
-    );
-};
+       return (
+           <View style={styles.container}>
+               <View style={styles.card}>
+                   <ScrollView
+                       contentContainerStyle={styles.scrollContent}
+                       showsVerticalScrollIndicator={true}
+                   >
+                       <Text style={styles.title}>Login</Text>
+                       {error ? <Text style={styles.error}>{error}</Text> : null}
+                       <TextInput
+                           placeholder="Username"
+                           value={username}
+                           onChangeText={setUsername}
+                           style={styles.input}
+                       />
+                       <TextInput
+                           placeholder="Password"
+                           value={password}
+                           onChangeText={setPassword}
+                           secureTextEntry
+                           style={styles.input}
+                       />
+                       <TouchableOpacity
+                           style={styles.button}
+                           onPress={handleLogin}
+                       >
+                           <Text style={styles.buttonText}>Login</Text>
+                       </TouchableOpacity>
+                       <TouchableOpacity
+                           style={[styles.button, styles.registerButton]}
+                           onPress={handleRegisterRedirect}
+                       >
+                           <Text style={styles.buttonText}>Register</Text>
+                       </TouchableOpacity>
+                   </ScrollView>
+               </View>
+           </View>
+       );
+   };
 
-// Styles for the LoginScreen layout
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        padding: 20,
-        justifyContent: 'center', // Center content vertically
-    },
-    title: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        textAlign: 'center',
-        marginBottom: 20, // Space below title
-    },
-    error: {
-        color: 'red',
-        textAlign: 'center',
-        marginBottom: 10, // Space below error
-    },
-    input: {
-        borderWidth: 1,
-        borderColor: '#ccc',
-        borderRadius: 4,
-        padding: 10,
-        marginVertical: 10, // Vertical spacing between inputs
-        fontSize: 16,
-    },
-    continueButton: {
-        marginTop: 10, // Space above continue button
-    },
-    registerLink: {
-        color: 'blue',
-        textAlign: 'center',
-        marginTop: 20, // Space above register link
-    },
-});
+   const windowWidth = Dimensions.get('window').width;
+   const containerWidth = Math.min(windowWidth, 800);
 
-export default LoginScreen;
+   const styles = StyleSheet.create({
+       container: {
+           flex: 1,
+           backgroundColor: '#ece6db',
+           alignItems: 'center',
+           justifyContent: 'center',
+           padding: windowWidth < 768 ? 16 : 20,
+       },
+       card: {
+           backgroundColor: '#ffffff',
+           borderWidth: 1,
+           borderColor: '#2e5436',
+           borderRadius: 8,
+           width: containerWidth - 40,
+           shadowColor: '#000',
+           shadowOffset: { width: 2, height: 2 },
+           shadowOpacity: 0.1,
+           shadowRadius: 5,
+           elevation: 5,
+           flex: 1,
+       },
+       scrollContent: {
+           padding: 20,
+           paddingBottom: 40,
+       },
+       title: {
+           fontFamily: 'Merriweather-Bold',
+           fontSize: 24,
+           color: '#555',
+           textAlign: 'center',
+           marginBottom: 20,
+       },
+       error: {
+           fontFamily: 'FiraCode-Regular',
+           fontSize: 16,
+           color: 'red',
+           textAlign: 'center',
+           marginBottom: 10,
+       },
+       input: {
+           fontFamily: 'FiraCode-Regular',
+           fontSize: 16,
+           borderWidth: 1,
+           borderColor: '#ccc',
+           borderRadius: 4,
+           padding: 10,
+           marginVertical: 10,
+           width: '100%',
+       },
+       button: {
+           backgroundColor: '#2e5436',
+           paddingVertical: 8,
+           paddingHorizontal: 16,
+           borderRadius: 4,
+           alignItems: 'center',
+           marginVertical: 10,
+       },
+       registerButton: {
+           backgroundColor: '#666',
+       },
+       buttonText: {
+           fontFamily: 'FiraCode-Regular',
+           fontSize: 16,
+           color: '#ffffff',
+       },
+   });
+
+   export default LoginScreen;
