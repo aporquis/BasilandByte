@@ -8,7 +8,7 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
-from .models import Recipe, Ingredient, RecipeIngredient, FoodGroup, SavedItem, WeeklyPlan, LoginEvent, UserDeletion, UserInventory, ShoppingListItem
+from .models import Recipe, Ingredient, RecipeIngredient, FoodGroup, SavedItem, WeeklyPlan, LoginEvent, UserDeletion, UserInventory, ShoppingListItem, AccountReactivation
 from .serializers import RecipeSerializer, UserRegisterSerializer, UserLoginSerializer, SavedItemSerializer, WeeklyPlanSerializer, UserInventorySerializer, IngredientSerializer, ShoppingListItemSerializer
 from django.http import JsonResponse, HttpResponse
 import json
@@ -86,10 +86,43 @@ def login_user(request):
     username = request.data.get("username")
     password = request.data.get("password")
     user = authenticate(username=username, password=password)
-    if user is None:
-        return Response({"error": "Invalid username or password"}, status=status.HTTP_401_UNAUTHORIZED)
-    return Response({"message": "Login successful!", "token": get_tokens_for_user(user)}, status=status.HTTP_200_OK)
 
+    if user:
+        if not user.is_active:
+            return Response({"detail": "Your account is deactivated. Please reactivate it."}, status=status.HTTP_403_FORBIDDEN)
+        return Response({"message": "Login successful!", "token": get_tokens_for_user(user)}, status=status.HTTP_200_OK)
+
+    try:
+        matched_user = User.objects.get(username=username)
+        if not matched_user.is_active and matched_user.check_password(password):
+            return Response({"detail":"Your account is deactivated. Please reactivate it."}, status=status.HTTP_403_FORBIDDEN)
+    except User.DoesNotExist:
+        pass
+    return Response({"error": "Invalid username or password"}, status=status.HTTP_401_UNAUTHORIZED)
+
+@api_view(["POST"])
+@permission_classes([AllowAny])
+def reactivate_account(request):
+    username = request.data.get("username")
+    password = request.data.get("password")
+
+    try:
+        user = User.objects.get(username=username)
+        if user.check_password(password):
+            if user.is_active:
+                return Response({"detail": "Account is already active."}, status=status.HTTP_400_BAD_REQUEST)
+            user.is_active = True
+            user.save()
+
+            #Remove already existing user deletion request
+            UserDeletion.objects.filter(user=user).delete()
+
+            AccountReactivation.objects.create(user=user)
+            return Response({"detail":"Account sucessfully reactivated."}, status=status.HTTP_200_OK)
+        else:
+            return Response({"detail": "Incorrect password."}, status=status.HTTP_400_BAD_REQUEST)
+    except User.DoesNotExist:
+        return Response({"detail": "No account found with that username."}, status=status.HTTP_404_NOT_FOUND)
 
 @api_view(["GET"])
 @permission_classes([AllowAny])

@@ -6,16 +6,19 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { loginUser, logLoginEvent } from "./api"; // Import login function
+import axios from "axios";
 
 function Login() {
   const [username, setUsername] = useState(""); // State for username input
   const [password, setPassword] = useState(""); // State for password input
   const [message, setMessage] = useState(""); // State for success/error messages
+  const [showReactivate, setShowReactivate] = useState(false); //State for showing reactivation button
   const navigate = useNavigate(); // Hook for navigation
 
 // Handle login form submission with GDPR-compliant event logging
   const handleSubmit = async (e) => {
     e.preventDefault(); // Prevent default form submission
+    setShowReactivate(false);
     if (!username || !password) { // Validate inputs
       setMessage("Username and password are required!");
       await logLoginEvent(username || 'unknown', 'failure', 'web'); // Log failed attempt due to missing fields
@@ -31,7 +34,35 @@ function Login() {
     } catch (error) {
       console.error("Login Error:", error.message);
       await logLoginEvent(username, 'failure', 'web'); // Log failed login
-      setMessage(error.response?.data?.detail || "Login failed! Check your credentials."); // Display error
+
+      const detail = error.response?.data?.detail || "Login failed! Check your credentials.";
+      setMessage(detail);
+
+      if (detail.includes("deactivated")){
+        setShowReactivate(true);
+      }
+    }
+  };
+
+  const handleReactivate = async () => {
+    try {
+      const response = await axios.post("https://basilandbyte.onrender.com/api/recipes/reactivate/", {
+        username,
+        password,
+      });
+
+      if (response.status === 200) {
+        setMessage("✅ Account reactivated! Logging in...");
+        setShowReactivate(false);
+
+        // Auto-login
+        await loginUser(username, password, "web");
+        await logLoginEvent(username, 'success', 'web');
+        setTimeout(() => navigate("/recipes"), 1000);
+      }
+    } catch (error) {
+      console.error("Reactivation Error:", error);
+      setMessage(error.response?.data?.detail || "Reactivation failed.");
     }
   };
 
@@ -61,6 +92,13 @@ function Login() {
         </div>
         <button type="submit">Login</button>
       </form>
+      {showReactivate && (
+        <div style = {{ marginTop:"15px"}}>
+          <p> This account is deactivated. Do you want to reactivate it?</p>
+          <button onClick={handleReactivate}>Reactivate Account</button>
+        </div>
+      )}
+
       <div style={{ marginTop: "20px" }}>
         <p>Don't have an account?</p>
         <button onClick={() => navigate("/register")}>Create New User</button> {/* Navigate to register */}
