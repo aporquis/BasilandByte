@@ -37,6 +37,16 @@ def export_user_data(request):
         "email": user.email,
         "date_joined": user.date_joined.strftime("%Y-%m-%d %H:%M:%S"),
     }
+    # Add login events (1000 last logins)
+    login_events = LoginEvent.objects.filter(username=user.username).order_by('-timestamp')[:1000]
+    user_data["login_attempts"] = [
+        {
+            "timestamp": event.timestamp.isoformat(),
+            "outcome": event.outcome,
+            "source": event.source,
+        }
+        for event in login_events
+    ]
     response = HttpResponse(json.dumps(user_data, indent=4),
                             content_type="application/json")
     response['Content-Disposition'] = f'attachment; filename="{user.username}_data.json"'
