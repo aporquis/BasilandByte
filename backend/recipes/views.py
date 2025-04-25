@@ -505,8 +505,12 @@ def suggest_recipes(request):
             ingredient_id = ri.ingredient.id
             try:
                 required_quantity = float(Fraction(ri.quantity.strip()))
+                required_quantity_str = str(Fraction(ri.quantity.strip()).limit_denominator())
             except Exception as e:
-                logger.warning(f"Skipping recipe '{recipe.recipe_name}' due to invalid quantity '{ri.quantity}' (ingredient: {ri.ingredient.ingredient_name}): {e}")
+                logger.warning(
+                    f"Skipping recipe '{recipe.recipe_name}' due to invalid quantity '{ri.quantity}' (ingredient: {ri.ingredient.ingredient_name}): {e}"
+                    f"(ingredient: {ri.ingredient.ingredient_name}): {e}"
+                )
                 can_make = False
                 continue
             required_unit = ri.unit
@@ -527,9 +531,9 @@ def suggest_recipes(request):
                         can_make = False
                         missing_ingredients.append({
                             "ingredient_name": ri.ingredient.ingredient_name,
-                            "required_quantity": required_quantity,
+                            "required_quantity": required_quantity_str,
                             "unit": required_unit,
-                            "available_quantity": available_quantity,
+                            "available_quantity": str(Fraction(available_quantity).limit_denominator()),
                             "available_unit": inv_data["unit"]
                         })
                     else:
