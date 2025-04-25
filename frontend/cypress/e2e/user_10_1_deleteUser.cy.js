@@ -18,7 +18,7 @@ describe('Delete User', () => {
         cy.contains('Dashboard').click(); // Go to Dashboard
         cy.reload();
 
-        cy.contains('Delete my Account').click(); // click delete my account
+        cy.contains('Delete My Account').click(); // click delete my account
 
         //in window popup, confirm deletion
         cy.on('window:confirm', (text) => {
