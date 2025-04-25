@@ -479,22 +479,21 @@ def suggest_recipes(request):
     if not inventory.exists():
         return Response({"message": "No items in inventory to suggest recipes", "suggested_recipes": []}, status=status.HTTP_200_OK)
 
-    # Normalize inventory ingredient names
+    # Normalize inventory
     inventory_dict = {}
     for item in inventory:
         name = item.ingredient.ingredient_name.lower()
-        # Remove common modifiers
         name = re.sub(r'\b(finely|shredded|cooked|boneless|skinless|chopped|sliced)\b',
                       '', name, flags=re.IGNORECASE).strip()
         inventory_dict[item.ingredient.id] = {
             "name": name,
             "quantity": float(item.quantity),
-            "unit": item.unit,
-            "original_name": item.ingredient.ingredient_name
+            "unit": item.unit
         }
 
     recipes = Recipe.objects.all().prefetch_related('recipe_ingredients__ingredient')
     suggested_recipes = []
+
     for recipe in recipes:
         recipe_ingredients = recipe.recipe_ingredients.all()
         can_make = True
@@ -502,39 +501,33 @@ def suggest_recipes(request):
         matched_ingredient_ids = set()
 
         for ri in recipe_ingredients:
-            ingredient_id = ri.ingredient.id
             try:
                 required_quantity = float(Fraction(ri.quantity.strip()))
-                required_quantity_str = str(Fraction(ri.quantity.strip()).limit_denominator())
             except Exception as e:
                 logger.warning(
-                    f"Skipping recipe '{recipe.recipe_name}' due to invalid quantity '{ri.quantity}' (ingredient: {ri.ingredient.ingredient_name}): {e}"
-                    f"(ingredient: {ri.ingredient.ingredient_name}): {e}"
-                )
+                    f"Skipping ingredient '{ri.ingredient.ingredient_name}' in recipe '{recipe.recipe_name}' due to invalid quantity '{ri.quantity}': {e}")
                 can_make = False
                 continue
-            required_unit = ri.unit
-            recipe_name = ri.ingredient.ingredient_name.lower()
-            # Normalize recipe ingredient name
-            normalized_recipe_name = re.sub(
-                r'\b(finely|shredded|cooked|boneless|skinless|chopped|sliced)\b', '', recipe_name, flags=re.IGNORECASE).strip()
 
-            # Check for match by ID or name
+            normalized_name = re.sub(
+                r'\b(finely|shredded|cooked|boneless|skinless|chopped|sliced)\b',
+                '', ri.ingredient.ingredient_name.lower(),
+                flags=re.IGNORECASE
+            ).strip()
+
             found_match = False
-            for inv_id, inv_data in inventory_dict.items():
-                if inv_id == ingredient_id or normalized_recipe_name in inv_data["name"] or inv_data["name"] in normalized_recipe_name:
+            for inv_id, inv in inventory_dict.items():
+                if inv_id == ri.ingredient.id or normalized_name in inv["name"] or inv["name"] in normalized_name:
                     if inv_id in matched_ingredient_ids:
-                        continue  # Skip if already used
-                    # Simplified unit check (relaxed for now)
-                    available_quantity = inv_data["quantity"]
-                    if available_quantity < required_quantity:
+                        continue
+                    if inv["quantity"] < required_quantity:
                         can_make = False
                         missing_ingredients.append({
                             "ingredient_name": ri.ingredient.ingredient_name,
-                            "required_quantity": required_quantity_str,
-                            "unit": required_unit,
-                            "available_quantity": str(Fraction(available_quantity).limit_denominator()),
-                            "available_unit": inv_data["unit"]
+                            "required_quantity": required_quantity,
+                            "unit": ri.unit,
+                            "available_quantity": inv["quantity"],
+                            "available_unit": inv["unit"]
                         })
                     else:
                         matched_ingredient_ids.add(inv_id)
@@ -546,7 +539,7 @@ def suggest_recipes(request):
                 missing_ingredients.append({
                     "ingredient_name": ri.ingredient.ingredient_name,
                     "required_quantity": required_quantity,
-                    "unit": required_unit
+                    "unit": ri.unit
                 })
 
         if can_make or (len(missing_ingredients) <= 2):
