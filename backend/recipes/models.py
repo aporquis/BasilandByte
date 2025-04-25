@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
+from fractions import Fraction
 
 # The models below create tables. Primary keys are specified and foreign keys are referenced
 # We do not need to create a user model, as we are using Django's user model
@@ -43,7 +44,7 @@ class RecipeIngredient(models.Model):
         Recipe, on_delete=models.CASCADE, related_name="recipe_ingredients")
     ingredient = models.ForeignKey(
         Ingredient, on_delete=models.CASCADE, related_name="ingredient_recipes")
-    quantity = models.DecimalField(max_digits=3, decimal_places=2)
+    quantity = models.CharField(max_length=20)
     unit = models.CharField(max_length=50)
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -128,10 +129,14 @@ class UserInventory(models.Model):
         on_delete=models.CASCADE,
         related_name="user_inventories"
     )
+    quantity_display = models.CharField(
+        max_length = 20,
+        help_text= "User-friendly string (e.g., '1 1/2')"
+    )
     quantity = models.DecimalField(
         max_digits=6,
         decimal_places=2,
-        help_text="Quantity of the ingredient"
+        help_text= "Numeric Version for calculations"
     )
     unit = models.CharField(
         max_length=50,

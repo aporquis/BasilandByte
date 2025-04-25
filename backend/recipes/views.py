@@ -11,6 +11,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from .models import Recipe, Ingredient, RecipeIngredient, FoodGroup, SavedItem, WeeklyPlan, LoginEvent, UserDeletion, UserInventory, ShoppingListItem, AccountReactivation
 from .serializers import RecipeSerializer, UserRegisterSerializer, UserLoginSerializer, SavedItemSerializer, WeeklyPlanSerializer, UserInventorySerializer, IngredientSerializer, ShoppingListItemSerializer
 from django.http import JsonResponse, HttpResponse
+from fractions import Fraction
 import json
 import logging
 import re
@@ -383,22 +384,32 @@ def add_to_inventory(request):
                 f"Ingredient validation failed: {ingredient_serializer.errors}")
             return Response(ingredient_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         ingredient = ingredient_serializer.save()
+        #Get Data Display
+        quantity_display = request.data.get("quantity_display", "").strip()
+        if not quantity_display:
+            return Repsonse({"error": "quantity_display is required"}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            quantity_parsed = float(Fraction(quantity_display))
+        except Exception:
+            return Response({"error": "Invalid quantity format. Use values like '1', '1/2', or '1 1/2'."}, status=status.HTTP_400_BAD_REQUEST)
+
         data = {
             "ingredient": ingredient.id,
-            "quantity": request.data.get("quantity"),
+            "quantity_display": quantity_display,
+            "quantity": quantity_parsed,
             "unit": request.data.get("unit"),
             "storage_location": request.data.get("storage_location", "pantry"),
             "expires_at": request.data.get("expires_at"),
         }
-        if data["quantity"] is None or not data["unit"]:
-            logger.error(
-                f"Invalid data: quantity={data['quantity']}, unit={data['unit']}")
-            return Response({"error": "quantity and unit are required"}, status=status.HTTP_400_BAD_REQUEST)
+        if data["unit"] is None:
+            return Response({"error": "unit is required"}, status=status.HTTP_400_BAD_REQUEST)
+
         serializer = UserInventorySerializer(
             data=data, context={'request': request})
         if serializer.is_valid():
             serializer.save(user=request.user)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
+
         logger.error(f"UserInventory validation failed: {serializer.errors}")
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     except Exception as e:
@@ -410,10 +421,24 @@ def add_to_inventory(request):
 @permission_classes([IsAuthenticated])
 def update_inventory_item(request, inventory_id):
     """Update an existing inventory item."""
-    inventory_item = get_object_or_404(
-        UserInventory, id=inventory_id, user=request.user)
+    try:
+        inventory_item = UserInventory.objects.get(id=inventory_id, user= request.user)
+    except UserInventory.DoesNotExist:
+        return Response({"error": "Iventory item not found."}, status=status.HTTP_404_NOT_FOUND)
+
+    data = request.data.copy()
+    if "quantity_display" in data:
+        quantity_display = data.get("quantity_display", "").strip()
+        try:
+            quantity_parsed = float(Fraction(quantity_display))
+        except Exception:
+            return Response({"error":"Invalid quantity format. Use values like '1', '1/2', or '1 1/2'."}, status=status.HTTP_400_BAD_REQUEST)
+        data["quantity"] = quantity_parsed
+        data["quantity_display"] = quantity_display
+
     serializer = UserInventorySerializer(
-        inventory_item, data=request.data, partial=True, context={'request': request})
+        instance = inventory_item, data=data, context = {'request': request}, partial=True
+    )
     if serializer.is_valid():
         serializer.save()
         return Response(serializer.data)

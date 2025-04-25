@@ -3,6 +3,7 @@ from django.contrib.auth import authenticate
 from rest_framework import serializers
 from rest_framework.exceptions import AuthenticationFailed
 from .models import Recipe, Ingredient, RecipeIngredient, FoodGroup, SavedItem, WeeklyPlan, UserInventory, ShoppingListItem
+from fractions import Fraction
 
 
 class UserRegisterSerializer(serializers.ModelSerializer):
@@ -68,6 +69,12 @@ class RecipeIngredientSerializer(serializers.ModelSerializer):
         model = RecipeIngredient
         fields = ['id', 'ingredient_name', 'quantity', 'unit']
 
+    def parse_quantity_to_float(quantity_str):
+        try:
+            return float(Fraction(quantity_str.strip()))
+        except Exception:
+            raise ValueError("Invalid quantity format. Use values like '1', '1/2', or '1 1/2'")
+
 
 class RecipeSerializer(serializers.ModelSerializer):
     image = serializers.ImageField(required=False)
@@ -115,15 +122,28 @@ class UserInventorySerializer(serializers.ModelSerializer):
         source='ingredient.ingredient_name', read_only=True)
     food_group = serializers.CharField(
         source='ingredient.food_group.food_group_name', read_only=True)
+    quantity_display = serializers.CharField(write_only=True)
+    quantity = serializers.DecimalField(
+        max_digits=6, decimal_places=2, read_only=True)
 
     class Meta:
         model = UserInventory
-        fields = ['id', 'user', 'ingredient', 'ingredient_name', 'food_group', 'quantity',
-                  'unit', 'storage_location', 'added_at', 'expires_at', 'is_available']
-        read_only_fields = ['user', 'added_at']
+        fields = ['id', 'user', 'ingredient', 'ingredient_name', 'food_group',
+                  'quantity', 'quantity_display', 'unit', 'storage_location',
+                  'added_at', 'expires_at', 'is_available']
+        read_only_fields = ['user', 'added_at', 'quantity']
 
     def create(self, validated_data):
         validated_data['user'] = self.context['request'].user
+
+        display = validated_data.pop('quantity_display').strip()
+        try:
+            validated_data['quantity'] = float(Fraction(display))
+        except ValueError:
+            raise serializers.ValidationError({
+                "quantity_display": "Enter a valid quantity like '1', '1/2', or '1 1/2'"
+            })
+        validated_data['quantity_display'] = display
         return super().create(validated_data)
 
 
