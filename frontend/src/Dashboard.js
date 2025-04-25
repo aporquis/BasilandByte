@@ -18,20 +18,19 @@ function Dashboard() {
   // Fetch user info on mount
   useEffect(() => {
     console.log("Dashboard Loaded!");
-    const token = localStorage.getItem("access_token"); // Check for token
-    console.log("🔑 Stored Token in LocalStorage:", token);
-
-    if (!token) {
-      setError("No authentication token found.");
-      console.error("No authentication token found.");
-      navigate("/login");
-      return;
-    }
 
     const fetchUserInfo = async () => {
       try {
-        console.log("About to call getUserInfo() with token");
-        const data = await getUserInfo(); // Fetch user info via API
+        const token = localStorage.getItem("access_token");
+        if (!token) {
+          console.error("No token found, redirecting to login...");
+          setError("No authentication token found.");
+          navigate("/login");
+          return;
+        }
+
+        console.log("Calling getUserInfo()");
+        const data = await getUserInfo();
         console.log("User Information Response:", data);
         setUser(data);
       } catch (err) {
@@ -41,15 +40,29 @@ function Dashboard() {
       }
     };
 
-    setTimeout(() => {
+    const token = localStorage.getItem("access_token");
+    if (token) {
       fetchUserInfo();
-    }, 100);
+    } else {
+      console.log("Waiting for token...");
+      const interval = setInterval(() => {
+        const refreshedToken = localStorage.getItem("access_token");
+        if (refreshedToken) {
+          clearInterval(interval);
+          fetchUserInfo();
+        }
+      }, 500);
+      // after 5 seconds of waiting, give up
+      setTimeout(() => clearInterval(interval), 5000);
+    }
 
     // Update clock every second
     const timer = setInterval(() => {
       setCurrentTime(new Date());
     }, 1000);
-    return () => clearInterval(timer);
+    return () => {
+      clearInterval(timer);
+    };
   }, [navigate]);
 
   // Download user data as JSON file
