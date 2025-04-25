@@ -484,7 +484,7 @@ def suggest_recipes(request):
     for item in inventory:
         name = item.ingredient.ingredient_name.lower()
         # Remove common modifiers
-        name = re.sub(r'\b(finely|shredded|cooked|boneless|skinless)\b',
+        name = re.sub(r'\b(finely|shredded|cooked|boneless|skinless|chopped|sliced)\b',
                       '', name, flags=re.IGNORECASE).strip()
         inventory_dict[item.ingredient.id] = {
             "name": name,
@@ -503,12 +503,17 @@ def suggest_recipes(request):
 
         for ri in recipe_ingredients:
             ingredient_id = ri.ingredient.id
-            required_quantity = float(ri.quantity)
+            try:
+                required_quantity = float(Fraction(ri.quantity.strip()))
+            except Exception as e:
+                logger.warning(f"Skipping recipe '{recipe.recipe_name}' due to invalid quantity '{ri.quantity}' (ingredient: {ri.ingredient.ingredient_name}): {e}")
+                can_make = False
+                continue
             required_unit = ri.unit
             recipe_name = ri.ingredient.ingredient_name.lower()
             # Normalize recipe ingredient name
             normalized_recipe_name = re.sub(
-                r'\b(finely|shredded|cooked|boneless|skinless)\b', '', recipe_name, flags=re.IGNORECASE).strip()
+                r'\b(finely|shredded|cooked|boneless|skinless|chopped|sliced)\b', '', recipe_name, flags=re.IGNORECASE).strip()
 
             # Check for match by ID or name
             found_match = False
@@ -645,7 +650,7 @@ def add_missing_ingredients_to_shopping_list(request, recipe_id):
     inventory_dict = {}
     for item in inventory:
         name = item.ingredient.ingredient_name.lower()
-        name = re.sub(r'\b(finely|shredded|cooked|boneless|skinless)\b',
+        name = re.sub(r'\b(finely|shredded|cooked|boneless|skinless|chopped|sliced)\b',
                       '', name, flags=re.IGNORECASE).strip()
         inventory_dict[item.ingredient.id] = {
             "name": name,
@@ -656,11 +661,15 @@ def add_missing_ingredients_to_shopping_list(request, recipe_id):
     added_items = []
     for ri in recipe_ingredients:
         ingredient_id = ri.ingredient.id
-        required_quantity = float(ri.quantity)
+        try:
+            required_quantity = float(Fraction(ri.quantity.strip()))
+        except Exception as e:
+            logger.warning(f"Invalid quantity '{ri.quantity}' in recipe {recipe.id}: {e}")
+            continue
         required_unit = ri.unit
         recipe_name = ri.ingredient.ingredient_name.lower()
         normalized_recipe_name = re.sub(
-            r'\b(finely|shredded|cooked|boneless|skinless)\b', '', recipe_name, flags=re.IGNORECASE).strip()
+            r'\b(finely|shredded|cooked|boneless|skinless|chopped|sliced)\b', '', recipe_name, flags=re.IGNORECASE).strip()
         found_match = False
         for inv_id, inv_data in inventory_dict.items():
             if inv_id == ingredient_id or normalized_recipe_name in inv_data["name"] or inv_data["name"] in normalized_recipe_name:
