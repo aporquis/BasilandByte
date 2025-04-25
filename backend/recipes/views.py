@@ -137,7 +137,7 @@ def get_recipes(request):
 
 
 @api_view(["POST"])
-@parser_classes([MultiPartParser])
+@parser_classes([JSONParser, MultiPartParser])
 @permission_classes([IsAuthenticated])
 def add_recipe(request):
     data = request.data

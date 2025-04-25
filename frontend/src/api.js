@@ -85,14 +85,13 @@ export const fetchRecipes = async () => {
 };
 
 // Add a new recipe to /add/
-export const addRecipe = async (formData) => {
+export const addRecipe = async (recipeData) => {
   try {
-    const response = await api.post('/add/', formData);
-    console.log('addRecipe - Response:', response.data);
+    const response = await api.post('/add/', recipeData); 
     return response.data;
   } catch (error) {
-    console.error('Error adding recipe:', error.message);
-    throw error; // Throw error for component to handle
+    console.error('Error adding recipe:', error.response?.data || error.message);
+    throw error;
   }
 };
 
