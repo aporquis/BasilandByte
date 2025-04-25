@@ -50,6 +50,7 @@ const PersonalPantry = ({ token }) => {
     try {
       const normalizedItem = {
         ...newItem,
+        quantity_display: `${newItem.quantity}`,
         ingredient_name: newItem.ingredient_name.trim().replace(/\b\w/g, char => char.toUpperCase()),
       };
       const response = await api.post('/inventory/add/', normalizedItem);

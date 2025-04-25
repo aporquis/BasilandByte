@@ -11,6 +11,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from .models import Recipe, Ingredient, RecipeIngredient, FoodGroup, SavedItem, WeeklyPlan, LoginEvent, UserDeletion, UserInventory, ShoppingListItem, AccountReactivation
 from .serializers import RecipeSerializer, UserRegisterSerializer, UserLoginSerializer, SavedItemSerializer, WeeklyPlanSerializer, UserInventorySerializer, IngredientSerializer, ShoppingListItemSerializer
 from django.http import JsonResponse, HttpResponse
+from fractions import Fraction
 import json
 import logging
 import re
@@ -136,7 +137,7 @@ def get_recipes(request):
 
 
 @api_view(["POST"])
-@parser_classes([MultiPartParser])
+@parser_classes([JSONParser, MultiPartParser])
 @permission_classes([IsAuthenticated])
 def add_recipe(request):
     data = request.data
@@ -383,22 +384,32 @@ def add_to_inventory(request):
                 f"Ingredient validation failed: {ingredient_serializer.errors}")
             return Response(ingredient_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         ingredient = ingredient_serializer.save()
+        #Get Data Display
+        quantity_display = request.data.get("quantity_display", "").strip()
+if not quantity_display:
+            return Response({"error": "quantity_display is required"}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            quantity_parsed = float(Fraction(quantity_display))
+        except Exception:
+            return Response({"error": "Invalid quantity format. Use values like '1', '1/2', or '1 1/2'."}, status=status.HTTP_400_BAD_REQUEST)
+
         data = {
             "ingredient": ingredient.id,
-            "quantity": request.data.get("quantity"),
+            "quantity_display": quantity_display,
+            "quantity": quantity_parsed,
             "unit": request.data.get("unit"),
             "storage_location": request.data.get("storage_location", "pantry"),
             "expires_at": request.data.get("expires_at"),
         }
-        if data["quantity"] is None or not data["unit"]:
-            logger.error(
-                f"Invalid data: quantity={data['quantity']}, unit={data['unit']}")
-            return Response({"error": "quantity and unit are required"}, status=status.HTTP_400_BAD_REQUEST)
+        if data["unit"] is None:
+            return Response({"error": "unit is required"}, status=status.HTTP_400_BAD_REQUEST)
+
         serializer = UserInventorySerializer(
             data=data, context={'request': request})
         if serializer.is_valid():
             serializer.save(user=request.user)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
+
         logger.error(f"UserInventory validation failed: {serializer.errors}")
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     except Exception as e:
@@ -410,10 +421,24 @@ def add_to_inventory(request):
 @permission_classes([IsAuthenticated])
 def update_inventory_item(request, inventory_id):
     """Update an existing inventory item."""
-    inventory_item = get_object_or_404(
-        UserInventory, id=inventory_id, user=request.user)
+    try:
+        inventory_item = UserInventory.objects.get(id=inventory_id, user= request.user)
+    except UserInventory.DoesNotExist:
+        return Response({"error": "Iventory item not found."}, status=status.HTTP_404_NOT_FOUND)
+
+    data = request.data.copy()
+    if "quantity_display" in data:
+        quantity_display = data.get("quantity_display", "").strip()
+        try:
+            quantity_parsed = float(Fraction(quantity_display))
+        except Exception:
+            return Response({"error":"Invalid quantity format. Use values like '1', '1/2', or '1 1/2'."}, status=status.HTTP_400_BAD_REQUEST)
+        data["quantity"] = quantity_parsed
+        data["quantity_display"] = quantity_display
+
     serializer = UserInventorySerializer(
-        inventory_item, data=request.data, partial=True, context={'request': request})
+        instance = inventory_item, data=data, context = {'request': request}, partial=True
+    )
     if serializer.is_valid():
         serializer.save()
         return Response(serializer.data)
@@ -454,22 +479,21 @@ def suggest_recipes(request):
     if not inventory.exists():
         return Response({"message": "No items in inventory to suggest recipes", "suggested_recipes": []}, status=status.HTTP_200_OK)
 
-    # Normalize inventory ingredient names
+    # Normalize inventory
     inventory_dict = {}
     for item in inventory:
         name = item.ingredient.ingredient_name.lower()
-        # Remove common modifiers
-        name = re.sub(r'\b(finely|shredded|cooked|boneless|skinless)\b',
+        name = re.sub(r'\b(finely|shredded|cooked|boneless|skinless|chopped|sliced)\b',
                       '', name, flags=re.IGNORECASE).strip()
         inventory_dict[item.ingredient.id] = {
             "name": name,
             "quantity": float(item.quantity),
-            "unit": item.unit,
-            "original_name": item.ingredient.ingredient_name
+            "unit": item.unit
         }
 
     recipes = Recipe.objects.all().prefetch_related('recipe_ingredients__ingredient')
     suggested_recipes = []
+
     for recipe in recipes:
         recipe_ingredients = recipe.recipe_ingredients.all()
         can_make = True
@@ -477,30 +501,33 @@ def suggest_recipes(request):
         matched_ingredient_ids = set()
 
         for ri in recipe_ingredients:
-            ingredient_id = ri.ingredient.id
-            required_quantity = float(ri.quantity)
-            required_unit = ri.unit
-            recipe_name = ri.ingredient.ingredient_name.lower()
-            # Normalize recipe ingredient name
-            normalized_recipe_name = re.sub(
-                r'\b(finely|shredded|cooked|boneless|skinless)\b', '', recipe_name, flags=re.IGNORECASE).strip()
+            try:
+                required_quantity = float(Fraction(ri.quantity.strip()))
+            except Exception as e:
+                logger.warning(
+                    f"Skipping ingredient '{ri.ingredient.ingredient_name}' in recipe '{recipe.recipe_name}' due to invalid quantity '{ri.quantity}': {e}")
+                can_make = False
+                continue
 
-            # Check for match by ID or name
+            normalized_name = re.sub(
+                r'\b(finely|shredded|cooked|boneless|skinless|chopped|sliced)\b',
+                '', ri.ingredient.ingredient_name.lower(),
+                flags=re.IGNORECASE
+            ).strip()
+
             found_match = False
-            for inv_id, inv_data in inventory_dict.items():
-                if inv_id == ingredient_id or normalized_recipe_name in inv_data["name"] or inv_data["name"] in normalized_recipe_name:
+            for inv_id, inv in inventory_dict.items():
+                if inv_id == ri.ingredient.id or normalized_name in inv["name"] or inv["name"] in normalized_name:
                     if inv_id in matched_ingredient_ids:
-                        continue  # Skip if already used
-                    # Simplified unit check (relaxed for now)
-                    available_quantity = inv_data["quantity"]
-                    if available_quantity < required_quantity:
+                        continue
+                    if inv["quantity"] < required_quantity:
                         can_make = False
                         missing_ingredients.append({
                             "ingredient_name": ri.ingredient.ingredient_name,
                             "required_quantity": required_quantity,
-                            "unit": required_unit,
-                            "available_quantity": available_quantity,
-                            "available_unit": inv_data["unit"]
+                            "unit": ri.unit,
+                            "available_quantity": inv["quantity"],
+                            "available_unit": inv["unit"]
                         })
                     else:
                         matched_ingredient_ids.add(inv_id)
@@ -512,7 +539,7 @@ def suggest_recipes(request):
                 missing_ingredients.append({
                     "ingredient_name": ri.ingredient.ingredient_name,
                     "required_quantity": required_quantity,
-                    "unit": required_unit
+                    "unit": ri.unit
                 })
 
         if can_make or (len(missing_ingredients) <= 2):
@@ -620,7 +647,7 @@ def add_missing_ingredients_to_shopping_list(request, recipe_id):
     inventory_dict = {}
     for item in inventory:
         name = item.ingredient.ingredient_name.lower()
-        name = re.sub(r'\b(finely|shredded|cooked|boneless|skinless)\b',
+        name = re.sub(r'\b(finely|shredded|cooked|boneless|skinless|chopped|sliced)\b',
                       '', name, flags=re.IGNORECASE).strip()
         inventory_dict[item.ingredient.id] = {
             "name": name,
@@ -631,11 +658,15 @@ def add_missing_ingredients_to_shopping_list(request, recipe_id):
     added_items = []
     for ri in recipe_ingredients:
         ingredient_id = ri.ingredient.id
-        required_quantity = float(ri.quantity)
+        try:
+            required_quantity = float(Fraction(ri.quantity.strip()))
+        except Exception as e:
+            logger.warning(f"Invalid quantity '{ri.quantity}' in recipe {recipe.id}: {e}")
+            continue
         required_unit = ri.unit
         recipe_name = ri.ingredient.ingredient_name.lower()
         normalized_recipe_name = re.sub(
-            r'\b(finely|shredded|cooked|boneless|skinless)\b', '', recipe_name, flags=re.IGNORECASE).strip()
+            r'\b(finely|shredded|cooked|boneless|skinless|chopped|sliced)\b', '', recipe_name, flags=re.IGNORECASE).strip()
         found_match = False
         for inv_id, inv_data in inventory_dict.items():
             if inv_id == ingredient_id or normalized_recipe_name in inv_data["name"] or inv_data["name"] in normalized_recipe_name:

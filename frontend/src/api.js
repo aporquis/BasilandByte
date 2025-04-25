@@ -4,6 +4,7 @@
 // Uses a hardcoded base URL matching the mobile app setup.
 
 import axios from "axios";
+import { data } from "react-router-dom";
 
 // Hardcode the base URL to the hosted backend on Render
 export const API_BASE_URL = 'https://basilandbyte.onrender.com/api/recipes';
@@ -84,20 +85,13 @@ export const fetchRecipes = async () => {
 };
 
 // Add a new recipe to /add/
-export const addRecipe = async (formData) => {
+export const addRecipe = async (recipeData) => {
   try {
-    console.log('Posting to:', `${API_BASE_URL}/add/`);
-    for (let [key, value] of formData.entries()) {
-      console.log(`FormData - ${key}:`, value); // Log form data for debugging
-    }
-    const response = await api.post('/add/', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' }, // Required for file uploads
-    });
-    console.log('addRecipe - Response:', response.data);
+    const response = await api.post('/add/', recipeData); 
     return response.data;
   } catch (error) {
-    console.error('Error adding recipe:', error.message);
-    throw error; // Throw error for component to handle
+    console.error('Error adding recipe:', error.response?.data || error.message);
+    throw error;
   }
 };
 

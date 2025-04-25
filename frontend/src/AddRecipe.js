@@ -13,14 +13,14 @@ function AddRecipe() {
   // State for recipe form fields
   const [recipeName, setRecipeName] = useState("");
   const [description, setDescription] = useState("");
-  const [ingredients, setIngredients] = useState([{ name: "", quantity: "", unit: "" }]);
+  const [ingredients, setIngredients] = useState([{ name: "", whole: "", fraction: "", unit: "" }]);
   const [instructions, setInstructions] = useState("");
   const [uploadedImageUrl, setUploadedImageUrl] = useState("");
   const navigate = useNavigate();
 
   // Add a new empty ingredient field
   const handleAddIngredient = () => {
-    setIngredients([...ingredients, { name: "", quantity: "", unit: "" }]);
+    setIngredients([...ingredients, { name: "", whole: "", fraction: "", unit: "" }]);
   };
 
   // Update ingredient field values
@@ -48,18 +48,29 @@ function AddRecipe() {
       recipe_name: recipeName,
       description: description,
       instructions: instructions,
-      image_url: uploadedImageUrl,
     };
+    if(uploadedImageUrl){
+      recipeData.image_url = uploadedImageUrl;
+    }
 
     try {
       const addedRecipe = await addRecipe(recipeData); // Add recipe via API
       if (addedRecipe) {
         // Add each ingredient if all fields are filled
         for (const ingr of ingredients) {
-          if (ingr.name && ingr.quantity && ingr.unit) {
+          const hasQuantity = ingr.whole || ingr.fraction;
+          if (ingr.name && hasQuantity && ingr.unit){
+            let quantityString = "";
+            if (ingr.whole && ingr.fraction){
+              quantityString = `${ingr.whole} ${ingr.fraction}`;
+            } else if (ingr.whole){
+              quantityString = `${ingr.whole}`;
+            } else {
+              quantityString = `${ingr.fraction}`;
+            }
             await addRecipeIngredient(addedRecipe.id, {
               ingredient_name: ingr.name,
-              quantity: parseFloat(ingr.quantity),
+              quantity: quantityString,
               unit: ingr.unit,
             });
           }
@@ -67,7 +78,7 @@ function AddRecipe() {
         // Reset form fields
         setRecipeName("");
         setDescription("");
-        setIngredients([{ name: "", quantity: "", unit: "" }]);
+        setIngredients([{ name: "", whole: "", fraction: "", unit: "" }]);
         setInstructions("");
         setUploadedImageUrl("");
         navigate("/recipes"); // Redirect to recipes page
@@ -110,14 +121,25 @@ function AddRecipe() {
               />
               <input
                 type="number"
-                placeholder="Quantity"
-                value={ing.quantity}
-                onChange={(e) => handleIngredientChange(index, "quantity", e.target.value)}
-                required
-                step="0.1"
+                placeholder="Whole"
+                value={ing.whole}
+                onChange={(e) => handleIngredientChange(index, "whole", e.target.value)}
                 min="0"
-                style={{ width: "80px", marginRight: "10px" }}
+                style={{ width: "80px", marginRight: "5px" }}
               />
+              <select
+                value={ing.fraction}
+                onChange={(e) => handleIngredientChange(index, "fraction", e.target.value)}
+                style={{ marginRight: "10px" }}
+              >
+                <option value="">-</option>
+                <option value="1/8">1/8</option>
+                <option value="1/4">1/4</option>
+                <option value="1/3">1/3</option>
+                <option value="1/2">1/2</option>
+                <option value="2/3">2/3</option>
+                <option value="3/4">3/4</option>
+              </select>
               <select
                 value={ing.unit}
                 onChange={(e) => handleIngredientChange(index, "unit", e.target.value)}
@@ -125,6 +147,7 @@ function AddRecipe() {
                 style={{ marginRight: "10px" }}
               >
                 <option value="">Select Unit</option>
+                <option value="whole">Whole</option>
                 <option value="cups">Cups</option>
                 <option value="tablespoons">Tablespoons</option>
                 <option value="teaspoons">Teaspoons</option>
@@ -141,10 +164,9 @@ function AddRecipe() {
           placeholder="Instructions"
           value={instructions}
           onChange={(e) => setInstructions(e.target.value)}
-          required
         />
         <UploadImage onUploadSuccess={handleImageUpload} />
-        <button type="submit" disabled={!uploadedImageUrl || !recipeName}>Add Recipe</button>
+        <button type="submit" disabled={!recipeName}>Add Recipe</button>
       </form>
     </div>
   );
