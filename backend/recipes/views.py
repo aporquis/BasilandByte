@@ -396,7 +396,7 @@ def add_to_inventory(request):
         ingredient = ingredient_serializer.save()
         #Get Data Display
         quantity_display = request.data.get("quantity_display", "").strip()
-if not quantity_display:
+        if not quantity_display:
             return Response({"error": "quantity_display is required"}, status=status.HTTP_400_BAD_REQUEST)
         try:
             quantity_parsed = float(Fraction(quantity_display))
