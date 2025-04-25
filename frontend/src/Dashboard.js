@@ -18,17 +18,17 @@ function Dashboard() {
   // Fetch user info on mount
   useEffect(() => {
     console.log("Dashboard Loaded!");
+    const token = localStorage.getItem("access_token"); // Check for token
+    console.log("🔑 Stored Token in LocalStorage:", token);
+
+    if (!token) {
+      setError("No authentication token found.");
+      console.error("No authentication token found.");
+      navigate("/login");
+      return;
+    }
+
     const fetchUserInfo = async () => {
-      const token = localStorage.getItem("access_token"); // Check for token
-      console.log("🔑 Stored Token in LocalStorage:", token);
-
-      if (!token) {
-        setError("No authentication token found.");
-        console.error("❌ No authentication token found.");
-        navigate("/login"); // Redirect to login if no token
-        return;
-      }
-
       try {
         console.log("About to call getUserInfo() with token");
         const data = await getUserInfo(); // Fetch user info via API
@@ -41,13 +41,15 @@ function Dashboard() {
       }
     };
 
-    fetchUserInfo();
+    setTimeout(() => {
+      fetchUserInfo();
+    }, 100);
 
     // Update clock every second
     const timer = setInterval(() => {
       setCurrentTime(new Date());
     }, 1000);
-    return () => clearInterval(timer); // Cleanup on unmount
+    return () => clearInterval(timer);
   }, [navigate]);
 
   // Download user data as JSON file
